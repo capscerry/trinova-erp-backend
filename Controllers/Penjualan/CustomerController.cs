@@ -29,6 +29,15 @@ namespace trinova_erp_backend.Controllers.Penjualan
                      Telepon = "031-7778888",
                      Alamat = "Jl. Pemuda No. 45, Surabaya",
                      Status = "Aktif"
+                },
+                new Customer
+                {
+                     Kode: "CUST-003",
+                     Nama: "PT Karya Mandiri",
+                     Email: "karyamandiri@gmail.com",
+                     Telepon: "022-3339999",
+                     Alamat: "Jl. Asia Afrika No. 77, Bandung",
+                     Status: "Non-aktif",
                 }
             };
 
