@@ -1,0 +1,78 @@
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Options;
+using trinova_erp_backend.Config;
+using trinova_erp_backend.Models.Penjualan;
+using trinova_erp_backend.Repositories.Penjualan;
+
+namespace trinova_erp_backend.Usecase.Penjualan
+{
+    
+    public interface ISalesQuotationUsecase {
+        Task<string> InsertSalesQuotation(SalesQuotation quotation);
+    }
+
+    public class SalesQuotationUsecase : ISalesQuotationUsecase
+    {
+        private readonly string _connectionString;
+        private readonly ISalesQuotationRepo _salesQuotationRepo;
+        public SalesQuotationUsecase(IOptionsSnapshot<DatabaseConnection> options,ISalesQuotationRepo salesQuotationRepo)
+        {
+            _connectionString = options.Value.SQLServer;
+            _salesQuotationRepo = salesQuotationRepo;
+        }
+        public async Task<string> InsertSalesQuotation(SalesQuotation quotation)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+            using var tx = conn.BeginTransaction();
+         
+            try
+            {
+
+                var header = new QuotationHeader
+                {
+                    CustomerId = quotation.CustomerId,
+                    QuotationNumber = quotation.QuotationNumber,
+                    QuotationDate = quotation.QuotationDate,
+                    Address = quotation.Address,
+                    Notes = quotation.Notes,
+
+                    IsTaxable = quotation.IsTaxable ?? false,
+                    IsTaxIncluded = quotation.IsTaxIncluded ?? false,
+
+                    Subtotal = quotation.Subtotal ?? 0,
+                    DiscountTotal = quotation.DiscountTotal ?? 0,
+                };
+
+                int quotationId = await _salesQuotationRepo.InsertQuotationHeader(header, conn, tx);
+                
+                foreach(var item in quotation.Details)
+                {
+                    var detail = new QuotationDetail
+                    {
+                        QuotationId = quotationId,
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        UomId = item.UomId,
+                        Price = item.Price,
+                        DiscountPercent = item.DiscountPercent ?? 0,
+                        DiscountAmount = item.DiscountAmount ?? 0
+                    };
+
+                    await _salesQuotationRepo.InsertQuotationDetail(detail, conn, tx);
+
+
+                }
+                await tx.CommitAsync();
+
+                return "Insert Sales Quotation Success";
+
+            }
+            catch(Exception ex)
+            {
+                await tx.RollbackAsync();
+                throw new Exception("Failed Insert", ex);
+            }
+        }
+    }
+}
