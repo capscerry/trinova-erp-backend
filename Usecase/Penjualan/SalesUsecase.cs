@@ -6,6 +6,14 @@ using trinova_erp_backend.Repositories.Penjualan;
 
 namespace trinova_erp_backend.Usecase.Penjualan
 {
+
+    public interface ISalesCategoryUsecase
+    {
+        Task<string> InsertDataCategory(SalesCategory model);
+        Task<List<SalesCategory>> GetAllCategory();
+        Task<bool> UpdateDataCategory(SalesCategory model);
+        Task<bool> UpdateStatusCategory(int id, int status);
+    }
     
     public interface ISalesQuotationUsecase {
         Task<string> InsertSalesQuotation(SalesQuotation quotation);
@@ -75,4 +83,45 @@ namespace trinova_erp_backend.Usecase.Penjualan
             }
         }
     }
+
+    public class SalesCategoryUsecase : ISalesCategoryUsecase
+    {
+        private readonly ISalesCategoryRepo _salesCategoryRepo;
+
+        public SalesCategoryUsecase(ISalesCategoryRepo salesCatergoryRepo)
+        {
+            _salesCategoryRepo = salesCatergoryRepo;
+        }
+
+        public async Task<string> InsertDataCategory(SalesCategory category)
+        {
+            var result = await _salesCategoryRepo.InsertCategorySales(category);
+            if (result)
+                return "Insert Successfully";
+
+            return "Insert Failed";
+        }
+
+        public async Task<bool> UpdateStatusCategory(int id, int status)
+        {
+            var result = await _salesCategoryRepo.UpdateStatusCategory(id, status);
+            return result;
+
+        }
+
+        public async Task<List<SalesCategory>> GetAllCategory()
+        {
+            var result = await _salesCategoryRepo.GetAllCategory();
+            return result;
+        }
+
+        
+
+        public async Task<bool> UpdateDataCategory(SalesCategory model)
+        {
+            var result = await _salesCategoryRepo.UpdateCategorySales(model);
+            return result;
+        }
+    }
+
 }

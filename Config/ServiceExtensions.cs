@@ -10,8 +10,10 @@ namespace trinova_erp_backend.Config
             services.AddScoped<IMasterCustomerRepo, MasterCustomerRepo>();
             services.AddScoped<ICategoryCustomerRepo, CategoryCustomerRepo>();
             services.AddScoped<ISalesQuotationRepo, SalesQuotationRepo>();
+            services.AddScoped<ISalesCategoryRepo, SalesCategoryRepo>();
             services.AddScoped<ICustomerUsecase, CustomerUsecase>();
             services.AddScoped<ISalesQuotationUsecase, SalesQuotationUsecase>();
+            services.AddScoped<ISalesCategoryUsecase, SalesCategoryUsecase>();
             
 
             return services;
