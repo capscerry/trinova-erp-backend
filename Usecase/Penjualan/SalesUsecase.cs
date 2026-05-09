@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
+using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Models.Penjualan;
 using trinova_erp_backend.Repositories.Penjualan;
 
@@ -17,6 +18,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
     
     public interface ISalesQuotationUsecase {
         Task<string> InsertSalesQuotation(SalesQuotation quotation);
+        Task<List<QuotationHeaderResponse>> GetAllQuotations();
     }
 
     public class SalesQuotationUsecase : ISalesQuotationUsecase
@@ -27,6 +29,12 @@ namespace trinova_erp_backend.Usecase.Penjualan
         {
             _connectionString = options.Value.SQLServer;
             _salesQuotationRepo = salesQuotationRepo;
+        }
+
+        public async Task<List<QuotationHeaderResponse>> GetAllQuotations()
+        {
+            var result = await _salesQuotationRepo.GetAllQuotation();
+            return result;
         }
         public async Task<string> InsertSalesQuotation(SalesQuotation quotation)
         {

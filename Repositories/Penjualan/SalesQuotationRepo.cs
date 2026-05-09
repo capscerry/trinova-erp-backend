@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using System.Data;
 using trinova_erp_backend.Config;
+using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Models.Penjualan;
 
 namespace trinova_erp_backend.Repositories.Penjualan
@@ -20,6 +21,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
             SqlConnection conn,
             SqlTransaction transaction
         );
+
+        Task<List<QuotationHeaderResponse>> GetAllQuotation();
     }
 
     public class SalesQuotationRepo : ISalesQuotationRepo
@@ -132,6 +135,29 @@ namespace trinova_erp_backend.Repositories.Penjualan
             );
 
             return result > 0;
+        }
+
+        public async Task<List<QuotationHeaderResponse>> GetAllQuotation()
+        {
+            string query = @"SELECT 
+                            sq.quotation_id AS QuotationId,
+                            sq.quotation_number AS QuotationNumber,
+                            sq.quotation_date As QuotationDate,
+                            mc.customer_name As CustomerName,
+                            sq.notes As Notes,
+                            sq.subtotal As SubTotal
+                            FROM  sales_quotation sq 
+                            JOIN master_customer mc on sq.customer_id  = mc.customer_id ";
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                var result = await connection.QueryAsync<QuotationHeaderResponse>(query);
+
+                return result.ToList();
+                
+            }
         }
     }
 }
