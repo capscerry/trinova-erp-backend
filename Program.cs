@@ -1,24 +1,36 @@
+using Microsoft.EntityFrameworkCore;
+using trinova_erp_backend.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+var connectionString =
+    "Server=trinova-server-dev.database.windows.net,1433;" +
+    "Initial Catalog=trinova-dev;" +
+    "User ID=capscerry;" +
+    "Password=capstoneckrtgr@11;" +
+    "Encrypt=True;" +
+    "TrustServerCertificate=True;";
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowCors", policy =>
     {
         policy.AllowAnyOrigin()
-        .AllowAnyHeader()
-        .AllowAnyMethod();
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -26,6 +38,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseCors("AllowCors");
 
 app.UseAuthorization();
