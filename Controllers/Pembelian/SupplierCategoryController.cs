@@ -1,92 +1,107 @@
 using Microsoft.AspNetCore.Mvc;
-using trinova_erp_backend.Data;
 using trinova_erp_backend.Models;
+using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class SupplierCategoryController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ISupplierCategoryUsecase _supplierCategoryUsecase;
 
-        public SupplierCategoryController(ApplicationDbContext context)
+        public SupplierCategoryController(
+            ISupplierCategoryUsecase supplierCategoryUsecase
+        )
         {
-            _context = context;
+            _supplierCategoryUsecase = supplierCategoryUsecase;
         }
 
-        // GET ALL
-        [HttpGet]
-        public IActionResult GetCategories()
+        [HttpPost("/api/supplier-category")]
+        public async Task<IActionResult> InsertSupplierCategory(
+            [FromBody] SupplierCategory category
+        )
         {
-            var categories = _context.SupplierCategories.ToList();
+            var result = await _supplierCategoryUsecase
+                .InsertSupplierCategory(category);
 
-            return Ok(categories);
-        }
-
-        // GET BY ID
-        [HttpGet("{id}")]
-        public IActionResult GetCategoryById(int id)
-        {
-            var category = _context.SupplierCategories.Find(id);
-
-            if (category == null)
+            return Ok(new
             {
-                return NotFound();
+                status = true,
+                message = result
+            });
+        }
+
+        [HttpGet("/api/supplier-category")]
+        public async Task<IActionResult> GetAllSupplierCategory()
+        {
+            var result = await _supplierCategoryUsecase
+                .GetAllSupplierCategory();
+
+            if (result == null || result.Count == 0)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    data = new List<object>(),
+                    message = "No Category Found"
+                });
             }
 
-            return Ok(category);
-        }
-
-        // CREATE
-        [HttpPost]
-        public IActionResult CreateCategory(SupplierCategory category)
-        {
-            category.created_date = DateTime.Now;
-
-            _context.SupplierCategories.Add(category);
-
-            _context.SaveChanges();
-
-            return Ok(category);
-        }
-
-        // UPDATE
-        [HttpPut("{id}")]
-        public IActionResult UpdateCategory(int id, SupplierCategory updatedCategory)
-        {
-            var category = _context.SupplierCategories.Find(id);
-
-            if (category == null)
+            return Ok(new
             {
-                return NotFound();
+                status = true,
+                data = result
+            });
+        }
+
+        [HttpPut("/api/supplier-category/{id}")]
+        public async Task<IActionResult> UpdateSupplierCategory(
+            int id,
+            [FromBody] SupplierCategory model
+        )
+        {
+            model.category_id = id;
+
+            var result = await _supplierCategoryUsecase
+                .UpdateSupplierCategory(model);
+
+            if (result)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Update Data"
+                });
             }
 
-            category.category_name = updatedCategory.category_name;
-            category.update_date = DateTime.Now;
-            category.update_by = updatedCategory.update_by;
-
-            _context.SaveChanges();
-
-            return Ok(category);
+            return BadRequest(new
+            {
+                status = false,
+                message = "Failed Update Data"
+            });
         }
 
-        // DELETE
-        [HttpDelete("{id}")]
-        public IActionResult DeleteCategory(int id)
+        [HttpDelete("/api/supplier-category/{id}")]
+        public async Task<IActionResult> DeleteSupplierCategory(int id)
         {
-            var category = _context.SupplierCategories.Find(id);
+            var result = await _supplierCategoryUsecase
+                .DeleteSupplierCategory(id);
 
-            if (category == null)
+            if (result)
             {
-                return NotFound();
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Delete Data"
+                });
             }
 
-            _context.SupplierCategories.Remove(category);
-
-            _context.SaveChanges();
-
-            return Ok("Category deleted");
+            return BadRequest(new
+            {
+                status = false,
+                message = "Failed Delete Data"
+            });
         }
     }
 }

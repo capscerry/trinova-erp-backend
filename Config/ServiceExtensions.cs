@@ -1,22 +1,53 @@
-﻿using trinova_erp_backend.Repositories.Penjualan;
+﻿using trinova_erp_backend.Repositories.Pembelian;
+using trinova_erp_backend.Repositories.Penjualan;
+using trinova_erp_backend.Repositories.Persediaan;
+
+using trinova_erp_backend.Usecase.Pembelian;
 using trinova_erp_backend.Usecase.Penjualan;
+using trinova_erp_backend.Usecase.Persediaan;
 
 namespace trinova_erp_backend.Config
 {
     public static class ServiceExtensions
     {
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services) {
+        public static IServiceCollection AddApplicationServices(
+            this IServiceCollection services
+        )
+        {
+            // PENJUALAN REPOSITORY
             services.AddScoped<IMasterCustomerRepo, MasterCustomerRepo>();
             services.AddScoped<ICategoryCustomerRepo, CategoryCustomerRepo>();
             services.AddScoped<ISalesQuotationRepo, SalesQuotationRepo>();
             services.AddScoped<ISalesCategoryRepo, SalesCategoryRepo>();
+
+            // PENJUALAN USECASE
             services.AddScoped<ICustomerUsecase, CustomerUsecase>();
             services.AddScoped<ISalesQuotationUsecase, SalesQuotationUsecase>();
             services.AddScoped<ISalesCategoryUsecase, SalesCategoryUsecase>();
-            
+
+            // PEMBELIAN REPOSITORY
+            services.AddScoped<ISupplierRepo, SupplierRepo>();
+            services.AddScoped<ISupplierCategoryRepo, SupplierCategoryRepo>();
+            services.AddScoped<IPurchaseOrderRepo, PurchaseOrderRepo>();
+            services.AddScoped<IPurchaseOrderDetailRepo, PurchaseOrderDetailRepo>();
+            services.AddScoped<IGoodsReceiptRepo, GoodsReceiptRepo>();
+            services.AddScoped<IPurchasingDashboardRepo, PurchasingDashboardRepo>();
+
+            // PEMBELIAN USECASE
+            services.AddScoped<ISupplierUsecase, SupplierUsecase>();
+            services.AddScoped<ISupplierCategoryUsecase, SupplierCategoryUsecase>();
+            services.AddScoped<IPurchaseOrderUsecase, PurchaseOrderUsecase>();
+            services.AddScoped<IPurchaseOrderDetailUsecase, PurchaseOrderDetailUsecase>();
+            services.AddScoped<IGoodsReceiptUsecase, GoodsReceiptUsecase>();
+            services.AddScoped<IPurchasingDashboardUsecase, PurchasingDashboardUsecase>();
+
+            // PERSEDIAAN REPOSITORY
+            services.AddScoped<IMasterUomRepo, MasterUomRepo>();
+
+            // PERSEDIAAN USECASE
+            services.AddScoped<IMasterUomUsecase, MasterUomUsecase>();
 
             return services;
-        
         }
     }
 }

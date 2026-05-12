@@ -15,6 +15,8 @@ namespace trinova_erp_backend.Models
 
         public int quantity { get; set; }
 
+        public int uom_id { get; set; }
+
         public decimal? price { get; set; }
 
         public decimal? subtotal { get; set; }

@@ -1,0 +1,179 @@
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Options;
+using trinova_erp_backend.Config;
+using trinova_erp_backend.Models;
+
+namespace trinova_erp_backend.Repositories.Pembelian
+{
+    public interface IGoodsReceiptRepo
+    {
+        Task<bool> InsertGoodsReceipt(GoodsReceipt model);
+
+        Task<List<GoodsReceipt>> GetAllGoodsReceipt();
+
+        Task<bool> UpdateGoodsReceipt(GoodsReceipt model);
+
+        Task<bool> DeleteGoodsReceipt(int id);
+    }
+
+    public class GoodsReceiptRepo : IGoodsReceiptRepo
+    {
+        private readonly string _connectionString;
+
+        public GoodsReceiptRepo(IOptionsSnapshot<DatabaseConnection> options)
+        {
+            _connectionString = options.Value.SQLServer
+                ?? throw new InvalidOperationException("Database connection string is not configured.");
+        }
+
+        // INSERT
+        public async Task<bool> InsertGoodsReceipt(GoodsReceipt model)
+        {
+            const string query = @"
+                INSERT INTO goods_receipt
+                (
+                    purchase_order_id,
+                    receipt_number,
+                    receipt_date,
+                    received_by,
+                    status
+                )
+                VALUES
+                (
+                    @purchase_order_id,
+                    @receipt_number,
+                    @receipt_date,
+                    @received_by,
+                    @status
+                )";
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    await connection.OpenAsync();
+
+                    command.Parameters.AddWithValue("@purchase_order_id", model.purchase_order_id);
+                    command.Parameters.AddWithValue("@receipt_number", model.receipt_number);
+                    command.Parameters.AddWithValue("@receipt_date", model.receipt_date);
+                    command.Parameters.AddWithValue("@received_by", model.received_by);
+                    command.Parameters.AddWithValue("@status", model.status);
+
+                    int result = await command.ExecuteNonQueryAsync();
+
+                    return result > 0;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        // UPDATE
+        public async Task<bool> UpdateGoodsReceipt(GoodsReceipt model)
+        {
+            const string query = @"
+                UPDATE goods_receipt
+                SET
+                    receipt_number = @receipt_number,
+                    receipt_date = @receipt_date,
+                    received_by = @received_by,
+                    status = @status
+                WHERE goods_receipt_id = @goods_receipt_id";
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    await connection.OpenAsync();
+
+                    command.Parameters.AddWithValue("@goods_receipt_id", model.goods_receipt_id);
+                    command.Parameters.AddWithValue("@receipt_number", model.receipt_number);
+                    command.Parameters.AddWithValue("@receipt_date", model.receipt_date);
+                    command.Parameters.AddWithValue("@received_by", model.received_by);
+                    command.Parameters.AddWithValue("@status", model.status);
+
+                    int result = await command.ExecuteNonQueryAsync();
+
+                    return result > 0;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        // DELETE
+        public async Task<bool> DeleteGoodsReceipt(int id)
+        {
+            const string query = @"
+                DELETE FROM goods_receipt
+                WHERE goods_receipt_id = @id";
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    await connection.OpenAsync();
+
+                    command.Parameters.AddWithValue("@id", id);
+
+                    int result = await command.ExecuteNonQueryAsync();
+
+                    return result > 0;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        // GET ALL
+        public async Task<List<GoodsReceipt>> GetAllGoodsReceipt()
+        {
+            const string query = @"SELECT * FROM goods_receipt";
+
+            var response = new List<GoodsReceipt>();
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    await connection.OpenAsync();
+
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var receipt = new GoodsReceipt()
+                            {
+                                goods_receipt_id = reader.GetInt32(reader.GetOrdinal("goods_receipt_id")),
+                                purchase_order_id = reader.GetInt32(reader.GetOrdinal("purchase_order_id")),
+                                receipt_number = reader["receipt_number"].ToString(),
+                                receipt_date = reader.GetDateTime(reader.GetOrdinal("receipt_date")),
+                                received_by = reader["received_by"].ToString(),
+                                status = reader["status"].ToString()
+                            };
+
+                            response.Add(receipt);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var msg = ex.Message;
+                throw new Exception(msg);
+            }
+
+            return response;
+        }
+    }
+}

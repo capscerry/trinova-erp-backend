@@ -1,125 +1,107 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using trinova_erp_backend.Data;
 using trinova_erp_backend.Models;
+using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class PurchaseOrderController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IPurchaseOrderUsecase _purchaseOrderUsecase;
 
-        public PurchaseOrderController(ApplicationDbContext context)
+        public PurchaseOrderController(
+            IPurchaseOrderUsecase purchaseOrderUsecase
+        )
         {
-            _context = context;
+            _purchaseOrderUsecase = purchaseOrderUsecase;
         }
 
-        // GET ALL
-        [HttpGet]
-        public IActionResult GetPurchaseOrders()
+        [HttpPost("/api/purchase-order")]
+        public async Task<IActionResult> InsertPurchaseOrder(
+            [FromBody] PurchaseOrder purchaseOrder
+        )
         {
-            var purchaseOrders = _context.PurchaseOrders
-                .Include(p => p.Supplier)
-                .ThenInclude(s => s.SupplierCategory)
-                .ToList();
+            var result = await _purchaseOrderUsecase
+                .InsertPurchaseOrder(purchaseOrder);
 
-            return Ok(purchaseOrders);
+            return Ok(new
+            {
+                status = true,
+                message = result
+            });
         }
 
-        // GET BY ID
-        [HttpGet("{id}")]
-        public IActionResult GetPurchaseOrderById(int id)
+        [HttpGet("/api/purchase-order")]
+        public async Task<IActionResult> GetAllPurchaseOrder()
         {
-            var purchaseOrder = _context.PurchaseOrders
-                .Include(p => p.Supplier)
-                .ThenInclude(s => s.SupplierCategory)
-                .FirstOrDefault(p => p.purchase_order_id == id);
+            var result = await _purchaseOrderUsecase
+                .GetAllPurchaseOrder();
 
-            if (purchaseOrder == null)
+            if (result == null || result.Count == 0)
             {
-                return NotFound();
+                return Ok(new
+                {
+                    status = true,
+                    data = new List<object>(),
+                    message = "No Purchase Order Found"
+                });
             }
 
-            return Ok(purchaseOrder);
+            return Ok(new
+            {
+                status = true,
+                data = result
+            });
         }
 
-        // CREATE
-        [HttpPost]
-        public IActionResult CreatePurchaseOrder(PurchaseOrder purchaseOrder)
+        [HttpPut("/api/purchase-order/{id}")]
+        public async Task<IActionResult> UpdatePurchaseOrder(
+            int id,
+            [FromBody] PurchaseOrder model
+        )
         {
-            purchaseOrder.created_at = DateTime.Now;
+            model.purchase_order_id = id;
 
-            // DEFAULT STATUS
-            purchaseOrder.status = "Draft";
+            var result = await _purchaseOrderUsecase
+                .UpdatePurchaseOrder(model);
 
-            // AUTO GENERATE PO NUMBER
-            string today = DateTime.Now.ToString("yyyyMMdd");
+            if (result)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Update Data"
+                });
+            }
 
-            int countToday = _context.PurchaseOrders
-                .Count(p => p.created_at.HasValue &&
-                            p.created_at.Value.Date == DateTime.Today);
-
-            purchaseOrder.po_number =
-                $"PO-{today}-{(countToday + 1).ToString("D3")}";
-
-            _context.PurchaseOrders.Add(purchaseOrder);
-
-            _context.SaveChanges();
-
-            return Ok(purchaseOrder);
+            return BadRequest(new
+            {
+                status = false,
+                message = "Failed Update Data"
+            });
         }
 
-        // UPDATE
-        [HttpPut("{id}")]
-        public IActionResult UpdatePurchaseOrder(int id, PurchaseOrder updatedPurchaseOrder)
+        [HttpDelete("/api/purchase-order/{id}")]
+        public async Task<IActionResult> DeletePurchaseOrder(int id)
         {
-            var purchaseOrder = _context.PurchaseOrders.Find(id);
+            var result = await _purchaseOrderUsecase
+                .DeletePurchaseOrder(id);
 
-            if (purchaseOrder == null)
+            if (result)
             {
-                return NotFound();
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Delete Data"
+                });
             }
 
-            // BLOCK EDIT IF COMPLETED
-            if (purchaseOrder.status == "Completed")
+            return BadRequest(new
             {
-                return BadRequest("Completed PO cannot be edited");
-            }
-
-            purchaseOrder.supplier_id = updatedPurchaseOrder.supplier_id;
-            purchaseOrder.order_date = updatedPurchaseOrder.order_date;
-            purchaseOrder.status = updatedPurchaseOrder.status;
-            purchaseOrder.total_amount = updatedPurchaseOrder.total_amount;
-
-            _context.SaveChanges();
-
-            return Ok(purchaseOrder);
-        }
-
-        // DELETE
-        [HttpDelete("{id}")]
-        public IActionResult DeletePurchaseOrder(int id)
-        {
-            var purchaseOrder = _context.PurchaseOrders.Find(id);
-
-            if (purchaseOrder == null)
-            {
-                return NotFound();
-            }
-
-            // BLOCK DELETE IF APPROVED
-            if (purchaseOrder.status == "Approved")
-            {
-                return BadRequest("Approved PO cannot be deleted");
-            }
-
-            _context.PurchaseOrders.Remove(purchaseOrder);
-
-            _context.SaveChanges();
-
-            return Ok("Purchase Order deleted");
+                status = false,
+                message = "Failed Delete Data"
+            });
         }
     }
 }
