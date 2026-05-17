@@ -10,14 +10,17 @@ namespace trinova_erp_backend.Controllers.Penjualan
     {
         private readonly ISalesQuotationUsecase _salesQuotationUsecase;
         private readonly ISalesCategoryUsecase _salesCategoryUsecase;
+        private readonly ISalesOrderUsecase _salesOrderUsecase;
 
         public SalesController(
             ISalesQuotationUsecase salesQuotationUsecase,
-            ISalesCategoryUsecase salesCategoryUsecase
+            ISalesCategoryUsecase salesCategoryUsecase,
+            ISalesOrderUsecase salesOrderUsecase
         )
         {
             _salesQuotationUsecase = salesQuotationUsecase;
             _salesCategoryUsecase = salesCategoryUsecase;
+            _salesOrderUsecase = salesOrderUsecase;
         }
 
         [HttpPost("/api/SalesQuotation")]
@@ -124,6 +127,56 @@ namespace trinova_erp_backend.Controllers.Penjualan
 
             });
 
+        }
+
+        // SALES ORDER CONTROLER 
+
+        [HttpPost("/api/sales-order")]
+        public async Task<IActionResult> PopulateSalesOrder([FromBody] SalesOrderRequest data)
+        {
+            try
+            {
+                if (data == null)
+                {
+                    return BadRequest(new
+                    {
+                        message = "Request tidak boleh kosong"
+                    });
+                }
+
+                if (data.Header == null)
+                {
+                    return BadRequest(new
+                    {
+                        message = "Header sales order wajib diisi"
+                    });
+                }
+
+                if (data.Detail == null || !data.Detail.Any())
+                {
+                    return BadRequest(new
+                    {
+                        message = "Detail sales order wajib diisi"
+                    });
+                }
+
+                var result = await _salesOrderUsecase.InsertSalesOrder(data);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Sales Order berhasil dibuat",
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
 
 

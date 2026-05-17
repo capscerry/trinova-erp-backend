@@ -19,6 +19,11 @@ namespace trinova_erp_backend.Usecase.Penjualan
         Task<string> InsertSalesQuotation(SalesQuotation quotation);
     }
 
+    public interface ISalesOrderUsecase
+    {
+        Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model);
+    }
+
     public class SalesQuotationUsecase : ISalesQuotationUsecase
     {
         private readonly string _connectionString;
@@ -124,4 +129,40 @@ namespace trinova_erp_backend.Usecase.Penjualan
         }
     }
 
+    public class SalesOrderUsecase : ISalesOrderUsecase
+    {
+        private readonly ISalesOrderRepositories _salesOrderRepo;
+        private readonly string _connectionString;
+        public SalesOrderUsecase(ISalesOrderRepositories salesOrderRepo,IOptions<DatabaseConnection> options)
+        {
+            _salesOrderRepo = salesOrderRepo;
+            _connectionString = options.Value.SQLServer;
+
+        }
+
+        public async Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            using var tx = connection.BeginTransaction();
+            try
+            {
+                var header = await _salesOrderRepo.InsertSalesOrderHeader(model.Header, connection, tx);
+
+                foreach(var detail in model.Detail)
+                {
+                    detail.OrderId = header.Id;
+                    await _salesOrderRepo.InsertSalesOrderDetail(detail, connection, tx);
+                }
+
+                tx.Commit();
+                return model;
+            }
+            catch (Exception ex)
+            {
+                tx.Rollback();
+                throw ex;
+            }
+        }
+    }
 }
