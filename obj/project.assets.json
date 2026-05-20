@@ -8850,23 +8850,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\it.magang10\\.nuget\\packages\\": {},
+    "C:\\Users\\aisya\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\ENO\\trinova-erp-backend\\trinova-erp-backend.csproj",
+      "projectUniqueName": "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\trinova-erp-backend.csproj",
       "projectName": "trinova-erp-backend",
-      "projectPath": "C:\\ENO\\trinova-erp-backend\\trinova-erp-backend.csproj",
-      "packagesPath": "C:\\Users\\it.magang10\\.nuget\\packages\\",
-      "outputPath": "C:\\ENO\\trinova-erp-backend\\obj\\",
+      "projectPath": "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\trinova-erp-backend.csproj",
+      "packagesPath": "C:\\Users\\aisya\\.nuget\\packages\\",
+      "outputPath": "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\it.magang10\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\aisya\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -8893,7 +8893,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.100"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
@@ -8945,7 +8945,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
