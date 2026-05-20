@@ -29,6 +29,10 @@ namespace trinova_erp_backend.Data
 
         public DbSet<MasterWarehouse> MasterWarehouses { get; set; }
 
+        public DbSet<InventoryStock> InventoryStocks { get; set; }
+     
+        public DbSet<StockTransaction> StockTransactions { get; set; }
+
         // =========================
         // TRANSACTION
         // =========================

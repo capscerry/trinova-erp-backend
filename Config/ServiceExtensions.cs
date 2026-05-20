@@ -46,12 +46,16 @@ namespace trinova_erp_backend.Config
             services.AddScoped<MasterProductCategoryRepo>();
             services.AddScoped<IMasterUomRepo, MasterUomRepo>();
             services.AddScoped<MasterWarehouseRepo>();
+            services.AddScoped<InventoryStockRepo>();
+            services.AddScoped<StockTransactionRepo>();
 
             // PERSEDIAAN USECASE
             services.AddScoped<IMasterProductUsecase, MasterProductUsecase>();
             services.AddScoped<IMasterProductCategoryUsecase, MasterProductCategoryUsecase>();
             services.AddScoped<IMasterUomUsecase, MasterUomUsecase>();
             services.AddScoped<IMasterWarehouseUsecase, MasterWarehouseUsecase>();
+            services.AddScoped<InventoryStockUsecase>();
+            services.AddScoped<StockTransactionUsecase>();
 
             return services;
         }
