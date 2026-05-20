@@ -13,7 +13,7 @@ namespace trinova_erp_backend.Models.Persediaan
         public int product_id { get; set; }
 
         [Required]
-        public string transaction_type { get; set; }
+        public string transaction_type { get; set; } = string.Empty;
 
         [Required]
         public int quantity { get; set; }
