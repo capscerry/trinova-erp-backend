@@ -19,9 +19,9 @@ namespace trinova_erp_backend.Config
             services.AddScoped<ICategoryCustomerRepo, CategoryCustomerRepo>();
             services.AddScoped<ISalesQuotationRepo, SalesQuotationRepo>();
             services.AddScoped<ISalesCategoryRepo, SalesCategoryRepo>();
-
             services.AddScoped<ISalesOrderRepositories,SalesOrderRepositories>();
-
+            services.AddScoped<IUangMukaRepositories, UangMukaRepositories>();
+            // PENJUALAN USECASE
             services.AddScoped<ICustomerUsecase, CustomerUsecase>();
             services.AddScoped<ISalesQuotationUsecase, SalesQuotationUsecase>();
             services.AddScoped<ISalesCategoryUsecase, SalesCategoryUsecase>();
@@ -59,6 +59,10 @@ namespace trinova_erp_backend.Config
             services.AddScoped<InventoryStockUsecase>();
             services.AddScoped<StockTransactionUsecase>();
 
+
+
+
+            
             return services;
         }
     }

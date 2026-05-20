@@ -12,6 +12,8 @@ namespace trinova_erp_backend.Usecase.Persediaan
         Task<bool> UpdateMasterProduct(MasterProduct model);
 
         Task<bool> DeleteMasterProduct(int productId);
+
+        Task<List<ProductDTO>> GetAllProduct();
     }
 
     public class MasterProductUsecase : IMasterProductUsecase
@@ -53,6 +55,12 @@ namespace trinova_erp_backend.Usecase.Persediaan
         {
             var result = await _masterProductRepo.DeleteMasterProduct(productId);
 
+            return result;
+        }
+
+        public async Task<List<ProductDTO>> GetAllProduct()
+        {
+            var result = await _masterProductRepo.GetAllProduct();
             return result;
         }
     }

@@ -160,17 +160,7 @@
         }
       }
     },
-    "/api/GoodsReceipt": {
-      "get": {
-        "tags": [
-          "GoodsReceipt"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
+    "/api/goods-receipt": {
       "post": {
         "tags": [
           "GoodsReceipt"
@@ -199,30 +189,19 @@
             "description": "OK"
           }
         }
-      }
-    },
-    "/api/GoodsReceipt/{id}": {
+      },
       "get": {
         "tags": [
           "GoodsReceipt"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
         ],
         "responses": {
           "200": {
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/goods-receipt/{id}": {
       "delete": {
         "tags": [
           "GoodsReceipt"
@@ -245,17 +224,223 @@
         }
       }
     },
-    "/api/PurchaseOrder": {
-      "get": {
+    "/api/master-product": {
+      "post": {
         "tags": [
-          "PurchaseOrder"
+          "MasterProduct"
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterProduct"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterProduct"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterProduct"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
           }
         }
       },
+      "get": {
+        "tags": [
+          "MasterProduct"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/master-product/{id}": {
+      "delete": {
+        "tags": [
+          "MasterProduct"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/product-data": {
+      "get": {
+        "tags": [
+          "MasterProduct"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/master-product-category": {
+      "post": {
+        "tags": [
+          "MasterProductCategory"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterProductCategory"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterProductCategory"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterProductCategory"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "MasterProductCategory"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/master-product-category/{id}": {
+      "delete": {
+        "tags": [
+          "MasterProductCategory"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/MasterUom/GetAllMasterUom": {
+      "get": {
+        "tags": [
+          "MasterUom"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/master-warehouse": {
+      "post": {
+        "tags": [
+          "MasterWarehouse"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterWarehouse"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterWarehouse"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterWarehouse"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "MasterWarehouse"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/master-warehouse/{id}": {
+      "delete": {
+        "tags": [
+          "MasterWarehouse"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-order": {
       "post": {
         "tags": [
           "PurchaseOrder"
@@ -284,30 +469,19 @@
             "description": "OK"
           }
         }
-      }
-    },
-    "/api/PurchaseOrder/{id}": {
+      },
       "get": {
         "tags": [
           "PurchaseOrder"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
         ],
         "responses": {
           "200": {
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/purchase-order/{id}": {
       "put": {
         "tags": [
           "PurchaseOrder"
@@ -370,17 +544,7 @@
         }
       }
     },
-    "/api/PurchaseOrderDetail": {
-      "get": {
-        "tags": [
-          "PurchaseOrderDetail"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
+    "/api/purchase-order-detail": {
       "post": {
         "tags": [
           "PurchaseOrderDetail"
@@ -409,30 +573,19 @@
             "description": "OK"
           }
         }
-      }
-    },
-    "/api/PurchaseOrderDetail/{id}": {
+      },
       "get": {
         "tags": [
           "PurchaseOrderDetail"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
         ],
         "responses": {
           "200": {
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/purchase-order-detail/{id}": {
       "put": {
         "tags": [
           "PurchaseOrderDetail"
@@ -683,17 +836,7 @@
         }
       }
     },
-    "/api/Supplier": {
-      "get": {
-        "tags": [
-          "Supplier"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
+    "/api/supplier": {
       "post": {
         "tags": [
           "Supplier"
@@ -722,30 +865,19 @@
             "description": "OK"
           }
         }
-      }
-    },
-    "/api/Supplier/{id}": {
+      },
       "get": {
         "tags": [
           "Supplier"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
         ],
         "responses": {
           "200": {
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/supplier/{id}": {
       "put": {
         "tags": [
           "Supplier"
@@ -808,17 +940,7 @@
         }
       }
     },
-    "/api/SupplierCategory": {
-      "get": {
-        "tags": [
-          "SupplierCategory"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
+    "/api/supplier-category": {
       "post": {
         "tags": [
           "SupplierCategory"
@@ -847,30 +969,19 @@
             "description": "OK"
           }
         }
-      }
-    },
-    "/api/SupplierCategory/{id}": {
+      },
       "get": {
         "tags": [
           "SupplierCategory"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
         ],
         "responses": {
           "200": {
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/supplier-category/{id}": {
       "put": {
         "tags": [
           "SupplierCategory"
@@ -1088,6 +1199,158 @@
         },
         "additionalProperties": false
       },
+      "MasterProduct": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "product_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "product_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "product_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "barcode": {
+            "type": "string",
+            "nullable": true
+          },
+          "uom_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "category_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "masterUom": {
+            "$ref": "#/components/schemas/MasterUom"
+          },
+          "masterProductCategory": {
+            "$ref": "#/components/schemas/MasterProductCategory"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MasterProductCategory": {
+        "type": "object",
+        "properties": {
+          "category_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "category_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "created_by": {
+            "type": "string",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_by": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MasterUom": {
+        "type": "object",
+        "properties": {
+          "uom_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "uom_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "uom_name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MasterWarehouse": {
+        "type": "object",
+        "properties": {
+          "warehouse_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warehouse_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "warehouse_address": {
+            "type": "string",
+            "nullable": true
+          },
+          "warehouse_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "created_by": {
+            "type": "string",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_by": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "PurchaseOrder": {
         "type": "object",
         "properties": {
@@ -1144,6 +1407,10 @@
             "nullable": true
           },
           "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "uom_id": {
             "type": "integer",
             "format": "int32"
           },

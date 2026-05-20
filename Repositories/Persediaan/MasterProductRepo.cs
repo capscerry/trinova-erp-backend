@@ -1,5 +1,6 @@
 // Repositories/Persediaan/MasterProductRepo.cs
 
+using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
@@ -16,6 +17,32 @@ namespace trinova_erp_backend.Repositories.Persediaan
             _connectionString = options.Value.SQLServer!;
         }
 
+
+        public async Task<List<ProductDTO>> GetAllProduct()
+        {
+            using var connection = new SqlConnection(_connectionString);
+
+            string query = @"
+                SELECT
+                    mp.product_id      AS ProductId,
+                    mp.product_code    AS ProductCode,
+                    mp.product_name    AS ProductName,
+                    mp.product_type    AS ProductType,
+                    mpc.category_id    AS CategoryId,
+                    mpc.category_name  AS CategoryName,
+                    mu.uom_code        AS Uom
+                FROM master_product mp
+                JOIN master_product_category mpc
+                    ON mp.category_id = mpc.category_id
+                JOIN master_uom mu
+                    ON mp.uom_id = mu.uom_id
+                ORDER BY mp.product_name
+            ";
+
+            var result = await connection.QueryAsync<ProductDTO>(query);
+
+            return result.ToList();
+        }
         // GET ALL
         public async Task<List<MasterProduct>> GetAllMasterProduct()
         {
