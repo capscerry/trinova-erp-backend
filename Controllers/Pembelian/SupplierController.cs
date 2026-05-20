@@ -1,107 +1,99 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using trinova_erp_backend.Data;
 using trinova_erp_backend.Models;
+using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class SupplierController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ISupplierUsecase _supplierUsecase;
 
-        public SupplierController(ApplicationDbContext context)
+        public SupplierController(ISupplierUsecase supplierUsecase)
         {
-            _context = context;
+            _supplierUsecase = supplierUsecase;
         }
 
-        // GET ALL
-        [HttpGet]
-        public IActionResult GetSuppliers()
+        [HttpPost("/api/supplier")]
+        public async Task<IActionResult> InsertSupplier([FromBody] Supplier supplier)
         {
-            var suppliers = _context.Suppliers
-                .Include(s => s.SupplierCategory)
-                .ToList();
+            var result = await _supplierUsecase.InsertSupplier(supplier);
 
-            return Ok(suppliers);
-        }
-
-        // GET BY ID
-        [HttpGet("{id}")]
-        public IActionResult GetSupplierById(int id)
-        {
-            var supplier = _context.Suppliers
-                .Include(s => s.SupplierCategory)
-                .FirstOrDefault(s => s.supplier_id == id);
-
-            if (supplier == null)
+            return Ok(new
             {
-                return NotFound();
+                status = true,
+                message = result
+            });
+        }
+
+        [HttpGet("/api/supplier")]
+        public async Task<IActionResult> GetAllSupplier()
+        {
+            var result = await _supplierUsecase.GetAllSupplier();
+
+            if (result == null || result.Count == 0)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    data = new List<object>(),
+                    message = "No Supplier Found"
+                });
             }
 
-            return Ok(supplier);
-        }
-
-        // CREATE
-        [HttpPost]
-        public IActionResult CreateSupplier(Supplier supplier)
-        {
-            supplier.created_date = DateTime.Now;
-
-            _context.Suppliers.Add(supplier);
-
-            _context.SaveChanges();
-
-            return Ok(supplier);
-        }
-
-        // UPDATE
-        [HttpPut("{id}")]
-        public IActionResult UpdateSupplier(int id, Supplier updatedSupplier)
-        {
-            var supplier = _context.Suppliers.Find(id);
-
-            if (supplier == null)
+            return Ok(new
             {
-                return NotFound();
+                status = true,
+                data = result
+            });
+        }
+
+        [HttpPut("/api/supplier/{id}")]
+        public async Task<IActionResult> UpdateSupplier(
+            int id,
+            [FromBody] Supplier model
+        )
+        {
+            model.supplier_id = id;
+
+            var result = await _supplierUsecase.UpdateSupplier(model);
+
+            if (result)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Update Data"
+                });
             }
 
-            supplier.supplier_code = updatedSupplier.supplier_code;
-            supplier.supplier_name = updatedSupplier.supplier_name;
-            supplier.category_supplier = updatedSupplier.category_supplier;
-            supplier.no_telp_bisnis = updatedSupplier.no_telp_bisnis;
-            supplier.no_telp_wa = updatedSupplier.no_telp_wa;
-            supplier.alamat = updatedSupplier.alamat;
-            supplier.email = updatedSupplier.email;
-            supplier.faximili = updatedSupplier.faximili;
-            supplier.website = updatedSupplier.website;
-            supplier.status = updatedSupplier.status;
-            supplier.type_supplier = updatedSupplier.type_supplier;
-            supplier.update_date = DateTime.Now;
-            supplier.update_by = updatedSupplier.update_by;
-
-            _context.SaveChanges();
-
-            return Ok(supplier);
+            return BadRequest(new
+            {
+                status = false,
+                message = "Failed Update Data"
+            });
         }
 
-        // DELETE
-        [HttpDelete("{id}")]
-        public IActionResult DeleteSupplier(int id)
+        [HttpDelete("/api/supplier/{id}")]
+        public async Task<IActionResult> DeleteSupplier(int id)
         {
-            var supplier = _context.Suppliers.Find(id);
+            var result = await _supplierUsecase.DeleteSupplier(id);
 
-            if (supplier == null)
+            if (result)
             {
-                return NotFound();
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Delete Data"
+                });
             }
 
-            _context.Suppliers.Remove(supplier);
-
-            _context.SaveChanges();
-
-            return Ok("Supplier deleted");
+            return BadRequest(new
+            {
+                status = false,
+                message = "Failed Delete Data"
+            });
         }
     }
 }

@@ -1,132 +1,107 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using trinova_erp_backend.Data;
 using trinova_erp_backend.Models;
+using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class PurchaseOrderDetailController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IPurchaseOrderDetailUsecase _purchaseOrderDetailUsecase;
 
-        public PurchaseOrderDetailController(ApplicationDbContext context)
+        public PurchaseOrderDetailController(
+            IPurchaseOrderDetailUsecase purchaseOrderDetailUsecase
+        )
         {
-            _context = context;
+            _purchaseOrderDetailUsecase = purchaseOrderDetailUsecase;
         }
 
-        // GET ALL
-        [HttpGet]
-        public IActionResult GetPurchaseOrderDetails()
+        [HttpPost("/api/purchase-order-detail")]
+        public async Task<IActionResult> InsertPurchaseOrderDetail(
+            [FromBody] PurchaseOrderDetail detail
+        )
         {
-            var details = _context.PurchaseOrderDetails
-                .Include(d => d.PurchaseOrder)
-                    .ThenInclude(p => p.Supplier)
-                        .ThenInclude(s => s.SupplierCategory)
-                .ToList();
+            var result = await _purchaseOrderDetailUsecase
+                .InsertPurchaseOrderDetail(detail);
 
-            return Ok(details);
-        }
-
-        // GET BY ID
-        [HttpGet("{id}")]
-        public IActionResult GetPurchaseOrderDetailById(int id)
-        {
-            var detail = _context.PurchaseOrderDetails
-                .Include(d => d.PurchaseOrder)
-                    .ThenInclude(p => p.Supplier)
-                        .ThenInclude(s => s.SupplierCategory)
-                .FirstOrDefault(d => d.purchase_order_detail_id == id);
-
-            if (detail == null)
+            return Ok(new
             {
-                return NotFound();
+                status = true,
+                message = result
+            });
+        }
+
+        [HttpGet("/api/purchase-order-detail")]
+        public async Task<IActionResult> GetAllPurchaseOrderDetail()
+        {
+            var result = await _purchaseOrderDetailUsecase
+                .GetAllPurchaseOrderDetail();
+
+            if (result == null || result.Count == 0)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    data = new List<object>(),
+                    message = "No Purchase Order Detail Found"
+                });
             }
 
-            return Ok(detail);
-        }
-
-        // CREATE
-        [HttpPost]
-        public IActionResult CreatePurchaseOrderDetail(PurchaseOrderDetail detail)
-        {
-            // AUTO SUBTOTAL
-            detail.subtotal = detail.quantity * detail.price;
-
-            _context.PurchaseOrderDetails.Add(detail);
-
-            _context.SaveChanges();
-
-            // AUTO UPDATE PO TOTAL
-            UpdatePurchaseOrderTotal(detail.purchase_order_id);
-
-            return Ok(detail);
-        }
-
-        // UPDATE
-        [HttpPut("{id}")]
-        public IActionResult UpdatePurchaseOrderDetail(int id, PurchaseOrderDetail updatedDetail)
-        {
-            var detail = _context.PurchaseOrderDetails.Find(id);
-
-            if (detail == null)
+            return Ok(new
             {
-                return NotFound();
+                status = true,
+                data = result
+            });
+        }
+
+        [HttpPut("/api/purchase-order-detail/{id}")]
+        public async Task<IActionResult> UpdatePurchaseOrderDetail(
+            int id,
+            [FromBody] PurchaseOrderDetail model
+        )
+        {
+            model.purchase_order_detail_id = id;
+
+            var result = await _purchaseOrderDetailUsecase
+                .UpdatePurchaseOrderDetail(model);
+
+            if (result)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Update Data"
+                });
             }
 
-            detail.product_name = updatedDetail.product_name;
-            detail.quantity = updatedDetail.quantity;
-            detail.price = updatedDetail.price;
-
-            // AUTO RECALCULATE SUBTOTAL
-            detail.subtotal = updatedDetail.quantity * updatedDetail.price;
-
-            _context.SaveChanges();
-
-            // AUTO UPDATE PO TOTAL
-            UpdatePurchaseOrderTotal(detail.purchase_order_id);
-
-            return Ok(detail);
+            return BadRequest(new
+            {
+                status = false,
+                message = "Failed Update Data"
+            });
         }
 
-        // DELETE
-        [HttpDelete("{id}")]
-        public IActionResult DeletePurchaseOrderDetail(int id)
+        [HttpDelete("/api/purchase-order-detail/{id}")]
+        public async Task<IActionResult> DeletePurchaseOrderDetail(int id)
         {
-            var detail = _context.PurchaseOrderDetails.Find(id);
+            var result = await _purchaseOrderDetailUsecase
+                .DeletePurchaseOrderDetail(id);
 
-            if (detail == null)
+            if (result)
             {
-                return NotFound();
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Delete Data"
+                });
             }
 
-            int purchaseOrderId = detail.purchase_order_id;
-
-            _context.PurchaseOrderDetails.Remove(detail);
-
-            _context.SaveChanges();
-
-            // AUTO UPDATE PO TOTAL
-            UpdatePurchaseOrderTotal(purchaseOrderId);
-
-            return Ok("Purchase Order Detail deleted");
-        }
-
-        // AUTO CALCULATE TOTAL
-        private void UpdatePurchaseOrderTotal(int purchaseOrderId)
-        {
-            var purchaseOrder = _context.PurchaseOrders
-                .FirstOrDefault(p => p.purchase_order_id == purchaseOrderId);
-
-            if (purchaseOrder != null)
+            return BadRequest(new
             {
-                purchaseOrder.total_amount = _context.PurchaseOrderDetails
-                    .Where(d => d.purchase_order_id == purchaseOrderId)
-                    .Sum(d => d.subtotal);
-
-                _context.SaveChanges();
-            }
+                status = false,
+                message = "Failed Delete Data"
+            });
         }
     }
 }
