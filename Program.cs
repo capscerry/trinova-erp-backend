@@ -1,23 +1,27 @@
 using DotNetEnv;
-
+using Microsoft.EntityFrameworkCore;
 using trinova_erp_backend.Config;
+using trinova_erp_backend.Data;
 
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
-
-Env.Load();
 
 builder.Services.Configure<DatabaseConnection>(options =>
 {
     options.SQLServer = Env.GetString("SQL_CONNECTION_STRING_DEV");
 });
 
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(
+        Env.GetString("SQL_CONNECTION_STRING_DEV")));
+
 builder.Services.AddApplicationServices();
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowCors", policy =>
