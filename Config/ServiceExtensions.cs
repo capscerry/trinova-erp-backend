@@ -26,6 +26,7 @@ namespace trinova_erp_backend.Config
             services.AddScoped<ISalesQuotationUsecase, SalesQuotationUsecase>();
             services.AddScoped<ISalesCategoryUsecase, SalesCategoryUsecase>();
             services.AddScoped<ISalesOrderUsecase, SalesOrderUsecase>();
+            services.AddScoped<IUangMukaUsecase, UangMukaUsecase>();
             
             // PEMBELIAN REPOSITORY
             services.AddScoped<ISupplierRepo, SupplierRepo>();

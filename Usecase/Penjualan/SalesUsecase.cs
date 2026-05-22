@@ -144,24 +144,45 @@ namespace trinova_erp_backend.Usecase.Penjualan
         {
             using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
+
             using var tx = connection.BeginTransaction();
+
             try
             {
-                var header = await _salesOrderRepo.InsertSalesOrderHeader(model.Header, connection, tx);
+                // Insert header dan ambil hasil header yang sudah ada Id
+                var insertedHeader = await _salesOrderRepo.InsertSalesOrderHeader(
+                    model.Header,
+                    connection,
+                    tx
+                );
 
-                foreach(var detail in model.Detail)
+                model.Header = insertedHeader;
+
+                var insertedDetails = new List<SalesOrderDetail>();
+
+                foreach (var detail in model.Detail)
                 {
-                    detail.OrderId = header.Id;
-                    await _salesOrderRepo.InsertSalesOrderDetail(detail, connection, tx);
+                    detail.OrderId = insertedHeader.Id;
+
+                    var insertedDetail = await _salesOrderRepo.InsertSalesOrderDetail(
+                        detail,
+                        connection,
+                        tx
+                    );
+
+                    insertedDetails.Add(insertedDetail);
                 }
 
+                model.Detail = insertedDetails;
+
                 tx.Commit();
+
                 return model;
             }
-            catch (Exception ex)
+            catch
             {
                 tx.Rollback();
-                throw ex;
+                throw;
             }
         }
     }

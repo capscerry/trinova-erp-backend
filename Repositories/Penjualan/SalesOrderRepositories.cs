@@ -31,77 +31,83 @@ namespace trinova_erp_backend.Repositories.Penjualan
         }
 
         public async Task<SalesOrderHeader> InsertSalesOrderHeader(
-            SalesOrderHeader header,
-            IDbConnection connection,
-            IDbTransaction tx
-        )
+     SalesOrderHeader header,
+     IDbConnection connection,
+     IDbTransaction tx
+ )
         {
             string query = @"
-                INSERT INTO sales_order
-                (
-                    so_number,
-                    tanggal_kirim,
-                    so_date,
-                    customer_id,
-                    is_taxable,
-                    is_tax_included,
-                    address,
-                    notes
-                )
-                VALUES
-                (
-                    @SoNumber,
-                    @TanggalKirim,
-                    @SoDate,
-                    @CustomerId,
-                    @IsTaxAble,
-                    @IsTaxIncluded,
-                    @Address,
-                    @Notes
-                );
-            ";
+        INSERT INTO sales_order
+        (
+            so_number,
+            tanggal_kirim,
+            so_date,
+            customer_id,
+            is_taxable,
+            is_tax_included,
+            address,
+            notes
+        )
+        OUTPUT INSERTED.*
+        VALUES
+        (
+            @SoNumber,
+            @TanggalKirim,
+            @SoDate,
+            @CustomerId,
+            @IsTaxAble,
+            @IsTaxIncluded,
+            @Address,
+            @Notes
+        );
+    ";
 
-            await connection.ExecuteAsync(query, header, tx);
-
-            return header;
+            return await connection.QuerySingleAsync<SalesOrderHeader>(
+                query,
+                header,
+                tx
+            );
         }
 
         public async Task<SalesOrderDetail> InsertSalesOrderDetail(
-            SalesOrderDetail detail,
-            IDbConnection connection,
-            IDbTransaction tx
-        )
+    SalesOrderDetail detail,
+    IDbConnection connection,
+    IDbTransaction tx
+)
         {
             string query = @"
-                INSERT INTO sales_order_detail
-                (
-                    order_id,
-                    product_id,
-                    product_code,
-                    product_name,
-                    product_qty,
-                    product_price,
-                    discount_amount,
-                    total_price,
-                    warehouse_id
-                )
-                VALUES
-                (
-                    @OrderId,
-                    @ProductId,
-                    @ProductCode,
-                    @ProductName,
-                    @ProductQty,
-                    @ProductPrice,
-                    @DiscountAmount,
-                    @TotalPrice,
-                    @WareHouseId
-                );
-            ";
+        INSERT INTO sales_order_detail
+        (
+            order_id,
+            product_id,
+            product_code,
+            product_name,
+            product_qty,
+            product_price,
+            discount_amount,
+            total_price,
+            warehouse_id
+        )
+        OUTPUT INSERTED.*
+        VALUES
+        (
+            @OrderId,
+            @ProductId,
+            @ProductCode,
+            @ProductName,
+            @ProductQty,
+            @ProductPrice,
+            @DiscountAmount,
+            @TotalPrice,
+            @WareHouseId
+        );
+    ";
 
-            await connection.ExecuteAsync(query, detail, tx);
-
-            return detail;
+            return await connection.QuerySingleAsync<SalesOrderDetail>(
+                query,
+                detail,
+                tx
+            );
         }
     }
 }

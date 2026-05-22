@@ -1,0 +1,40 @@
+﻿using trinova_erp_backend.Models.Penjualan;
+using trinova_erp_backend.Repositories.Penjualan;
+
+namespace trinova_erp_backend.Usecase.Penjualan
+{
+    public interface IUangMukaUsecase
+    {
+        Task<bool> InsertUangMuka(UangMuka model);
+    }
+
+    public class UangMukaUsecase : IUangMukaUsecase
+    {
+        private readonly IUangMukaRepositories _uangMuka;
+
+        public UangMukaUsecase(IUangMukaRepositories uangMuka)
+        {
+            _uangMuka = uangMuka;
+        }
+
+        public async Task<bool> InsertUangMuka(UangMuka model)
+        {
+            if (model == null)
+                throw new Exception("Data uang muka tidak boleh kosong");
+
+            if (string.IsNullOrWhiteSpace(model.NoFaktur))
+                throw new Exception("No faktur wajib diisi");
+
+            if (model.CustomerId <= 0)
+                throw new Exception("Customer wajib dipilih");
+
+            if (model.NominalUangMuka <= 0)
+                throw new Exception("Nominal uang muka harus lebih dari 0");
+
+            if (string.IsNullOrWhiteSpace(model.CreatedBy))
+                model.CreatedBy = "SYSTEM";
+
+            return await _uangMuka.InsertUangMuka(model);
+        }
+    }
+}

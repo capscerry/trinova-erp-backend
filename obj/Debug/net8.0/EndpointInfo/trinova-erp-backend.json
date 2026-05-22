@@ -1044,6 +1044,37 @@
         }
       }
     },
+    "/api/UangMuka": {
+      "post": {
+        "tags": [
+          "UangMuka"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UangMuka"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UangMuka"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UangMuka"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/WeatherForecast": {
       "get": {
         "tags": [
@@ -1781,6 +1812,79 @@
             "nullable": true
           },
           "update_by": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UangMuka": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "noFaktur": {
+            "type": "string",
+            "nullable": true
+          },
+          "tanggal": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "noPO": {
+            "type": "string",
+            "nullable": true
+          },
+          "nominalUangMuka": {
+            "type": "number",
+            "format": "double"
+          },
+          "isTaxable": {
+            "type": "boolean"
+          },
+          "isTaxIncluded": {
+            "type": "boolean"
+          },
+          "taxAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "syaratPembayaran": {
+            "type": "string",
+            "nullable": true
+          },
+          "alamat": {
+            "type": "string",
+            "nullable": true
+          },
+          "keterangan": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedBy": {
             "type": "string",
             "nullable": true
           }

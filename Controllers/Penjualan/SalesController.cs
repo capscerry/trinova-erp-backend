@@ -140,6 +140,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 {
                     return BadRequest(new
                     {
+                        success = false,
                         message = "Request tidak boleh kosong"
                     });
                 }
@@ -148,6 +149,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 {
                     return BadRequest(new
                     {
+                        success = false,
                         message = "Header sales order wajib diisi"
                     });
                 }
@@ -156,6 +158,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 {
                     return BadRequest(new
                     {
+                        success = false,
                         message = "Detail sales order wajib diisi"
                     });
                 }
@@ -166,7 +169,11 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 {
                     success = true,
                     message = "Sales Order berhasil dibuat",
-                    data = result
+                    data = new
+                    {
+                        header = result.Header,
+                        detail = result.Detail
+                    }
                 });
             }
             catch (Exception ex)

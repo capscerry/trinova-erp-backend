@@ -644,6 +644,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.UangMukaController",
+    "Method": "InsertUangMuka",
+    "RelativePath": "api/UangMuka",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "trinova_erp_backend.Models.Penjualan.UangMuka",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.WeatherForecastController",
     "Method": "Get",
     "RelativePath": "WeatherForecast",
