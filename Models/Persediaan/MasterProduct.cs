@@ -15,8 +15,6 @@ namespace trinova_erp_backend.Models.Persediaan
 
         public string? product_type { get; set; }
 
-        public string? barcode { get; set; }
-
         public int uom_id { get; set; }
 
         public int category_id { get; set; }

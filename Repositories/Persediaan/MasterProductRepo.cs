@@ -27,6 +27,8 @@ namespace trinova_erp_backend.Repositories.Persediaan
         public async Task<List<MasterProduct>> GetAllMasterProduct()
         {
             var result = await _context.MasterProducts
+                .Include(x => x.MasterUom)
+                .Include(x => x.MasterProductCategory)
                 .ToListAsync();
 
             return result;
@@ -37,6 +39,8 @@ namespace trinova_erp_backend.Repositories.Persediaan
         )
         {
             var result = await _context.MasterProducts
+                .Include(x => x.MasterUom)
+                .Include(x => x.MasterProductCategory)
                 .FirstOrDefaultAsync(x =>
                     x.product_id == productId
                 );
@@ -60,6 +64,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
             existingProduct.product_name = model.product_name;
             existingProduct.product_code = model.product_code;
+            existingProduct.product_type = model.product_type;
             existingProduct.category_id = model.category_id;
             existingProduct.uom_id = model.uom_id;
             existingProduct.updated_at = model.updated_at;

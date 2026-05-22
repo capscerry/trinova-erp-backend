@@ -116,14 +116,14 @@ namespace trinova_erp_backend.Controllers.Persediaan
                 return Ok(new
                 {
                     status = true,
-                    message = "Success Delete Data"
+                    message = "Success Delete Product"
                 });
             }
 
             return BadRequest(new
             {
                 status = false,
-                message = "Failed Delete Data"
+                message = "Failed Delete Product"
             });
         }
     }
