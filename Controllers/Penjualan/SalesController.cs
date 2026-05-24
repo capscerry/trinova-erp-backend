@@ -128,7 +128,29 @@ namespace trinova_erp_backend.Controllers.Penjualan
             });
 
         }
+        [HttpGet("/api/sales-order")]
+        public async Task<IActionResult> GetAllSalesOrder()
+        {
+            try
+            {
+                var result = await _salesOrderUsecase.GetAllSalesOrder();
 
+                return Ok(new
+                {
+                    success = true,
+                    message = "Data Sales Order berhasil diambil",
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
         // SALES ORDER CONTROLER 
 
         [HttpPost("/api/sales-order")]

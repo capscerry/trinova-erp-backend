@@ -487,6 +487,16 @@
   },
   {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesController",
+    "Method": "GetAllSalesOrder",
+    "RelativePath": "api/sales-order",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesController",
     "Method": "PopulateSalesOrder",
     "RelativePath": "api/sales-order",
     "HttpMethod": "POST",

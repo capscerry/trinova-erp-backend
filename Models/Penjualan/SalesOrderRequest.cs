@@ -8,11 +8,14 @@
     }
     public class SalesOrderHeader
     {
-        public int Id { get; set; }
+        public int OrderId { get; set; }
+        public int CustomerId { get; set; }
+        public string? CustomerName { get; set; }
         public string SoNumber { get; set; }
         public DateTime? TanggalKirim { get; set; }
         public DateTime? SoDate { get; set; }
-        public int CustomerId { get; set; }
+        public string? PoNumber { get; set; }
+        public decimal? SubTotal { get; set; }
         public Boolean? IsTaxAble { get; set; }
         public Boolean IsTaxIncluded { get; set; }
         public string? Address { get; set; }

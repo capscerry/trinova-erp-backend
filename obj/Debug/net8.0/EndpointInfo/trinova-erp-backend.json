@@ -806,6 +806,16 @@
       }
     },
     "/api/sales-order": {
+      "get": {
+        "tags": [
+          "Sales"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "post": {
         "tags": [
           "Sales"
@@ -1525,9 +1535,17 @@
       "SalesOrderHeader": {
         "type": "object",
         "properties": {
-          "id": {
+          "orderId": {
             "type": "integer",
             "format": "int32"
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "customerName": {
+            "type": "string",
+            "nullable": true
           },
           "soNumber": {
             "type": "string",
@@ -1543,9 +1561,14 @@
             "format": "date-time",
             "nullable": true
           },
-          "customerId": {
-            "type": "integer",
-            "format": "int32"
+          "poNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "subTotal": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           },
           "isTaxAble": {
             "type": "boolean",

@@ -22,6 +22,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
     public interface ISalesOrderUsecase
     {
         Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model);
+        Task<List<SalesOrderHeader>> GetAllSalesOrder();
     }
 
     public class SalesQuotationUsecase : ISalesQuotationUsecase
@@ -162,7 +163,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
                 foreach (var detail in model.Detail)
                 {
-                    detail.OrderId = insertedHeader.Id;
+                    detail.OrderId = insertedHeader.OrderId;
 
                     var insertedDetail = await _salesOrderRepo.InsertSalesOrderDetail(
                         detail,
@@ -181,9 +182,14 @@ namespace trinova_erp_backend.Usecase.Penjualan
             }
             catch
             {
-                tx.Rollback();
+                tx.Rollback();  
                 throw;
             }
+        }
+
+        public async Task<List<SalesOrderHeader>> GetAllSalesOrder()
+        {
+            return await _salesOrderRepo.GetAllSalesOrder();
         }
     }
 }
