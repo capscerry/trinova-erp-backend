@@ -1054,7 +1054,7 @@
         }
       }
     },
-    "/api/UangMuka": {
+    "/api/uang-muka": {
       "post": {
         "tags": [
           "UangMuka"

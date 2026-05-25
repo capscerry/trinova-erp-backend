@@ -53,7 +53,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
 
             using var connection = new SqlConnection(_connectionString);
 
-            await connection.OpenAsync();
+            await connection.OpenAsync();   
 
             var result = await connection.ExecuteAsync(query, data);
 

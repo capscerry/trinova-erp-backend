@@ -656,7 +656,7 @@
   {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.UangMukaController",
     "Method": "InsertUangMuka",
-    "RelativePath": "api/UangMuka",
+    "RelativePath": "api/uang-muka",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,

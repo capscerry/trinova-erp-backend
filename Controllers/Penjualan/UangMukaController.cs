@@ -15,7 +15,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
             _uangMukaUsecase = uangMukaUsecase;
         }
 
-        [HttpPost]
+        [HttpPost("/api/uang-muka")]
         public async Task<IActionResult> InsertUangMuka([FromBody] UangMuka model)
         {
             try
