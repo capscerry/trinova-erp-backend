@@ -6,6 +6,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
     public interface IUangMukaUsecase
     {
         Task<bool> InsertUangMuka(UangMuka model);
+        Task<IEnumerable<UangMuka>> GetAllUangMuka();
     }
 
     public class UangMukaUsecase : IUangMukaUsecase
@@ -35,6 +36,11 @@ namespace trinova_erp_backend.Usecase.Penjualan
                 model.CreatedBy = "SYSTEM";
 
             return await _uangMuka.InsertUangMuka(model);
+        }
+
+        public async Task<IEnumerable<UangMuka>> GetAllUangMuka()
+        {
+            return await _uangMuka.GetAllUangMuka();
         }
     }
 }

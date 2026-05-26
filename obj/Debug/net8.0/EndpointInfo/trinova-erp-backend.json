@@ -1083,6 +1083,16 @@
             "description": "OK"
           }
         }
+      },
+      "get": {
+        "tags": [
+          "UangMuka"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/WeatherForecast": {

@@ -47,5 +47,29 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 });
             }
         }
+
+        [HttpGet("/api/uang-muka")]
+        public async Task<IActionResult> GetAllUangMuka()
+        {
+            try
+            {
+                var result = await _uangMukaUsecase.GetAllUangMuka();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Data uang muka berhasil diambil",
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
     }
 }
