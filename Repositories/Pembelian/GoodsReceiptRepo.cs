@@ -154,12 +154,29 @@ namespace trinova_erp_backend.Repositories.Pembelian
                         {
                             var receipt = new GoodsReceipt()
                             {
-                                goods_receipt_id = reader.GetInt32(reader.GetOrdinal("goods_receipt_id")),
-                                purchase_order_id = reader.GetInt32(reader.GetOrdinal("purchase_order_id")),
-                                receipt_number = reader["receipt_number"].ToString(),
-                                receipt_date = reader.GetDateTime(reader.GetOrdinal("receipt_date")),
-                                received_by = reader["received_by"].ToString(),
-                                status = reader["status"].ToString()
+                                goods_receipt_id =
+                                    reader["goods_receipt_id"] != DBNull.Value
+                                    ? Convert.ToInt32(reader["goods_receipt_id"])
+                                    : 0,
+
+                                purchase_order_id =
+                                    reader["purchase_order_id"] != DBNull.Value
+                                    ? Convert.ToInt32(reader["purchase_order_id"])
+                                    : 0,
+
+                                receipt_number =
+                                    reader["receipt_number"]?.ToString() ?? "",
+
+                                receipt_date =
+                                    reader["receipt_date"] != DBNull.Value
+                                    ? Convert.ToDateTime(reader["receipt_date"])
+                                    : DateTime.Now,
+
+                                received_by =
+                                    reader["received_by"]?.ToString() ?? "",
+
+                                status =
+                                    reader["status"]?.ToString() ?? ""
                             };
 
                             response.Add(receipt);

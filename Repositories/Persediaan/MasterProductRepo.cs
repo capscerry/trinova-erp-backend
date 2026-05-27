@@ -1,5 +1,3 @@
-// Repositories/Persediaan/MasterProductRepo.cs
-
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
@@ -40,7 +38,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     product_name = reader["product_name"].ToString(),
                     product_code = reader["product_code"].ToString(),
                     product_type = reader["product_type"].ToString(),
-                    barcode = reader["barcode"].ToString(),
                     uom_id = Convert.ToInt32(reader["uom_id"]),
                     category_id = Convert.ToInt32(reader["category_id"]),
                     created_at = Convert.ToDateTime(reader["created_at"]),
@@ -78,7 +75,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     product_name = reader["product_name"].ToString(),
                     product_code = reader["product_code"].ToString(),
                     product_type = reader["product_type"].ToString(),
-                    barcode = reader["barcode"].ToString(),
                     uom_id = Convert.ToInt32(reader["uom_id"]),
                     category_id = Convert.ToInt32(reader["category_id"]),
                     created_at = Convert.ToDateTime(reader["created_at"]),
@@ -98,7 +94,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     product_name,
                     product_code,
                     product_type,
-                    barcode,
                     uom_id,
                     category_id,
                     created_at,
@@ -109,7 +104,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     @product_name,
                     @product_code,
                     @product_type,
-                    @barcode,
                     @uom_id,
                     @category_id,
                     @created_at,
@@ -122,7 +116,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@product_name", model.product_name ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@product_code", model.product_code ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@product_type", model.product_type ?? (object)DBNull.Value);
-            command.Parameters.AddWithValue("@barcode", model.barcode ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@uom_id", model.uom_id);
             command.Parameters.AddWithValue("@category_id", model.category_id);
             command.Parameters.AddWithValue("@created_at", model.created_at ?? DateTime.Now);
@@ -144,7 +137,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     product_name = @product_name,
                     product_code = @product_code,
                     product_type = @product_type,
-                    barcode = @barcode,
                     uom_id = @uom_id,
                     category_id = @category_id,
                     updated_at = @updated_at
@@ -157,7 +149,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@product_name", model.product_name ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@product_code", model.product_code ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@product_type", model.product_type ?? (object)DBNull.Value);
-            command.Parameters.AddWithValue("@barcode", model.barcode ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@uom_id", model.uom_id);
             command.Parameters.AddWithValue("@category_id", model.category_id);
             command.Parameters.AddWithValue("@updated_at", DateTime.Now);

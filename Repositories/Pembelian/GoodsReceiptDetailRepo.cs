@@ -51,20 +51,24 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
                     int result = await command.ExecuteNonQueryAsync();
 
-                    // =========================
-                    // AUTO UPDATE INVENTORY
-                    // =========================
+                    // ====================================================
+                    // AUTO UPDATE INVENTORY STOCK
+                    // ====================================================
 
                     const string checkStockQuery = @"
-                        SELECT COUNT(*) 
-                        FROM inventory_stock 
+                        SELECT COUNT(*)
+                        FROM inventory_stock
                         WHERE product_id = @product_id";
 
-                    using (SqlCommand checkCommand = new SqlCommand(checkStockQuery, connection))
+                    using (SqlCommand checkCommand =
+                           new SqlCommand(checkStockQuery, connection))
                     {
-                        checkCommand.Parameters.AddWithValue("@product_id", model.product_id);
+                        checkCommand.Parameters.AddWithValue(
+                            "@product_id",
+                            model.product_id);
 
-                        int stockExists = (int)await checkCommand.ExecuteScalarAsync();
+                        int stockExists =
+                            (int)await checkCommand.ExecuteScalarAsync();
 
                         if (stockExists > 0)
                         {
@@ -75,10 +79,16 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                     updated_at = GETDATE()
                                 WHERE product_id = @product_id";
 
-                            using (SqlCommand updateCommand = new SqlCommand(updateStockQuery, connection))
+                            using (SqlCommand updateCommand =
+                                   new SqlCommand(updateStockQuery, connection))
                             {
-                                updateCommand.Parameters.AddWithValue("@quantity", model.quantity);
-                                updateCommand.Parameters.AddWithValue("@product_id", model.product_id);
+                                updateCommand.Parameters.AddWithValue(
+                                    "@quantity",
+                                    model.quantity);
+
+                                updateCommand.Parameters.AddWithValue(
+                                    "@product_id",
+                                    model.product_id);
 
                                 await updateCommand.ExecuteNonQueryAsync();
                             }
@@ -105,14 +115,70 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                     GETDATE()
                                 )";
 
-                            using (SqlCommand insertCommand = new SqlCommand(insertStockQuery, connection))
+                            using (SqlCommand insertCommand =
+                                   new SqlCommand(insertStockQuery, connection))
                             {
-                                insertCommand.Parameters.AddWithValue("@product_id", model.product_id);
-                                insertCommand.Parameters.AddWithValue("@quantity", model.quantity);
+                                insertCommand.Parameters.AddWithValue(
+                                    "@product_id",
+                                    model.product_id);
+
+                                insertCommand.Parameters.AddWithValue(
+                                    "@quantity",
+                                    model.quantity);
 
                                 await insertCommand.ExecuteNonQueryAsync();
                             }
                         }
+                    }
+
+                    // ====================================================
+                    // INSERT STOCK TRANSACTION LOG
+                    // ====================================================
+
+                    const string insertTransactionQuery = @"
+                        INSERT INTO stock_transaction
+                        (
+                            product_id,
+                            warehouse_id,
+                            transaction_type,
+                            quantity,
+                            reference_module,
+                            reference_id,
+                            remarks,
+                            created_at
+                        )
+                        VALUES
+                        (
+                            @product_id,
+                            NULL,
+                            'IN',
+                            @quantity,
+                            'Goods Receipt',
+                            @reference_id,
+                            @remarks,
+                            GETDATE()
+                        )";
+
+                    using (SqlCommand transactionCommand =
+                           new SqlCommand(insertTransactionQuery, connection))
+                    {
+                        transactionCommand.Parameters.AddWithValue(
+                            "@product_id",
+                            model.product_id);
+
+                        transactionCommand.Parameters.AddWithValue(
+                            "@quantity",
+                            model.quantity);
+
+                        transactionCommand.Parameters.AddWithValue(
+                            "@reference_id",
+                            model.goods_receipt_id);
+
+                        transactionCommand.Parameters.AddWithValue(
+                            "@remarks",
+                            "Stock added from Goods Receipt");
+
+                        await transactionCommand.ExecuteNonQueryAsync();
                     }
 
                     return result > 0;

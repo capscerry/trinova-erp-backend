@@ -5,7 +5,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface IPurchaseOrderUsecase
     {
-        Task<string> InsertPurchaseOrder(PurchaseOrder model);
+        Task<int> InsertPurchaseOrder(PurchaseOrder model);
 
         Task<List<PurchaseOrder>> GetAllPurchaseOrder();
 
@@ -28,7 +28,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
             _supplierRepo = supplierRepo;
         }
 
-        public async Task<string> InsertPurchaseOrder(PurchaseOrder model)
+        public async Task<int> InsertPurchaseOrder(PurchaseOrder model)
         {
             // VALIDATE SUPPLIER
             var supplier =
@@ -38,12 +38,12 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
             if (supplier == null)
             {
-                return "Supplier not found";
+                return 0;
             }
 
             if (supplier.status != "Active")
             {
-                return "Supplier is inactive";
+                return 0;
             }
 
             // AUTO CREATED DATE
@@ -58,12 +58,10 @@ namespace trinova_erp_backend.Usecase.Pembelian
             model.po_number =
                 $"PO-{today}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
 
-            var result = await _purchaseOrderRepo
-                .InsertPurchaseOrder(model);
+            var result =
+                await _purchaseOrderRepo.InsertPurchaseOrder(model);
 
-            return result
-                ? "Insert Successfully"
-                : "Insert Failed";
+            return result;
         }
 
         public async Task<List<PurchaseOrder>> GetAllPurchaseOrder()
