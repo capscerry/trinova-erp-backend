@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+// using trinova_erp_backend.Models.Persediaan;
 
 namespace trinova_erp_backend.Models
 {
@@ -11,7 +12,7 @@ namespace trinova_erp_backend.Models
 
         public int purchase_order_id { get; set; }
 
-        public string product_name { get; set; } = string.Empty;
+        public int product_id { get; set; }
 
         public int quantity { get; set; }
 
@@ -23,5 +24,8 @@ namespace trinova_erp_backend.Models
 
         [ForeignKey("purchase_order_id")]
         public PurchaseOrder? PurchaseOrder { get; set; }
+
+        // [ForeignKey("product_id")]
+        // public MasterProduct? MasterProduct { get; set; }
     }
 }

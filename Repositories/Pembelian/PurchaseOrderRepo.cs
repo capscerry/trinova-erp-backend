@@ -7,7 +7,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
 {
     public interface IPurchaseOrderRepo
     {
-        Task<bool> InsertPurchaseOrder(PurchaseOrder model);
+        Task<int> InsertPurchaseOrder(PurchaseOrder model);
 
         Task<List<PurchaseOrder>> GetAllPurchaseOrder();
 
@@ -29,7 +29,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
         }
 
         // INSERT
-        public async Task<bool> InsertPurchaseOrder(PurchaseOrder model)
+        public async Task<int> InsertPurchaseOrder(PurchaseOrder model)
         {
             const string query = @"
                 INSERT INTO purchase_order
@@ -41,6 +41,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     total_amount,
                     created_at
                 )
+                OUTPUT INSERTED.purchase_order_id
                 VALUES
                 (
                     @po_number,
@@ -64,14 +65,17 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     command.Parameters.AddWithValue("@status", model.status);
                     command.Parameters.AddWithValue("@total_amount", model.total_amount);
 
-                    int result = await command.ExecuteNonQueryAsync();
+                    int insertedId =
+                        Convert.ToInt32(
+                            await command.ExecuteScalarAsync()
+                        );
 
-                    return result > 0;
+                    return insertedId;
                 }
             }
             catch (Exception)
             {
-                return false;
+                return 0;
             }
         }
 
