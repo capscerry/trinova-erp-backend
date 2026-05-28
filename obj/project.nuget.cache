@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "4ut+8eZBiFE=",
+  "dgSpecHash": "jjsD84T/Dbg=",
   "success": true,
   "projectFilePath": "C:\\ENO\\trinova-erp-backend\\trinova-erp-backend.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\it.magang10\\.nuget\\packages\\azure.core\\1.35.0\\azure.core.1.35.0.nupkg.sha512",
     "C:\\Users\\it.magang10\\.nuget\\packages\\azure.identity\\1.10.3\\azure.identity.1.10.3.nupkg.sha512",
+    "C:\\Users\\it.magang10\\.nuget\\packages\\bcrypt.net-next\\4.2.0\\bcrypt.net-next.4.2.0.nupkg.sha512",
     "C:\\Users\\it.magang10\\.nuget\\packages\\dapper\\2.1.72\\dapper.2.1.72.nupkg.sha512",
     "C:\\Users\\it.magang10\\.nuget\\packages\\dotnetenv\\3.2.0\\dotnetenv.3.2.0.nupkg.sha512",
     "C:\\Users\\it.magang10\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",

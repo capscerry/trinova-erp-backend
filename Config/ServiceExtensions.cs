@@ -1,7 +1,8 @@
 ﻿using trinova_erp_backend.Repositories.Pembelian;
 using trinova_erp_backend.Repositories.Penjualan;
 using trinova_erp_backend.Repositories.Persediaan;
-
+using trinova_erp_backend.Repositories.User;
+using trinova_erp_backend.Usecase;
 using trinova_erp_backend.Usecase.Pembelian;
 using trinova_erp_backend.Usecase.Penjualan;
 using trinova_erp_backend.Usecase.Persediaan;
@@ -61,6 +62,12 @@ namespace trinova_erp_backend.Config
             services.AddScoped<IMasterWarehouseUsecase, MasterWarehouseUsecase>();
             services.AddScoped<InventoryStockUsecase>();
             services.AddScoped<StockTransactionUsecase>();
+
+
+
+            // USER 
+            services.AddScoped<IMasterUserRepositories, MasterUserRepositories>();
+            services.AddScoped<IMasterUserUsecase, MasterUserUsecase>();
 
 
 

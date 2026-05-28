@@ -120,6 +120,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.GoodsReceiptDetailController",
+    "Method": "InsertGoodsReceiptDetail",
+    "RelativePath": "api/goods-receipt-detail",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "goodsReceiptDetail",
+        "Type": "trinova_erp_backend.Models.GoodsReceiptDetail",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Pembelian.GoodsReceiptController",
     "Method": "DeleteGoodsReceipt",
     "RelativePath": "api/goods-receipt/{id}",
@@ -418,6 +434,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.UserController",
+    "Method": "GetAllRole",
+    "RelativePath": "api/role-list",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesController",
     "Method": "InsertCategorySales",
     "RelativePath": "api/sales-category",
@@ -680,24 +706,13 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "trinova_erp_backend.Controllers.WeatherForecastController",
-    "Method": "Get",
-    "RelativePath": "WeatherForecast",
+    "ContainingType": "trinova_erp_backend.Controllers.UserController",
+    "Method": "GetAllUser",
+    "RelativePath": "api/user-list",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[trinova_erp_backend.WeatherForecast, trinova-erp-backend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ],
-    "EndpointName": "GetWeatherForecast"
+    "ReturnTypes": []
   }
 ]
