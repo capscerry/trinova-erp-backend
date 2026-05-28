@@ -68,6 +68,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.MasterUserController",
+    "Method": "CreateUser",
+    "RelativePath": "api/create-user",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "trinova_erp_backend.Models.DTO.MasterUserDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.CustomerController",
     "Method": "InsertCustomer",
     "RelativePath": "api/customer",
@@ -434,7 +450,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "trinova_erp_backend.Controllers.UserController",
+    "ContainingType": "trinova_erp_backend.Controllers.MasterUserController",
     "Method": "GetAllRole",
     "RelativePath": "api/role-list",
     "HttpMethod": "GET",
@@ -680,6 +696,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.MasterUserController",
+    "Method": "ToggleUserStatus",
+    "RelativePath": "api/toggle-user-status/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.UangMukaController",
     "Method": "InsertUangMuka",
     "RelativePath": "api/uang-muka",
@@ -706,7 +738,23 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "trinova_erp_backend.Controllers.UserController",
+    "ContainingType": "trinova_erp_backend.Controllers.MasterUserController",
+    "Method": "UpdateUser",
+    "RelativePath": "api/update-user",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "trinova_erp_backend.Models.DTO.MasterUserDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.MasterUserController",
     "Method": "GetAllUser",
     "RelativePath": "api/user-list",
     "HttpMethod": "GET",

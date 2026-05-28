@@ -30,7 +30,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     mp.product_code    AS ProductCode,
                     mp.product_name    AS ProductName,
                     mp.product_type    AS ProductType,
-                    mp.barcode         AS Barcode,
                     mpc.category_id    AS CategoryId,
                     mpc.category_name  AS CategoryName,
                     mu.uom_code        AS Uom

@@ -24,16 +24,18 @@ namespace trinova_erp_backend.Repositories.Penjualan
 
         public async Task<IEnumerable<UangMuka>> GetAllUangMuka()
         {
-            string query = @"
-        SELECT 
-            Id,
-            NoFaktur,
-            Tanggal,
-            CustomerId,
-            NoPO,
-            NominalUangMuka,
-            TotalAmount
-        FROM uang_muka";
+            string query = @" SELECT 
+                                 um.Id,
+                                 um.NoFaktur,
+                                 um.Tanggal,
+                                 um.CustomerId,
+                                 mc.customer_name AS CustomerName,
+                                 um.NoSo As SoNumber,
+                                 um.NoPO,
+                                 um.NominalUangMuka,
+                                 um.TotalAmount
+                             FROM uang_muka as um join master_customer as mc
+                             ON um.CustomerId = mc.customer_id ";
 
             using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
@@ -56,6 +58,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     TaxAmount,
                     TotalAmount,
                     SyaratPembayaran,
+                    NoSo,
                     Alamat,
                     Keterangan,
                     CreatedBy
@@ -70,6 +73,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @TaxAmount,
                     @TotalAmount,
                     @SyaratPembayaran,
+                    @SoNumber,
                     @Alamat,
                     @Keterangan,
                     @CreatedBy
