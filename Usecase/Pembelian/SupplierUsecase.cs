@@ -5,50 +5,78 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface ISupplierUsecase
     {
-        Task<string> InsertSupplier(Supplier model);
+        Task<Supplier?> InsertSupplier(
+            Supplier model
+        );
 
-        Task<List<Supplier>> GetAllSupplier();
+        Task<List<Supplier>>
+            GetAllSupplier();
 
-        Task<bool> UpdateSupplier(Supplier model);
+        Task<bool>
+            UpdateSupplier(
+                Supplier model
+            );
 
-        Task<bool> DeleteSupplier(int id);
+        Task<bool>
+            DeleteSupplier(
+                int id
+            );
     }
 
-    public class SupplierUsecase : ISupplierUsecase
+    public class SupplierUsecase
+        : ISupplierUsecase
     {
-        private readonly ISupplierRepo _supplierRepo;
+        private readonly ISupplierRepo
+            _supplierRepo;
 
-        public SupplierUsecase(ISupplierRepo supplierRepo)
+        public SupplierUsecase(
+            ISupplierRepo supplierRepo
+        )
         {
-            _supplierRepo = supplierRepo;
+            _supplierRepo =
+                supplierRepo;
         }
 
-        public async Task<string> InsertSupplier(Supplier model)
-        {
-            var result = await _supplierRepo.InsertSupplier(model);
+        // ─── INSERT ─────────────────────────────
 
-            return result ? "Insert Successfully" : "Insert Failed";
+        public async Task<Supplier?>
+            InsertSupplier(
+                Supplier model
+            )
+        {
+            return await _supplierRepo
+                .InsertSupplier(model);
         }
 
-        public async Task<List<Supplier>> GetAllSupplier()
-        {
-            var result = await _supplierRepo.GetAllSupplier();
+        // ─── GET ALL ────────────────────────────
 
-            return result;
+        public async Task<List<Supplier>>
+            GetAllSupplier()
+        {
+            return await _supplierRepo
+                .GetAllSupplier();
         }
 
-        public async Task<bool> UpdateSupplier(Supplier model)
-        {
-            var result = await _supplierRepo.UpdateSupplier(model);
+        // ─── UPDATE ─────────────────────────────
 
-            return result;
+        public async Task<bool>
+            UpdateSupplier(
+                Supplier model
+            )
+        {
+            return await _supplierRepo
+                .UpdateSupplier(model);
         }
 
-        public async Task<bool> DeleteSupplier(int id)
-        {
-            var result = await _supplierRepo.DeleteSupplier(id);
+        // ─── DELETE ─────────────────────────────
 
-            return result;
+        public async Task<bool>
+            DeleteSupplier(
+                int id
+            )
+        {
+            return await _supplierRepo
+                .DeleteSupplier(id);
         }
     }
 }
