@@ -76,5 +76,29 @@ namespace trinova_erp_backend.Controllers.Persediaan
                 message = "Failed Delete Data"
             });
         }
+
+        [HttpGet("/api/product-data")]
+        public async Task<IActionResult> GetProductData()
+        {
+            try
+            {
+                var result = await _masterProductUsecase.GetAllProduct();
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Fetch Data ",
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {   
+                    status = false,
+                    message = ex.Message,
+                    data = (object?)null
+                });
+            }
+        }
     }
 }

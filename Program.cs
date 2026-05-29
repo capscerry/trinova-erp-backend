@@ -13,6 +13,17 @@ builder.Services.Configure<DatabaseConnection>(options =>
     options.SQLServer = Env.GetString("SQL_CONNECTION_STRING_DEV");
 });
 
+
+builder.Services.Configure<JwtSettings>(options =>
+{
+    options.Secret = Env.GetString("JWT_SECRET_KEY");
+    options.Issuer = Env.GetString("JWT_ISSUER");
+    options.Audience = Env.GetString("JWT_AUDIENCE");
+    options.ExpirationMinutes = int.TryParse(Env.GetString("JWT_EXPIRE_MINUTES", "60"), out var exp) ? exp : 60;
+});
+
+
+
 builder.Services.AddApplicationServices();
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();

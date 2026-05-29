@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="Dapper" Version="2.1.72" />
     <PackageReference Include="DotNetEnv" Version="3.2.0" />
     <PackageReference Include="ExcelDataReader" Version="3.8.0" />
@@ -28,7 +29,6 @@
   <ItemGroup>
     <Folder Include="Controllers\Persediaan\" />
     <Folder Include="Controllers\Pembelian\" />
-    <Folder Include="Models\DTO\" />
     <Folder Include="Services\" />
   </ItemGroup>
 

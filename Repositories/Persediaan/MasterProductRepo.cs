@@ -1,3 +1,6 @@
+// Repositories/Persediaan/MasterProductRepo.cs
+
+using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
@@ -14,14 +17,46 @@ namespace trinova_erp_backend.Repositories.Persediaan
             _connectionString = options.Value.SQLServer!;
         }
 
-        // GET ALL
+        // =========================================================
+        // GET ALL PRODUCT DTO
+        // =========================================================
+        public async Task<List<ProductDTO>> GetAllProduct()
+        {
+            using var connection = new SqlConnection(_connectionString);
+
+            string query = @"
+                SELECT
+                    mp.product_id      AS ProductId,
+                    mp.product_code    AS ProductCode,
+                    mp.product_name    AS ProductName,
+                    mp.product_type    AS ProductType,
+                    mpc.category_id    AS CategoryId,
+                    mpc.category_name  AS CategoryName,
+                    mu.uom_code        AS Uom
+                FROM master_product mp
+                JOIN master_product_category mpc
+                    ON mp.category_id = mpc.category_id
+                JOIN master_uom mu
+                    ON mp.uom_id = mu.uom_id
+                ORDER BY mp.product_name
+            ";
+
+            var result = await connection.QueryAsync<ProductDTO>(query);
+
+            return result.ToList();
+        }
+
+        // =========================================================
+        // GET ALL MASTER PRODUCT
+        // =========================================================
         public async Task<List<MasterProduct>> GetAllMasterProduct()
         {
             var response = new List<MasterProduct>();
 
             const string query = @"
                 SELECT *
-                FROM master_product";
+                FROM master_product
+                ORDER BY product_name";
 
             using SqlConnection connection = new SqlConnection(_connectionString);
             using SqlCommand command = new SqlCommand(query, connection);
@@ -35,9 +70,10 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 response.Add(new MasterProduct
                 {
                     product_id = Convert.ToInt32(reader["product_id"]),
-                    product_name = reader["product_name"].ToString(),
-                    product_code = reader["product_code"].ToString(),
-                    product_type = reader["product_type"].ToString(),
+                    product_name = reader["product_name"]?.ToString(),
+                    product_code = reader["product_code"]?.ToString(),
+                    product_type = reader["product_type"]?.ToString(),
+                    barcode = reader["barcode"]?.ToString(),
                     uom_id = Convert.ToInt32(reader["uom_id"]),
                     category_id = Convert.ToInt32(reader["category_id"]),
                     created_at = Convert.ToDateTime(reader["created_at"]),
@@ -48,7 +84,9 @@ namespace trinova_erp_backend.Repositories.Persediaan
             return response;
         }
 
+        // =========================================================
         // GET BY ID
+        // =========================================================
         public async Task<MasterProduct?> GetMasterProductById(int productId)
         {
             MasterProduct? response = null;
@@ -72,9 +110,10 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 response = new MasterProduct
                 {
                     product_id = Convert.ToInt32(reader["product_id"]),
-                    product_name = reader["product_name"].ToString(),
-                    product_code = reader["product_code"].ToString(),
-                    product_type = reader["product_type"].ToString(),
+                    product_name = reader["product_name"]?.ToString(),
+                    product_code = reader["product_code"]?.ToString(),
+                    product_type = reader["product_type"]?.ToString(),
+                    barcode = reader["barcode"]?.ToString(),
                     uom_id = Convert.ToInt32(reader["uom_id"]),
                     category_id = Convert.ToInt32(reader["category_id"]),
                     created_at = Convert.ToDateTime(reader["created_at"]),
@@ -85,7 +124,9 @@ namespace trinova_erp_backend.Repositories.Persediaan
             return response;
         }
 
+        // =========================================================
         // INSERT
+        // =========================================================
         public async Task<bool> InsertMasterProduct(MasterProduct model)
         {
             const string query = @"
@@ -94,6 +135,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     product_name,
                     product_code,
                     product_type,
+                    barcode,
                     uom_id,
                     category_id,
                     created_at,
@@ -104,6 +146,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     @product_name,
                     @product_code,
                     @product_type,
+                    @barcode,
                     @uom_id,
                     @category_id,
                     @created_at,
@@ -116,6 +159,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@product_name", model.product_name ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@product_code", model.product_code ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@product_type", model.product_type ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@barcode", model.barcode ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@uom_id", model.uom_id);
             command.Parameters.AddWithValue("@category_id", model.category_id);
             command.Parameters.AddWithValue("@created_at", model.created_at ?? DateTime.Now);
@@ -128,7 +172,9 @@ namespace trinova_erp_backend.Repositories.Persediaan
             return result > 0;
         }
 
+        // =========================================================
         // UPDATE
+        // =========================================================
         public async Task<bool> UpdateMasterProduct(MasterProduct model)
         {
             const string query = @"
@@ -137,6 +183,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     product_name = @product_name,
                     product_code = @product_code,
                     product_type = @product_type,
+                    barcode = @barcode,
                     uom_id = @uom_id,
                     category_id = @category_id,
                     updated_at = @updated_at
@@ -149,6 +196,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@product_name", model.product_name ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@product_code", model.product_code ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@product_type", model.product_type ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@barcode", model.barcode ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@uom_id", model.uom_id);
             command.Parameters.AddWithValue("@category_id", model.category_id);
             command.Parameters.AddWithValue("@updated_at", DateTime.Now);
@@ -160,7 +208,9 @@ namespace trinova_erp_backend.Repositories.Persediaan
             return result > 0;
         }
 
+        // =========================================================
         // DELETE
+        // =========================================================
         public async Task<bool> DeleteMasterProduct(int productId)
         {
             const string query = @"

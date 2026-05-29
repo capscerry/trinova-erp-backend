@@ -19,6 +19,12 @@ namespace trinova_erp_backend.Usecase.Penjualan
         Task<string> InsertSalesQuotation(SalesQuotation quotation);
     }
 
+    public interface ISalesOrderUsecase
+    {
+        Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model);
+        Task<List<SalesOrderHeader>> GetAllSalesOrder();
+    }
+
     public class SalesQuotationUsecase : ISalesQuotationUsecase
     {
         private readonly string _connectionString;
@@ -124,4 +130,66 @@ namespace trinova_erp_backend.Usecase.Penjualan
         }
     }
 
+    public class SalesOrderUsecase : ISalesOrderUsecase
+    {
+        private readonly ISalesOrderRepositories _salesOrderRepo;
+        private readonly string _connectionString;
+        public SalesOrderUsecase(ISalesOrderRepositories salesOrderRepo,IOptions<DatabaseConnection> options)
+        {
+            _salesOrderRepo = salesOrderRepo;
+            _connectionString = options.Value.SQLServer;
+
+        }
+
+        public async Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var tx = connection.BeginTransaction();
+
+            try
+            {
+                // Insert header dan ambil hasil header yang sudah ada Id
+                var insertedHeader = await _salesOrderRepo.InsertSalesOrderHeader(
+                    model.Header,
+                    connection,
+                    tx
+                );
+
+                model.Header = insertedHeader;
+
+                var insertedDetails = new List<SalesOrderDetail>();
+
+                foreach (var detail in model.Detail)
+                {
+                    detail.OrderId = insertedHeader.OrderId;
+
+                    var insertedDetail = await _salesOrderRepo.InsertSalesOrderDetail(
+                        detail,
+                        connection,
+                        tx
+                    );
+
+                    insertedDetails.Add(insertedDetail);
+                }
+
+                model.Detail = insertedDetails;
+
+                tx.Commit();
+
+                return model;
+            }
+            catch
+            {
+                tx.Rollback();  
+                throw;
+            }
+        }
+
+        public async Task<List<SalesOrderHeader>> GetAllSalesOrder()
+        {
+            return await _salesOrderRepo.GetAllSalesOrder();
+        }
+    }
 }
