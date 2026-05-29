@@ -21,6 +21,17 @@ namespace trinova_erp_backend.Controllers.Persediaan
             return Ok(await _usecase.GetAllAsync());
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var result = await _usecase.GetByIdAsync(id);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create(StockTransaction transaction)
         {

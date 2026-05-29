@@ -13,10 +13,15 @@ namespace trinova_erp_backend.Models.Persediaan
         public int product_id { get; set; }
 
         [Required]
+        public int warehouse_id { get; set; }
+
+        [Required]
         public string transaction_type { get; set; } = string.Empty;
 
         [Required]
-        public int quantity { get; set; }
+        public decimal quantity { get; set; }
+
+        public string? reference_no { get; set; }
 
         public string? reference_module { get; set; }
 
@@ -25,5 +30,11 @@ namespace trinova_erp_backend.Models.Persediaan
         public string? remarks { get; set; }
 
         public DateTime created_at { get; set; }
+
+        [ForeignKey(nameof(product_id))]
+        public MasterProduct? Product { get; set; }
+
+        [ForeignKey(nameof(warehouse_id))]
+        public MasterWarehouse? Warehouse { get; set; }
     }
 }

@@ -85,6 +85,16 @@ namespace trinova_erp_backend.Data
                 .WithMany()
                 .HasForeignKey(x => x.warehouse_id);
 
+            modelBuilder.Entity<StockTransaction>()
+                .HasOne(x => x.Product)
+                .WithMany()
+                .HasForeignKey(x => x.product_id);
+
+            modelBuilder.Entity<StockTransaction>()
+                .HasOne(x => x.Warehouse)
+                .WithMany()
+                .HasForeignKey(x => x.warehouse_id);
+
             // =========================
             // TRANSACTION
             // =========================
