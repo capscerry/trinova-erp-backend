@@ -33,6 +33,7 @@ namespace trinova_erp_backend.Data
      
         public DbSet<StockTransaction> StockTransactions { get; set; }
 
+        public DbSet<ProductSubcategory> MasterProductSubcategories { get; set; }
         // =========================
         // TRANSACTION
         // =========================
@@ -81,6 +82,11 @@ namespace trinova_erp_backend.Data
 
             modelBuilder.Entity<GoodsReceipt>()
                 .ToTable("goods_receipt");
+
+            modelBuilder.Entity<ProductSubcategory>()
+                .HasOne(x => x.Category)
+                .WithMany()
+                .HasForeignKey(x => x.category_id);
         }
     }
 }
