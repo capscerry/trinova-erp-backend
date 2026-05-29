@@ -55,6 +55,30 @@ namespace trinova_erp_backend.Controllers.Persediaan
             });
         }
 
+        [HttpPut("/api/master-warehouse")]
+        public async Task<IActionResult> UpdateMasterWarehouse(
+            [FromBody] MasterWarehouse masterWarehouse
+        )
+        {
+            var result = await _masterWarehouseUsecase
+                .UpdateMasterWarehouse(masterWarehouse);
+
+            if (result)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Update Data"
+                });
+            }
+
+            return BadRequest(new
+            {
+                status = false,
+                message = "Failed Update Data"
+            });
+        }
+
         [HttpDelete("/api/master-warehouse/{id}")]
         public async Task<IActionResult> DeleteMasterWarehouse(int id)
         {
