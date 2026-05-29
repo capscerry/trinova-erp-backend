@@ -15,12 +15,22 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
         public async Task<List<InventoryStock>> GetAllAsync()
         {
-            return await _context.InventoryStocks.ToListAsync();
+            return await _context.InventoryStocks
+                .Include(x => x.Product!)
+                .ThenInclude(x => x.ProductSubcategory)
+                .Include(x => x.Warehouse)
+                .ToListAsync();
         }
 
         public async Task<InventoryStock?> GetByIdAsync(int id)
         {
-            return await _context.InventoryStocks.FindAsync(id);
+            return await _context.InventoryStocks
+                .Include(x => x.Product!)
+                .ThenInclude(x => x.ProductSubcategory)
+                .Include(x => x.Warehouse)
+                .FirstOrDefaultAsync(x =>
+                    x.stock_id == id
+                );
         }
 
         public async Task<InventoryStock> CreateAsync(InventoryStock stock)

@@ -70,6 +70,21 @@ namespace trinova_erp_backend.Data
             modelBuilder.Entity<MasterWarehouse>()
                 .ToTable("master_warehouse");
 
+            modelBuilder.Entity<ProductSubcategory>()
+                .HasOne(x => x.Category)
+                .WithMany()
+                .HasForeignKey(x => x.category_id);
+
+            modelBuilder.Entity<InventoryStock>()
+                .HasOne(x => x.Product)
+                .WithMany()
+                .HasForeignKey(x => x.product_id);
+
+            modelBuilder.Entity<InventoryStock>()
+                .HasOne(x => x.Warehouse)
+                .WithMany()
+                .HasForeignKey(x => x.warehouse_id);
+
             // =========================
             // TRANSACTION
             // =========================
