@@ -1,5 +1,21 @@
 [
   {
+    "ContainingType": "trinova_erp_backend.Controllers.MasterUserController",
+    "Method": "LoginUser",
+    "RelativePath": "api/auth/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "payload",
+        "Type": "trinova_erp_backend.Models.DTO.LoginRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.CustomerController",
     "Method": "InsertCategory",
     "RelativePath": "api/category-customer",

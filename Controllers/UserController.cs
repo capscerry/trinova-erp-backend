@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Usecase;
@@ -13,6 +14,39 @@ namespace trinova_erp_backend.Controllers
         {
             _masterUser = masterUser;
         }
+
+        [HttpPost("/api/auth/login")]
+        public async Task<IActionResult> LoginUser([FromBody] LoginRequest payload)
+        {
+            try
+            {
+                var result = await _masterUser.LoginUserAsync(payload);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Login berhasil",
+                    data = result
+                });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
+
 
         [HttpGet("/api/user-list")]
         public async Task<IActionResult> GetAllUser()

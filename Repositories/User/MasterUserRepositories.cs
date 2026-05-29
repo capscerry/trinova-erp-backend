@@ -43,7 +43,7 @@ namespace trinova_erp_backend.Repositories.User
             return result.ToList();
         }
 
-        public async Task<MasterUserDTO> GetUserByName(string name)
+        public async Task<MasterUserDTO> GetUserByEmail(string name)
         {
             string query  = @"SELECT 
                                 mu.id AS Id,
@@ -51,8 +51,10 @@ namespace trinova_erp_backend.Repositories.User
                                 mu.email As Email,
                                 mr.role_name AS RoleName,
                                 mr.id As RoleId,   
+                                mu.password As Password,
                                 mu.is_active AS Status
-                            FROM master_user mu JOIN master_role mr on mu.role_id = mr.id";
+                            FROM master_user mu JOIN master_role mr on mu.role_id = mr.id 
+                            WHERE mu.email = @Email";
             using var connection = new SqlConnection(_connectionString);
 
             var result = await connection.QueryFirstOrDefaultAsync<MasterUserDTO>(
@@ -64,8 +66,6 @@ namespace trinova_erp_backend.Repositories.User
                 );
 
             return result;
-
-
         }
 
         public async Task<bool> UpdateUser(MasterUserDTO dataUpdate)
