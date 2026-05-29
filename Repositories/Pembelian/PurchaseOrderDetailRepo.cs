@@ -35,7 +35,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 INSERT INTO purchase_order_detail
                 (
                     purchase_order_id,
-                    product_name,
+                    product_id,
                     uom_id,
                     quantity,
                     price,
@@ -44,7 +44,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 VALUES
                 (
                     @purchase_order_id,
-                    @product_name,
+                    @product_id,
                     @uom_id,
                     @quantity,
                     @price,
@@ -59,7 +59,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     await connection.OpenAsync();
 
                     command.Parameters.AddWithValue("@purchase_order_id", model.purchase_order_id);
-                    command.Parameters.AddWithValue("@product_name", model.product_name);
+                    command.Parameters.AddWithValue("@product_id", model.product_id);
                     command.Parameters.AddWithValue("@uom_id", model.uom_id);
                     command.Parameters.AddWithValue("@quantity", model.quantity);
                     command.Parameters.AddWithValue("@price", model.price ?? 0);
@@ -87,7 +87,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
             const string query = @"
                 UPDATE purchase_order_detail
                 SET
-                    product_name = @product_name,
+                    product_id = @product_id,
                     uom_id = @uom_id,
                     quantity = @quantity,
                     price = @price,
@@ -102,7 +102,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     await connection.OpenAsync();
 
                     command.Parameters.AddWithValue("@purchase_order_detail_id", model.purchase_order_detail_id);
-                    command.Parameters.AddWithValue("@product_name", model.product_name);
+                    command.Parameters.AddWithValue("@product_id", model.product_id);
                     command.Parameters.AddWithValue("@uom_id", model.uom_id);
                     command.Parameters.AddWithValue("@quantity", model.quantity);
                     command.Parameters.AddWithValue("@price", model.price ?? 0);
@@ -223,8 +223,10 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                         )
                                     ),
 
-                                product_name =
-                                    reader["product_name"].ToString(),
+                                product_id =
+                                    reader["product_id"] != DBNull.Value
+                                        ? Convert.ToInt32(reader["product_id"])
+                                        : 0,
 
                                 uom_id =
                                     reader["uom_id"] != DBNull.Value
