@@ -111,9 +111,10 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     return result > 0;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;
+                Console.WriteLine(ex.ToString());
+                throw;
             }
         }
 
