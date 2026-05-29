@@ -121,8 +121,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
         public async Task<bool> DeletePurchaseOrder(int id)
         {
             const string query = @"
-                DELETE FROM purchase_order
-                WHERE purchase_order_id = @id";
+            DELETE FROM purchase_order_detail
+            WHERE purchase_order_id = @id;
+
+            DELETE FROM purchase_order
+            WHERE purchase_order_id = @id;
+            ";
 
             try
             {
@@ -138,16 +142,23 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     return result > 0;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;
+                throw new Exception(ex.Message);
             }
         }
 
         // GET ALL
         public async Task<List<PurchaseOrder>> GetAllPurchaseOrder()
         {
-            const string query = @"SELECT * FROM purchase_order";
+            const string query = @"
+            SELECT
+                po.*,
+                s.supplier_name
+            FROM purchase_order po
+            LEFT JOIN master_supplier s
+                ON po.supplier_id = s.supplier_id
+            ";
 
             var response = new List<PurchaseOrder>();
 
@@ -170,6 +181,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 order_date = reader.GetDateTime(reader.GetOrdinal("order_date")),
                                 status = reader["status"].ToString(),
                                 total_amount = reader.GetDecimal(reader.GetOrdinal("total_amount"))
+                            };
+
+                            purchaseOrder.Supplier = new Supplier
+                            {
+                                supplier_id = purchaseOrder.supplier_id,
+                                supplier_name = reader["supplier_name"]?.ToString() ?? ""
                             };
 
                             response.Add(purchaseOrder);
