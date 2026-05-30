@@ -12,10 +12,10 @@ namespace trinova_erp_backend.Usecase.Persediaan
             _repo = repo;
         }
 
-        //public async Task<List<StockTransaction>> GetAllAsync()
-        //{
-        //    return await _repo.GetAllAsync();
-        //}
+        public async Task<List<StockTransaction>> GetAllAsync()
+        {
+            return await _repo.GetAllAsync();
+        }
 
         public async Task<StockTransaction?> GetByIdAsync(int id)
         {

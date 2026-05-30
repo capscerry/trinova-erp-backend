@@ -359,9 +359,59 @@
             "description": "OK"
           }
         }
+      },
+      "put": {
+        "tags": [
+          "MasterProduct"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterProduct"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterProduct"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterProduct"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/master-product/{id}": {
+      "get": {
+        "tags": [
+          "MasterProduct"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "delete": {
         "tags": [
           "MasterProduct"
@@ -435,12 +485,168 @@
             "description": "OK"
           }
         }
+      },
+      "put": {
+        "tags": [
+          "MasterProductCategory"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterProductCategory"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterProductCategory"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterProductCategory"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
       }
     },
     "/api/master-product-category/{id}": {
       "delete": {
         "tags": [
           "MasterProductCategory"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/product-subcategories": {
+      "get": {
+        "tags": [
+          "MasterProductSubcategory"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MasterProductSubcategory"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductSubcategory"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductSubcategory"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductSubcategory"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/product-subcategories/by-category/{categoryId}": {
+      "get": {
+        "tags": [
+          "MasterProductSubcategory"
+        ],
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/product-subcategories/{id}": {
+      "put": {
+        "tags": [
+          "MasterProductSubcategory"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductSubcategory"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductSubcategory"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductSubcategory"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MasterProductSubcategory"
         ],
         "parameters": [
           {
@@ -646,6 +852,35 @@
         "tags": [
           "MasterWarehouse"
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "MasterWarehouse"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterWarehouse"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterWarehouse"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasterWarehouse"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -884,6 +1119,131 @@
         }
       }
     },
+    "/api/PurchaseRequisition": {
+      "get": {
+        "tags": [
+          "PurchaseRequisition"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PurchaseRequisition"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseRequisition"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseRequisition"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseRequisition"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/PurchaseRequisition/{id}": {
+      "get": {
+        "tags": [
+          "PurchaseRequisition"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PurchaseRequisition"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseRequisition"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseRequisition"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseRequisition"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "PurchaseRequisition"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/purchasing/dashboard": {
       "get": {
         "tags": [
@@ -1097,6 +1457,18 @@
               "format": "int32"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/StockTransaction": {
+      "get": {
+        "tags": [
+          "StockTransaction"
         ],
         "responses": {
           "200": {
@@ -1528,15 +1900,15 @@
             "type": "string",
             "nullable": true
           },
-          "barcode": {
-            "type": "string",
-            "nullable": true
-          },
           "uom_id": {
             "type": "integer",
             "format": "int32"
           },
           "category_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subcategory_id": {
             "type": "integer",
             "format": "int32"
           },
@@ -1555,6 +1927,9 @@
           },
           "masterProductCategory": {
             "$ref": "#/components/schemas/MasterProductCategory"
+          },
+          "productSubcategory": {
+            "$ref": "#/components/schemas/ProductSubcategory"
           }
         },
         "additionalProperties": false
@@ -1609,6 +1984,20 @@
           "uom_name": {
             "type": "string",
             "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1648,6 +2037,11 @@
         "additionalProperties": false
       },
       "MasterWarehouse": {
+        "required": [
+          "warehouse_address",
+          "warehouse_name",
+          "warehouse_type"
+        ],
         "type": "object",
         "properties": {
           "warehouse_id": {
@@ -1655,20 +2049,20 @@
             "format": "int32"
           },
           "warehouse_name": {
-            "type": "string",
-            "nullable": true
+            "minLength": 1,
+            "type": "string"
           },
           "description": {
             "type": "string",
             "nullable": true
           },
           "warehouse_address": {
-            "type": "string",
-            "nullable": true
+            "minLength": 1,
+            "type": "string"
           },
           "warehouse_type": {
-            "type": "string",
-            "nullable": true
+            "minLength": 1,
+            "type": "string"
           },
           "created_at": {
             "type": "string",
@@ -1691,6 +2085,49 @@
           "is_active": {
             "type": "boolean",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductSubcategory": {
+        "required": [
+          "category_id",
+          "code",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "subcategory_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "category_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "category": {
+            "$ref": "#/components/schemas/MasterProductCategory"
+          },
+          "code": {
+            "maxLength": 2,
+            "minLength": 0,
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -1770,6 +2207,98 @@
           },
           "purchaseOrder": {
             "$ref": "#/components/schemas/PurchaseOrder"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseRequisition": {
+        "required": [
+          "pr_date",
+          "status",
+          "warehouse_id"
+        ],
+        "type": "object",
+        "properties": {
+          "pr_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pr_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "pr_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "remarks": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "warehouse": {
+            "$ref": "#/components/schemas/MasterWarehouse"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PurchaseRequisitionDetail"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseRequisitionDetail": {
+        "required": [
+          "pr_id",
+          "product_id",
+          "qty_requested"
+        ],
+        "type": "object",
+        "properties": {
+          "pr_detail_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pr_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "product_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "qty_requested": {
+            "type": "number",
+            "format": "double"
+          },
+          "qty_processed": {
+            "type": "number",
+            "format": "double"
+          },
+          "remarks": {
+            "type": "string",
+            "nullable": true
+          },
+          "product": {
+            "$ref": "#/components/schemas/MasterProduct"
           }
         },
         "additionalProperties": false

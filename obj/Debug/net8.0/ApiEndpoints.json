@@ -247,6 +247,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.MasterProductController",
+    "Method": "UpdateMasterProduct",
+    "RelativePath": "api/master-product",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "masterProduct",
+        "Type": "trinova_erp_backend.Models.Persediaan.MasterProduct",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Persediaan.MasterProductCategoryController",
     "Method": "InsertMasterProductCategory",
     "RelativePath": "api/master-product-category",
@@ -274,9 +290,41 @@
   },
   {
     "ContainingType": "trinova_erp_backend.Controllers.Persediaan.MasterProductCategoryController",
+    "Method": "UpdateMasterProductCategory",
+    "RelativePath": "api/master-product-category",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "masterProductCategory",
+        "Type": "trinova_erp_backend.Models.Persediaan.MasterProductCategory",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.MasterProductCategoryController",
     "Method": "DeleteMasterProductCategory",
     "RelativePath": "api/master-product-category/{id}",
     "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.MasterProductController",
+    "Method": "GetMasterProductById",
+    "RelativePath": "api/master-product/{id}",
+    "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [
@@ -332,6 +380,22 @@
   },
   {
     "ContainingType": "trinova_erp_backend.Controllers.Persediaan.MasterWarehouseController",
+    "Method": "UpdateMasterWarehouse",
+    "RelativePath": "api/master-warehouse",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "masterWarehouse",
+        "Type": "trinova_erp_backend.Models.Persediaan.MasterWarehouse",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.MasterWarehouseController",
     "Method": "DeleteMasterWarehouse",
     "RelativePath": "api/master-warehouse/{id}",
     "HttpMethod": "DELETE",
@@ -364,6 +428,85 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.MasterProductSubcategoryController",
+    "Method": "GetAll",
+    "RelativePath": "api/product-subcategories",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.MasterProductSubcategoryController",
+    "Method": "Create",
+    "RelativePath": "api/product-subcategories",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "trinova_erp_backend.Models.Persediaan.ProductSubcategory",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.MasterProductSubcategoryController",
+    "Method": "Update",
+    "RelativePath": "api/product-subcategories/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "model",
+        "Type": "trinova_erp_backend.Models.Persediaan.ProductSubcategory",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.MasterProductSubcategoryController",
+    "Method": "Delete",
+    "RelativePath": "api/product-subcategories/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.MasterProductSubcategoryController",
+    "Method": "GetByCategory",
+    "RelativePath": "api/product-subcategories/by-category/{categoryId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "categoryId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": []
   },
   {
@@ -480,6 +623,85 @@
     "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseOrderController",
     "Method": "DeletePurchaseOrder",
     "RelativePath": "api/purchase-order/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.PurchaseRequisitionController",
+    "Method": "GetAll",
+    "RelativePath": "api/PurchaseRequisition",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.PurchaseRequisitionController",
+    "Method": "Create",
+    "RelativePath": "api/PurchaseRequisition",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "trinova_erp_backend.Models.Persediaan.PurchaseRequisition",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.PurchaseRequisitionController",
+    "Method": "GetById",
+    "RelativePath": "api/PurchaseRequisition/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.PurchaseRequisitionController",
+    "Method": "Update",
+    "RelativePath": "api/PurchaseRequisition/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "model",
+        "Type": "trinova_erp_backend.Models.Persediaan.PurchaseRequisition",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.PurchaseRequisitionController",
+    "Method": "Delete",
+    "RelativePath": "api/PurchaseRequisition/{id}",
     "HttpMethod": "DELETE",
     "IsController": true,
     "Order": 0,
@@ -636,6 +858,16 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.StockTransactionController",
+    "Method": "GetAll",
+    "RelativePath": "api/StockTransaction",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {

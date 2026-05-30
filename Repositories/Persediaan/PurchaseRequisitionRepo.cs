@@ -1,72 +1,122 @@
-using Microsoft.EntityFrameworkCore;
-using trinova_erp_backend.Data;
+using Dapper;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Options;
+using trinova_erp_backend.Config;
 using trinova_erp_backend.Models.Persediaan;
 
 namespace trinova_erp_backend.Repositories.Persediaan
 {
     public class PurchaseRequisitionRepo
     {
-        private readonly ApplicationDbContext _context;
+        private readonly string _connectionString;
 
-        public PurchaseRequisitionRepo(ApplicationDbContext context)
+        public PurchaseRequisitionRepo(IOptionsSnapshot<DatabaseConnection> options)
         {
-            _context = context;
+            _connectionString = options.Value.SQLServer
+                ?? throw new InvalidOperationException("Database connection string is not configured.");
         }
 
         public async Task<List<PurchaseRequisition>> GetAllAsync()
         {
-            return await _context.PurchaseRequisitions
-                .Include(x => x.Warehouse)
-                .Include(x => x.Details)
-                .OrderByDescending(x => x.created_at)
-                .ToListAsync();
+            using var connection = new SqlConnection(_connectionString);
+
+            string query = @"
+                SELECT *
+                FROM purchase_requisition
+                ORDER BY created_at DESC";
+
+            var result = await connection.QueryAsync<PurchaseRequisition>(query);
+
+            return result.ToList();
         }
 
         public async Task<PurchaseRequisition?> GetByIdAsync(int id)
         {
-            return await _context.PurchaseRequisitions
-                .Include(x => x.Warehouse)
-                .Include(x => x.Details)
-                    .ThenInclude(x => x.Product)
-                .FirstOrDefaultAsync(x => x.pr_id == id);
+            using var connection = new SqlConnection(_connectionString);
+
+            string query = @"
+                SELECT *
+                FROM purchase_requisition
+                WHERE pr_id = @Id";
+
+            return await connection.QueryFirstOrDefaultAsync<PurchaseRequisition>(
+                query,
+                new { Id = id }
+            );
         }
 
-        public async Task<PurchaseRequisition> CreateAsync(
-            PurchaseRequisition requisition
-        )
+        public async Task<PurchaseRequisition> CreateAsync(PurchaseRequisition requisition)
         {
-            _context.PurchaseRequisitions.Add(requisition);
+            using var connection = new SqlConnection(_connectionString);
 
-            await _context.SaveChangesAsync();
+            string query = @"
+                INSERT INTO purchase_requisition
+                (
+                    pr_number,
+                    warehouse_id,
+                    notes,
+                    status,
+                    created_at
+                )
+                OUTPUT INSERTED.*
+                VALUES
+                (
+                    @pr_number,
+                    @warehouse_id,
+                    @notes,
+                    @status,
+                    GETDATE()
+                )";
 
-            return requisition;
+            var result = await connection.QuerySingleAsync<PurchaseRequisition>(
+                query,
+                requisition
+            );
+
+            return result;
         }
 
-        public async Task UpdateAsync(
-            PurchaseRequisition requisition
-        )
+        public async Task UpdateAsync(PurchaseRequisition requisition)
         {
-            _context.PurchaseRequisitions.Update(requisition);
+            using var connection = new SqlConnection(_connectionString);
 
-            await _context.SaveChangesAsync();
+            string query = @"
+                UPDATE purchase_requisition
+                SET
+                    warehouse_id = @warehouse_id,
+                    notes = @notes,
+                    status = @status
+                WHERE pr_id = @pr_id";
+
+            await connection.ExecuteAsync(query, requisition);
         }
 
-        public async Task DeleteAsync(
-            PurchaseRequisition requisition
-        )
+        public async Task DeleteAsync(PurchaseRequisition requisition)
         {
-            _context.PurchaseRequisitions.Remove(requisition);
+            using var connection = new SqlConnection(_connectionString);
 
-            await _context.SaveChangesAsync();
+            string query = @"
+                DELETE FROM purchase_requisition
+                WHERE pr_id = @Id";
+
+            await connection.ExecuteAsync(query, new
+            {
+                Id = requisition.pr_id
+            });
         }
 
         public async Task<string> GeneratePrNumber()
         {
+            using var connection = new SqlConnection(_connectionString);
+
             string today = DateTime.Now.ToString("yyyyMMdd");
 
-            int countToday = await _context.PurchaseRequisitions
-                .CountAsync(x =>
-                    x.created_at.Date == DateTime.Today);
+            string query = @"
+                SELECT COUNT(*)
+                FROM purchase_requisition
+                WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)";
+
+            int countToday = await connection.ExecuteScalarAsync<int>(query);
 
             return $"PR-{today}-{(countToday + 1):D4}";
         }

@@ -52,80 +52,80 @@ namespace trinova_erp_backend.Repositories.Persediaan
         // =========================================================
         // GET ALL MASTER PRODUCT
         // =========================================================
-        public async Task<List<MasterProduct>> GetAllMasterProduct()
-        {
-            var response = new List<MasterProduct>();
+        //public async Task<List<MasterProduct>> GetAllMasterProduct()
+        //{
+        //    var response = new List<MasterProduct>();
 
-            const string query = @"
-                SELECT *
-                FROM master_product
-                ORDER BY product_name";
+        //    const string query = @"
+        //        SELECT *
+        //        FROM master_product
+        //        ORDER BY product_name";
 
-            using SqlConnection connection = new SqlConnection(_connectionString);
-            using SqlCommand command = new SqlCommand(query, connection);
+        //    using SqlConnection connection = new SqlConnection(_connectionString);
+        //    using SqlCommand command = new SqlCommand(query, connection);
 
-            await connection.OpenAsync();
+        //    await connection.OpenAsync();
 
-            using SqlDataReader reader = await command.ExecuteReaderAsync();
+        //    using SqlDataReader reader = await command.ExecuteReaderAsync();
 
-            while (await reader.ReadAsync())
-            {
-                response.Add(new MasterProduct
-                {
-                    product_id = Convert.ToInt32(reader["product_id"]),
-                    product_name = reader["product_name"]?.ToString(),
-                    product_code = reader["product_code"]?.ToString(),
-                    product_type = reader["product_type"]?.ToString(),
-                    barcode = reader["barcode"]?.ToString(),
-                    uom_id = Convert.ToInt32(reader["uom_id"]),
-                    category_id = Convert.ToInt32(reader["category_id"]),
-                    created_at = Convert.ToDateTime(reader["created_at"]),
-                    updated_at = Convert.ToDateTime(reader["updated_at"])
-                });
-            }
+        //    while (await reader.ReadAsync())
+        //    {
+        //        response.Add(new MasterProduct
+        //        {
+        //            product_id = Convert.ToInt32(reader["product_id"]),
+        //            product_name = reader["product_name"]?.ToString(),
+        //            product_code = reader["product_code"]?.ToString(),
+        //            product_type = reader["product_type"]?.ToString(),
+        //            //barcode = reader["barcode"]?.ToString(),
+        //            uom_id = Convert.ToInt32(reader["uom_id"]),
+        //            category_id = Convert.ToInt32(reader["category_id"]),
+        //            created_at = Convert.ToDateTime(reader["created_at"]),
+        //            updated_at = Convert.ToDateTime(reader["updated_at"])
+        //        });
+        //    }
 
-            return response;
-        }
+        //    return response;
+        //}
 
         // =========================================================
         // GET BY ID
         // =========================================================
-        public async Task<MasterProduct?> GetMasterProductById(int productId)
-        {
-            MasterProduct? response = null;
+        //public async Task<MasterProduct?> GetMasterProductById(int productId)
+        //{
+        //    MasterProduct? response = null;
 
-            const string query = @"
-                SELECT *
-                FROM master_product
-                WHERE product_id = @product_id";
+        //    const string query = @"
+        //        SELECT *
+        //        FROM master_product
+        //        WHERE product_id = @product_id";
 
-            using SqlConnection connection = new SqlConnection(_connectionString);
-            using SqlCommand command = new SqlCommand(query, connection);
+        //    using SqlConnection connection = new SqlConnection(_connectionString);
+        //    using SqlCommand command = new SqlCommand(query, connection);
 
-            command.Parameters.AddWithValue("@product_id", productId);
+        //    command.Parameters.AddWithValue("@product_id", productId);
 
-            await connection.OpenAsync();
+        //    await connection.OpenAsync();
 
-            using SqlDataReader reader = await command.ExecuteReaderAsync();
+        //    using SqlDataReader reader = await command.ExecuteReaderAsync();
 
-            if (await reader.ReadAsync())
-            {
-                response = new MasterProduct
-                {
-                    product_id = Convert.ToInt32(reader["product_id"]),
-                    product_name = reader["product_name"]?.ToString(),
-                    product_code = reader["product_code"]?.ToString(),
-                    product_type = reader["product_type"]?.ToString(),
-                    barcode = reader["barcode"]?.ToString(),
-                    uom_id = Convert.ToInt32(reader["uom_id"]),
-                    category_id = Convert.ToInt32(reader["category_id"]),
-                    created_at = Convert.ToDateTime(reader["created_at"]),
-                    updated_at = Convert.ToDateTime(reader["updated_at"])
-                };
-            }
+        //    if (await reader.ReadAsync())
+        //    {
+        //        response = new MasterProduct
+        //        {
+        //            product_id = Convert.ToInt32(reader["product_id"]),
+        //            product_name = reader["product_name"]?.ToString(),
+        //            product_code = reader["product_code"]?.ToString(),
+        //            product_type = reader["product_type"]?.ToString(),
+        //            //barcode = reader["barcode"]?.ToString(),
+        //            uom_id = Convert.ToInt32(reader["uom_id"]),
+        //            category_id = Convert.ToInt32(reader["category_id"]),
+        //            created_at = Convert.ToDateTime(reader["created_at"]),
+        //            updated_at = Convert.ToDateTime(reader["updated_at"])
+        //        };
+        //    }
 
-            return response;
-        }
+        //    return response;
+        //}
 
         // =========================================================
         // INSERT
