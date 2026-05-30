@@ -16,6 +16,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
         Task<bool> UpdateStatusCategory(int id, int status);
 
         Task<string> InsertMasterCustomer(Customer customer);
+        Task<List<Customer>> GetCustomerActive();
     }
     public class CustomerUsecase : ICustomerUsecase
     {
@@ -58,6 +59,12 @@ namespace trinova_erp_backend.Usecase.Penjualan
         public async Task<List<Customer>> GetAllCustomer()
         {
             var result = await _masterCustomerRepo.GetAllCustomer();
+            return result;
+        }
+
+        public async Task<List<Customer>> GetCustomerActive()
+        {
+            var result = await _masterCustomerRepo.GetCustomerActive();
             return result;
         }
 

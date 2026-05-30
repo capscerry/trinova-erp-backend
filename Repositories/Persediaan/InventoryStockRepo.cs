@@ -2,6 +2,9 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
 using trinova_erp_backend.Models.Persediaan;
+using trinova_erp_backend.Repositories.Persediaan;
+
+
 
 namespace trinova_erp_backend.Repositories.Persediaan
 {

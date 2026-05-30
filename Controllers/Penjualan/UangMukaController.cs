@@ -48,6 +48,28 @@ namespace trinova_erp_backend.Controllers.Penjualan
             }
         }
 
+        [HttpGet("/api/uang-muka/{id}")]
+        public async Task<IActionResult> GetUangMukaById(int id)
+        {
+            var result = await _uangMukaUsecase.GetUangMukaById(id);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    status = false,
+                    message = "Data uang muka tidak ditemukan"
+                });
+            }
+
+            return Ok(new
+            {
+                status = true,
+                message = "Data uang muka berhasil diambil",
+                data = result
+            });
+        }
+
         [HttpGet("/api/uang-muka")]
         public async Task<IActionResult> GetAllUangMuka()
         {

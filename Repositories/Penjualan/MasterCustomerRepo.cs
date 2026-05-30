@@ -12,6 +12,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
         Task<bool> InsertMasterCustomer(Customer customer);
 
         Task<bool> UpdateMasterCustomer(Customer customer);
+        Task<List<Customer>> GetCustomerActive();
 
         Task<List<Customer>> GetAllCustomer();
         Task<bool> ToggleCustomerStatus(int id);
@@ -43,6 +44,37 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 FROM master_customer c
                 LEFT JOIN master_customer_category cat 
                     ON c.category_id = cat.id
+            ";
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                var result = await connection.QueryAsync<Customer>(query);
+
+                return result.ToList();
+            }
+        }
+
+        public async Task<List<Customer>> GetCustomerActive()
+        {
+
+            string query = @"
+                SELECT 
+                    c.customer_id AS CustomerId,
+                    c.customer_name AS CustomerName,
+                    c.customer_code AS CustomerCode,
+                    c.no_telp_bisnis AS NoTelpBisnis,
+                    c.alamat AS Alamat,
+                    c.email AS Email,
+                    c.is_active AS IsActive,
+                    c.created_date AS CreatedDate,
+                    c.update_date AS UpdateDate,
+                    cat.category_name AS CategoryName
+                FROM master_customer c
+                LEFT JOIN master_customer_category cat 
+                    ON c.category_id = cat.id
+                WHERE c.is_active = 1
             ";
 
             using (var connection = new SqlConnection(_connectionString))
@@ -119,7 +151,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
         {
             using var connection = new SqlConnection(_connectionString);
 
-            string query = @"
+                string query = @"
                 UPDATE master_customer
                 SET is_active = 
                     CASE 

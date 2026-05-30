@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using trinova_erp_backend.Models.Persediaan;
+
 
 namespace trinova_erp_backend.Models.Persediaan
 {
@@ -19,6 +21,7 @@ namespace trinova_erp_backend.Models.Persediaan
 
         public decimal qty_available { get; set; }
 
+        public int quantity { get; set; }
         public DateTime? created_at { get; set; }
 
         public DateTime? updated_at { get; set; }

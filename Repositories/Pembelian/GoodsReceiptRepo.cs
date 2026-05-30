@@ -7,7 +7,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
 {
     public interface IGoodsReceiptRepo
     {
-        Task<bool> InsertGoodsReceipt(GoodsReceipt model);
+        Task<int> InsertGoodsReceipt(GoodsReceipt model);
 
         Task<List<GoodsReceipt>> GetAllGoodsReceipt();
 
@@ -27,7 +27,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
         }
 
         // INSERT
-        public async Task<bool> InsertGoodsReceipt(GoodsReceipt model)
+        public async Task<int> InsertGoodsReceipt(GoodsReceipt model)
         {
             const string query = @"
                 INSERT INTO goods_receipt
@@ -45,7 +45,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     @receipt_date,
                     @received_by,
                     @status
-                )";
+                );
+
+                SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
             try
             {
@@ -60,14 +62,15 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     command.Parameters.AddWithValue("@received_by", model.received_by);
                     command.Parameters.AddWithValue("@status", model.status);
 
-                    int result = await command.ExecuteNonQueryAsync();
+                    int goodsReceiptId =
+                        (int)await command.ExecuteScalarAsync();
 
-                    return result > 0;
+                    return goodsReceiptId;
                 }
             }
             catch (Exception)
             {
-                return false;
+                return 0;
             }
         }
 
@@ -137,7 +140,19 @@ namespace trinova_erp_backend.Repositories.Pembelian
         // GET ALL
         public async Task<List<GoodsReceipt>> GetAllGoodsReceipt()
         {
-            const string query = @"SELECT * FROM goods_receipt";
+            const string query = @"
+            SELECT
+                gr.*,
+                po.supplier_id,
+                po.total_amount,
+                s.supplier_name
+            FROM goods_receipt gr
+            INNER JOIN purchase_order po
+                ON gr.purchase_order_id =
+                po.purchase_order_id
+            INNER JOIN master_supplier s
+                ON po.supplier_id =
+                s.supplier_id";
 
             var response = new List<GoodsReceipt>();
 
@@ -176,7 +191,21 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                     reader["received_by"]?.ToString() ?? "",
 
                                 status =
-                                    reader["status"]?.ToString() ?? ""
+                                    reader["status"]?.ToString() ?? "",
+
+                                supplier_id =
+                                    reader["supplier_id"] != DBNull.Value
+                                    ? Convert.ToInt32(reader["supplier_id"])
+                                    : 0,
+
+                                supplier_name =
+                                    reader["supplier_name"]?.ToString() ?? "",
+
+                                total_amount =
+                                    reader["total_amount"] != DBNull.Value
+                                    ? Convert.ToDecimal(reader["total_amount"])
+                                    : 0,
+
                             };
 
                             response.Add(receipt);

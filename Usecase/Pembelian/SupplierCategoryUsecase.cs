@@ -44,11 +44,22 @@ namespace trinova_erp_backend.Usecase.Pembelian
             return result;
         }
 
-        public async Task<bool> DeleteSupplierCategory(int id)
-        {
-            var result = await _supplierCategoryRepo.DeleteSupplierCategory(id);
+        public async Task<bool>
+        DeleteSupplierCategory(int id)
+    {
+        bool isUsed =
+            await _supplierCategoryRepo
+                .IsCategoryUsed(id);
 
-            return result;
+        if (isUsed)
+        {
+            throw new Exception(
+                "Category masih digunakan oleh supplier"
+            );
         }
+
+        return await _supplierCategoryRepo
+            .DeleteSupplierCategory(id);
+    }
     }
 }

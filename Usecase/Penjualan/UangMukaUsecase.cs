@@ -7,6 +7,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
     {
         Task<bool> InsertUangMuka(UangMuka model);
         Task<IEnumerable<UangMuka>> GetAllUangMuka();
+        Task<UangMuka?> GetUangMukaById(int id);
     }
 
     public class UangMukaUsecase : IUangMukaUsecase
@@ -41,6 +42,14 @@ namespace trinova_erp_backend.Usecase.Penjualan
         public async Task<IEnumerable<UangMuka>> GetAllUangMuka()
         {
             return await _uangMuka.GetAllUangMuka();
+        }
+
+        public async Task<UangMuka?> GetUangMukaById(int id)
+        {
+            if (id <= 0)
+                throw new Exception("Id uang muka tidak valid");
+
+            return await _uangMuka.GetUangMukaById(id);
         }
     }
 }
