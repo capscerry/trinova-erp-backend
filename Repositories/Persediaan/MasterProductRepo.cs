@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
+using trinova_erp_backend.Models;
 using trinova_erp_backend.Models.Persediaan;
 
 namespace trinova_erp_backend.Repositories.Persediaan
@@ -114,9 +115,30 @@ namespace trinova_erp_backend.Repositories.Persediaan
             GetAllMasterProduct()
         {
             const string query = @"
-                SELECT *
-                FROM master_product
-                ORDER BY product_id DESC";
+            SELECT
+                p.*,
+
+                u.uom_code,
+                u.uom_name,
+
+                c.category_name,
+
+                s.subcategory_code,
+                s.subcategory_name,
+                s.is_active AS subcategory_is_active
+
+            FROM master_product p
+
+            LEFT JOIN master_uom u
+                ON p.uom_id = u.uom_id
+
+            LEFT JOIN master_product_category c
+                ON p.category_id = c.category_id
+
+            LEFT JOIN master_product_subcategory s
+                ON p.subcategory_id = s.subcategory_id
+
+            ORDER BY p.product_id DESC";
 
             var response =
                 new List<MasterProduct>();
@@ -193,8 +215,75 @@ namespace trinova_erp_backend.Repositories.Persediaan
                                     ? null
                                     : Convert.ToDateTime(
                                         reader["updated_at"]
-                                    )
-                        }
+                                    ),
+
+                            MasterUom =
+                                reader["uom_name"] == DBNull.Value
+                                ? null
+                                : new MasterUom
+                                {
+                                    uom_id = Convert.ToInt32(
+                                        reader["uom_id"]
+                                    ),
+
+                                    uom_code =
+                                        reader["uom_code"]
+                                            ?.ToString(),
+
+                                    uom_name =
+                                        reader["uom_name"]
+                                            ?.ToString()
+                                },
+
+                            MasterProductCategory =
+                                reader["category_name"] == DBNull.Value
+                                ? null
+                                : new MasterProductCategory
+                                {
+                                    category_id =
+                                        Convert.ToInt32(
+                                            reader["category_id"]
+                                        ),
+
+                                    category_name =
+                                        reader["category_name"]
+                                            ?.ToString()
+                                },
+
+                            ProductSubcategory =
+                                reader["subcategory_name"] == DBNull.Value
+                                ? null
+                                : new ProductSubcategory
+                                {
+                                    subcategory_id =
+                                        Convert.ToInt32(
+                                            reader["subcategory_id"]
+                                        ),
+
+                                    category_id =
+                                        Convert.ToInt32(
+                                            reader["category_id"]
+                                        ),
+
+                                    code =
+                                        reader["subcategory_code"]
+                                            ?.ToString()
+                                            ?? "",
+
+                                    name =
+                                        reader["subcategory_name"]
+                                            ?.ToString()
+                                            ?? "",
+
+                                    is_active =
+                                        reader["subcategory_is_active"]
+                                            != DBNull.Value
+                                        &&
+                                        Convert.ToBoolean(
+                                            reader["subcategory_is_active"]
+                                        )
+                                }          
+                        } 
                     );
                 }
             }
