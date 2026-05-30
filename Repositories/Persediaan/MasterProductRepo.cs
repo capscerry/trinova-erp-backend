@@ -207,14 +207,34 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     model.updated_at ?? DateTime.Now
                 );
 
+                Console.WriteLine(
+                    $"INSERT PRODUCT => " +
+                    $"NAME={model.product_name}, " +
+                    $"CATEGORY={model.category_id}, " +
+                    $"SUBCATEGORY={model.subcategory_id}, " +
+                    $"UOM={model.uom_id}"
+                );
+
                 int result =
                     await command.ExecuteNonQueryAsync();
 
+                Console.WriteLine(
+                    $"ROWS AFFECTED = {result}"
+                );
+
                 return result > 0;
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                Console.WriteLine(
+                    "===== INSERT PRODUCT ERROR ====="
+                );
+
+                Console.WriteLine(
+                    ex.ToString()
+                );
+
+                throw;
             }
         }
 

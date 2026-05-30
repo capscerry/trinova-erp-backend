@@ -261,6 +261,34 @@ namespace trinova_erp_backend.Repositories.Persediaan
             return subcategory;
         }
 
+        public async Task<string> GenerateNextCodeAsync()
+        {
+            const string query = @"
+                SELECT ISNULL(
+                    MAX(
+                        TRY_CAST(subcategory_code AS INT)
+                    ),
+                    0
+                )
+                FROM master_product_subcategory";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            await connection.OpenAsync();
+
+            var result =
+                await command.ExecuteScalarAsync();
+
+            int nextCode =
+                Convert.ToInt32(result) + 1;
+
+            return nextCode.ToString("D2");
+        }
+
         public async Task<ProductSubcategory?> UpdateAsync(
             ProductSubcategory subcategory
         )

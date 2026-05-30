@@ -22,8 +22,18 @@ namespace trinova_erp_backend.Controllers.Persediaan
             [FromBody] MasterProduct masterProduct
         )
         {
-            var result = await _masterProductUsecase
-                .InsertMasterProduct(masterProduct);
+            var result =
+                await _masterProductUsecase
+                    .InsertMasterProduct(masterProduct);
+
+            if (result == "Insert Failed")
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = result
+                });
+            }
 
             return Ok(new
             {

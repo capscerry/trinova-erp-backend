@@ -47,11 +47,17 @@ namespace trinova_erp_backend.Usecase.Persediaan
                 );
             }
 
+            subcategory.code =
+                await _repository
+                    .GenerateNextCodeAsync();
+
             subcategory.created_at =
                 DateTime.UtcNow;
 
             subcategory.updated_at =
                 DateTime.UtcNow;
+
+            subcategory.is_active = true;
 
             return await _repository.CreateAsync(
                 subcategory
