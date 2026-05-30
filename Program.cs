@@ -32,6 +32,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<MasterProductSubcategoryRepo>();
 builder.Services.AddScoped<MasterProductSubcategoryUsecase>();
+builder.Services.AddScoped<StockMovementRepo>();
+builder.Services.AddScoped<StockTransferUsecase>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowCors", policy =>
