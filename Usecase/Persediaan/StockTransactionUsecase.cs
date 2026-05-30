@@ -12,23 +12,23 @@ namespace trinova_erp_backend.Usecase.Persediaan
             _repo = repo;
         }
 
-        //public async Task<List<StockTransaction>> GetAllAsync()
-        //{
-        //    return await _repo.GetAllAsync();
-        //}
+        public async Task<List<StockTransaction>> GetAllAsync()
+        {
+            return await _repo.GetAllAsync();
+        }
 
-        //public async Task<StockTransaction> CreateAsync(StockTransaction transaction)
-        //{
-        //    if (
-        //        transaction.transaction_type != "IN" &&
-        //        transaction.transaction_type != "OUT" &&
-        //        transaction.transaction_type != "ADJUSTMENT"
-        //    )
-        //    {
-        //        throw new Exception("Invalid transaction type");
-        //    }
+        public async Task<StockTransaction> CreateAsync(StockTransaction transaction)
+        {
+            if (
+                transaction.transaction_type != "IN" &&
+                transaction.transaction_type != "OUT" &&
+                transaction.transaction_type != "ADJUSTMENT"
+            )
+            {
+                throw new Exception("Invalid transaction type");
+            }
 
-        //    return await _repo.CreateAsync(transaction);
-        //}
+            return await _repo.CreateAsync(transaction);
+        }
     }
 }

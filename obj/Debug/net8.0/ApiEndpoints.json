@@ -163,6 +163,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.CustomerController",
+    "Method": "GetCustomerActive",
+    "RelativePath": "api/customer/active",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Pembelian.GoodsReceiptController",
     "Method": "InsertGoodsReceipt",
     "RelativePath": "api/goods-receipt",
@@ -215,6 +225,32 @@
       {
         "Name": "id",
         "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.InventoryStockController",
+    "Method": "GetAll",
+    "RelativePath": "api/InventoryStock",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.InventoryStockController",
+    "Method": "Create",
+    "RelativePath": "api/InventoryStock",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "stock",
+        "Type": "trinova_erp_backend.Models.Persediaan.InventoryStock",
         "IsRequired": true
       }
     ],
@@ -639,6 +675,32 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.StockTransactionController",
+    "Method": "GetAll",
+    "RelativePath": "api/StockTransaction",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.StockTransactionController",
+    "Method": "Create",
+    "RelativePath": "api/StockTransaction",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "transaction",
+        "Type": "trinova_erp_backend.Models.Persediaan.StockTransaction",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierController",
     "Method": "InsertSupplier",
     "RelativePath": "api/supplier",
@@ -804,6 +866,22 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.UangMukaController",
+    "Method": "GetUangMukaById",
+    "RelativePath": "api/uang-muka/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": []
   },
   {

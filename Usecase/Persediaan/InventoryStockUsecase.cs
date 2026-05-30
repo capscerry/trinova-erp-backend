@@ -12,32 +12,32 @@ namespace trinova_erp_backend.Usecase.Persediaan
             _repo = repo;
         }
 
-        //public async Task<List<InventoryStock>> GetAllAsync()
-        //{
-        //    return await _repo.GetAllAsync();
-        //}
+        public async Task<List<InventoryStock>> GetAllAsync()
+        {
+            return await _repo.GetAllAsync();
+        }
 
-        //public async Task<InventoryStock?> GetByIdAsync(int id)
-        //{
-        //    return await _repo.GetByIdAsync(id);
-        //}
+        public async Task<InventoryStock?> GetByIdAsync(int id)
+        {
+            return await _repo.GetByIdAsync(id);
+        }
 
-        //public async Task<InventoryStock> CreateAsync(InventoryStock stock)
-        //{
-        //    if (stock.quantity < 0)
-        //        throw new Exception("Quantity cannot be negative");
+        public async Task<InventoryStock> CreateAsync(InventoryStock stock)
+        {
+            if (stock.quantity < 0)
+                throw new Exception("Quantity cannot be negative");
 
-        //    return await _repo.CreateAsync(stock);
-        //}
+            return await _repo.CreateAsync(stock);
+        }
 
-        //public async Task UpdateAsync(InventoryStock stock)
-        //{
-        //    await _repo.UpdateAsync(stock);
-        //}
+        public async Task UpdateAsync(InventoryStock stock)
+        {
+            await _repo.UpdateAsync(stock);
+        }
 
-        //public async Task DeleteAsync(InventoryStock stock)
-        //{
-        //    await _repo.DeleteAsync(stock);
-        //}
+        public async Task DeleteAsync(InventoryStock stock)
+        {
+            await _repo.DeleteAsync(stock);
+        }
     }
 }

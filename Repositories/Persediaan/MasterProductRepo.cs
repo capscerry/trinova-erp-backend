@@ -73,7 +73,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     product_name = reader["product_name"]?.ToString(),
                     product_code = reader["product_code"]?.ToString(),
                     product_type = reader["product_type"]?.ToString(),
-                    barcode = reader["barcode"]?.ToString(),
+                    //barcode = reader["barcode"]?.ToString(),
                     uom_id = Convert.ToInt32(reader["uom_id"]),
                     category_id = Convert.ToInt32(reader["category_id"]),
                     created_at = Convert.ToDateTime(reader["created_at"]),

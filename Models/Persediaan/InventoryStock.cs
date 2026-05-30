@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using trinova_erp_backend.Models.Persediaan;
+
 
 namespace trinova_erp_backend.Models.Persediaan
 {
@@ -9,18 +11,25 @@ namespace trinova_erp_backend.Models.Persediaan
         [Key]
         public int stock_id { get; set; }
 
-        [Required]
         public int product_id { get; set; }
 
-        [Required]
+        public int warehouse_id { get; set; }
+
+        public decimal qty_on_hand { get; set; }
+
+        public decimal qty_reserved { get; set; }
+
+        public decimal qty_available { get; set; }
+
         public int quantity { get; set; }
+        public DateTime? created_at { get; set; }
 
-        public int? minimum_stock { get; set; }
+        public DateTime? updated_at { get; set; }
 
-        public int? maximum_stock { get; set; }
+        [ForeignKey(nameof(product_id))]
+        public MasterProduct? Product { get; set; }
 
-        public DateTime created_at { get; set; }
-
-        public DateTime updated_at { get; set; }
+        [ForeignKey(nameof(warehouse_id))]
+        public MasterWarehouse? Warehouse { get; set; }
     }
 }

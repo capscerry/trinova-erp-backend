@@ -118,6 +118,17 @@ namespace trinova_erp_backend.Controllers.Penjualan
             });
         }
 
+        [HttpGet("api/customer/active")]
+        public async Task<IActionResult> GetCustomerActive()
+        {
+            var customerActive = await _customerCategoryUsecase.GetCustomerActive();
+            return Ok(new
+            {
+                status = true,
+                data = customerActive ?? new List<Customer>()
+            });
+        }
+
 
         [HttpPut("api/customer/{id}")]
         public async Task<IActionResult> UpdateCustomer(

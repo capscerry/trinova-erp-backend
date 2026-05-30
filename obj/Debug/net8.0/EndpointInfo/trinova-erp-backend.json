@@ -160,6 +160,18 @@
         }
       }
     },
+    "/api/customer/active": {
+      "get": {
+        "tags": [
+          "Customer"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/customer/{id}": {
       "put": {
         "tags": [
@@ -309,6 +321,47 @@
             "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/GoodsReceiptDetail"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/InventoryStock": {
+      "get": {
+        "tags": [
+          "InventoryStock"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "InventoryStock"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryStock"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryStock"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryStock"
               }
             }
           }
@@ -1105,6 +1158,47 @@
         }
       }
     },
+    "/api/StockTransaction": {
+      "get": {
+        "tags": [
+          "StockTransaction"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "StockTransaction"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockTransaction"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockTransaction"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockTransaction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/supplier": {
       "post": {
         "tags": [
@@ -1353,6 +1447,29 @@
           }
         }
       }
+    },
+    "/api/uang-muka/{id}": {
+      "get": {
+        "tags": [
+          "UangMuka"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1491,6 +1608,56 @@
           },
           "goodsReceipt": {
             "$ref": "#/components/schemas/GoodsReceipt"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InventoryStock": {
+        "type": "object",
+        "properties": {
+          "stock_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "product_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "qty_on_hand": {
+            "type": "number",
+            "format": "double"
+          },
+          "qty_reserved": {
+            "type": "number",
+            "format": "double"
+          },
+          "qty_available": {
+            "type": "number",
+            "format": "double"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "product": {
+            "$ref": "#/components/schemas/MasterProduct"
+          },
+          "warehouse": {
+            "$ref": "#/components/schemas/MasterWarehouse"
           }
         },
         "additionalProperties": false
@@ -2032,6 +2199,65 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StockTransaction": {
+        "required": [
+          "product_id",
+          "quantity",
+          "transaction_type",
+          "warehouse_id"
+        ],
+        "type": "object",
+        "properties": {
+          "transaction_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "product_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "transaction_type": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "reference_no": {
+            "type": "string",
+            "nullable": true
+          },
+          "reference_module": {
+            "type": "string",
+            "nullable": true
+          },
+          "reference_id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "remarks": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "product": {
+            "$ref": "#/components/schemas/MasterProduct"
+          },
+          "warehouse": {
+            "$ref": "#/components/schemas/MasterWarehouse"
           }
         },
         "additionalProperties": false
