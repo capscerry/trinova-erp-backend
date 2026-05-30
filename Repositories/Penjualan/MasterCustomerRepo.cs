@@ -10,7 +10,11 @@ namespace trinova_erp_backend.Repositories.Penjualan
 {
     public interface IMasterCustomerRepo {
         Task<bool> InsertMasterCustomer(Customer customer);
+
+        Task<bool> UpdateMasterCustomer(Customer customer);
+
         Task<List<Customer>> GetAllCustomer();
+        Task<bool> ToggleCustomerStatus(int id);
     }
 
     public class MasterCustomerRepo : IMasterCustomerRepo
@@ -80,6 +84,60 @@ namespace trinova_erp_backend.Repositories.Penjualan
 
                 return result > 0;
             }
+        }
+
+        public async Task<bool> UpdateMasterCustomer(Customer customer)
+        {
+            string query = @"
+            UPDATE master_customer
+            SET 
+                category_id = @CategoryId,
+                email = @Email,
+                alamat = @Alamat,
+                no_telp_bisnis = @NoTelpBisnis,
+                update_date = GETDATE(),
+                update_by = @UpdateBy
+            WHERE customer_id = @CustomerId";
+
+            using var connection = new SqlConnection(_connectionString);
+
+            var affectedRows = await connection.ExecuteAsync(query, new
+            {
+                CustomerId = customer.CustomerId,
+                CategoryId = customer.CategoryId,
+                Email = customer.Email,
+                Alamat = customer.Alamat,
+                NoTelpBisnis = customer.NoTelpBisnis,
+                UpdateBy = customer.UpdateBy
+            });
+
+            return affectedRows > 0;
+        }
+
+
+        public async Task<bool> ToggleCustomerStatus(int id)
+        {
+            using var connection = new SqlConnection(_connectionString);
+
+            string query = @"
+                UPDATE master_customer
+                SET is_active = 
+                    CASE 
+                        WHEN is_active = 1 THEN 0
+                        ELSE 1
+                    END
+                WHERE customer_id = @Id
+            ";
+
+            var result = await connection.ExecuteAsync(
+                query,
+                new
+                {
+                    Id = id
+                }
+            );
+
+            return result > 0;
         }
     }
 }

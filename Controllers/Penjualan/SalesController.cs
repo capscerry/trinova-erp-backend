@@ -208,6 +208,27 @@ namespace trinova_erp_backend.Controllers.Penjualan
             }
         }
 
+        [HttpGet("/api/sales-order/{orderId}")]
+        public async Task<IActionResult> GetSalesOrderDetail(int orderId)
+        {
+            var result = await _salesOrderUsecase.GetSalesOrderDetail(orderId);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    status = false,
+                    message = "Sales order tidak ditemukan"
+                });
+            }
+
+            return Ok(new
+            {
+                status = true,
+                data = result
+            });
+        }
+
 
     }
 }
