@@ -5,7 +5,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface IGoodsReceiptUsecase
     {
-        Task<string> InsertGoodsReceipt(GoodsReceipt model);
+        Task<int> InsertGoodsReceipt(GoodsReceipt model);
 
         Task<List<GoodsReceipt>> GetAllGoodsReceipt();
 
@@ -28,7 +28,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
             _purchaseOrderRepo = purchaseOrderRepo;
         }
 
-        public async Task<string> InsertGoodsReceipt(GoodsReceipt model)
+        public async Task<int> InsertGoodsReceipt(GoodsReceipt model)
         {
             // AUTO CREATED DATE
             model.created_at = DateTime.Now;
@@ -56,10 +56,10 @@ namespace trinova_erp_backend.Usecase.Pembelian
                     .UpdatePurchaseOrder(purchaseOrder);
             }
 
-            var result = await _goodsReceiptRepo
-                .InsertGoodsReceipt(model);
+            int goodsReceiptId =
+                await _goodsReceiptRepo.InsertGoodsReceipt(model);
 
-            return result ? "Insert Successfully" : "Insert Failed";
+            return goodsReceiptId;
         }
 
         public async Task<List<GoodsReceipt>> GetAllGoodsReceipt()

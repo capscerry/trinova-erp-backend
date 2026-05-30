@@ -13,6 +13,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
         Task<bool> UpdateSupplierCategory(SupplierCategory model);
 
+        Task<bool> IsCategoryUsed(int categoryId);
+
         Task<bool> DeleteSupplierCategory(int id);
     }
 
@@ -97,32 +99,66 @@ namespace trinova_erp_backend.Repositories.Pembelian
             }
         }
 
-        // DELETE
-        public async Task<bool> DeleteSupplierCategory(int id)
-        {
-            const string query = @"
-                DELETE FROM supplier_category
-                WHERE category_id = @id";
-
-            try
+            // DELETE
+            public async Task<bool> IsCategoryUsed(int categoryId)
             {
-                using (SqlConnection connection = new SqlConnection(_connectionString))
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    await connection.OpenAsync();
+                const string query = @"
+                    SELECT COUNT(*)
+                    FROM master_supplier
+                    WHERE supplier_category_id =
+                        @categoryId";
 
-                    command.Parameters.AddWithValue("@id", id);
+                using SqlConnection connection =
+                    new SqlConnection(
+                        _connectionString
+                    );
 
-                    int result = await command.ExecuteNonQueryAsync();
+                using SqlCommand command =
+                    new SqlCommand(
+                        query,
+                        connection
+                    );
 
-                    return result > 0;
-                }
+                await connection.OpenAsync();
+
+                command.Parameters.AddWithValue(
+                    "@categoryId",
+                    categoryId
+                );
+
+                int count =
+                    Convert.ToInt32(
+                        await command
+                            .ExecuteScalarAsync()
+                    );
+
+                return count > 0;
             }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
+
+            public async Task<bool> DeleteSupplierCategory(int id)
+    {
+        const string query = @"
+            DELETE FROM supplier_category
+            WHERE category_id = @id";
+
+        using SqlConnection connection =
+            new SqlConnection(_connectionString);
+
+        using SqlCommand command =
+            new SqlCommand(query, connection);
+
+        await connection.OpenAsync();
+
+        command.Parameters.AddWithValue(
+            "@id",
+            id
+        );
+
+        int result =
+            await command.ExecuteNonQueryAsync();
+
+        return result > 0;
+    }
 
         // GET ALL
         public async Task<List<SupplierCategory>> GetAllSupplierCategory()

@@ -21,6 +21,12 @@ namespace trinova_erp_backend.Models
 
         public DateTime? created_at { get; set; }
 
+        public int supplier_id { get; set; }
+
+        public string supplier_name { get; set; } = "";
+
+        public decimal total_amount { get; set; }
+
         [ForeignKey("purchase_order_id")]
         public PurchaseOrder? PurchaseOrder { get; set; }
     }
