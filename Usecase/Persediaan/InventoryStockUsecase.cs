@@ -22,13 +22,26 @@ namespace trinova_erp_backend.Usecase.Persediaan
         //    return await _repo.GetByIdAsync(id);
         //}
 
-        //public async Task<InventoryStock> CreateAsync(InventoryStock stock)
-        //{
-        //    if (stock.quantity < 0)
-        //        throw new Exception("Quantity cannot be negative");
+        public async Task<InventoryStock> CreateAsync(InventoryStock stock)
+        {
+            if (stock.qty_on_hand < 0)
+                {
+                    throw new Exception(
+                        "Stock cannot be negative"
+                    );
+                }
 
-        //    return await _repo.CreateAsync(stock);
-        //}
+                stock.qty_available =
+                    stock.qty_on_hand -
+                    stock.qty_reserved;
+
+                stock.created_at =
+                    DateTime.Now;
+
+                stock.updated_at =
+                    DateTime.Now;
+            return await _repo.CreateAsync(stock);
+        }
 
         //public async Task UpdateAsync(InventoryStock stock)
         //{

@@ -54,6 +54,7 @@ namespace trinova_erp_backend.Config
             services.AddScoped<MasterWarehouseRepo>();
             services.AddScoped<InventoryStockRepo>();
             services.AddScoped<StockTransactionRepo>();
+            services.AddScoped<PurchaseRequisitionRepo>();
 
             // PERSEDIAAN USECASE
             services.AddScoped<IMasterProductUsecase, MasterProductUsecase>();
@@ -62,6 +63,7 @@ namespace trinova_erp_backend.Config
             services.AddScoped<IMasterWarehouseUsecase, MasterWarehouseUsecase>();
             services.AddScoped<InventoryStockUsecase>();
             services.AddScoped<StockTransactionUsecase>();
+            services.AddScoped<PurchaseRequisitionUsecase>();
 
 
 

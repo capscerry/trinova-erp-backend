@@ -1,12 +1,13 @@
 using DotNetEnv;
-
+using Microsoft.EntityFrameworkCore;
 using trinova_erp_backend.Config;
+using trinova_erp_backend.Data;
+using trinova_erp_backend.Repositories.Persediaan;
+using trinova_erp_backend.Usecase.Persediaan;
 
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
-
-Env.Load();
 
 builder.Services.Configure<DatabaseConnection>(options =>
 {
@@ -29,6 +30,8 @@ builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<MasterProductSubcategoryRepo>();
+builder.Services.AddScoped<MasterProductSubcategoryUsecase>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowCors", policy =>

@@ -15,11 +15,11 @@ namespace trinova_erp_backend.Controllers.Persediaan
             _usecase = usecase;
         }
 
-        //[HttpGet]
-        //public async Task<IActionResult> GetAll()
-        //{
-        //    return Ok(await _usecase.GetAllAsync());
-        //}
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            return Ok(await _usecase.GetAllAsync());
+        }
 
         //[HttpPost]
         //public async Task<IActionResult> Create(StockTransaction transaction)

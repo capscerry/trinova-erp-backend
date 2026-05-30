@@ -55,8 +55,58 @@ namespace trinova_erp_backend.Controllers.Persediaan
             });
         }
 
+        [HttpGet("/api/master-product/{id}")]
+        public async Task<IActionResult> GetMasterProductById(
+            int id
+        )
+        {
+            var result = await _masterProductUsecase
+                .GetMasterProductById(id);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    status = false,
+                    message = "Product Not Found"
+                });
+            }
+
+            return Ok(new
+            {
+                status = true,
+                data = result
+            });
+        }
+
+        [HttpPut("/api/master-product")]
+        public async Task<IActionResult> UpdateMasterProduct(
+            [FromBody] MasterProduct masterProduct
+        )
+        {
+            var result = await _masterProductUsecase
+                .UpdateMasterProduct(masterProduct);
+
+            if (result)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Update Product"
+                });
+            }
+
+            return BadRequest(new
+            {
+                status = false,
+                message = "Failed Update Product"
+            });
+        }
+
         [HttpDelete("/api/master-product/{id}")]
-        public async Task<IActionResult> DeleteMasterProduct(int id)
+        public async Task<IActionResult> DeleteMasterProduct(
+            int id
+        )
         {
             var result = await _masterProductUsecase
                 .DeleteMasterProduct(id);
@@ -66,14 +116,14 @@ namespace trinova_erp_backend.Controllers.Persediaan
                 return Ok(new
                 {
                     status = true,
-                    message = "Success Delete Data"
+                    message = "Success Delete Product"
                 });
             }
 
             return BadRequest(new
             {
                 status = false,
-                message = "Failed Delete Data"
+                message = "Failed Delete Product"
             });
         }
 

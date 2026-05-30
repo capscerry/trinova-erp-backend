@@ -12,5 +12,11 @@ namespace trinova_erp_backend.Models
         public string? uom_code { get; set; }
 
         public string? uom_name { get; set; }
+
+        public DateTime? created_at { get; set; }
+
+        public DateTime? updated_at { get; set; }
+
+        public bool? is_active { get; set; }
     }
 }
