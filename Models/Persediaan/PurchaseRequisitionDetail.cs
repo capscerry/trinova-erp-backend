@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace trinova_erp_backend.Models.Persediaan
 {
@@ -22,6 +23,7 @@ namespace trinova_erp_backend.Models.Persediaan
 
         public string? remarks { get; set; }
 
+        [JsonIgnore]
         [ForeignKey(nameof(pr_id))]
         public PurchaseRequisition? PurchaseRequisition { get; set; }
 
