@@ -75,7 +75,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             const string updateStockQuery = @"
                                 UPDATE inventory_stock
                                 SET
-                                    quantity = quantity + @quantity,
+                                    qty_on_hand = qty_on_hand + @quantity,
+                                    qty_available = qty_available + @quantity,
                                     updated_at = GETDATE()
                                 WHERE product_id = @product_id";
 
@@ -93,42 +94,42 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 await updateCommand.ExecuteNonQueryAsync();
                             }
                         }
-                        else
-                        {
-                            const string insertStockQuery = @"
-                                INSERT INTO inventory_stock
-                                (
-                                    product_id,
-                                    quantity,
-                                    minimum_stock,
-                                    maximum_stock,
-                                    created_at,
-                                    updated_at
-                                )
-                                VALUES
-                                (
-                                    @product_id,
-                                    @quantity,
-                                    0,
-                                    0,
-                                    GETDATE(),
-                                    GETDATE()
-                                )";
+                        // else
+                        // {
+                        //     const string insertStockQuery = @"
+                        //         INSERT INTO inventory_stock
+                        //         (
+                        //             product_id,
+                        //             quantity,
+                        //             minimum_stock,
+                        //             maximum_stock,
+                        //             created_at,
+                        //             updated_at
+                        //         )
+                        //         VALUES
+                        //         (
+                        //             @product_id,
+                        //             @quantity,
+                        //             0,
+                        //             0,
+                        //             GETDATE(),
+                        //             GETDATE()
+                        //         )";
 
-                            using (SqlCommand insertCommand =
-                                   new SqlCommand(insertStockQuery, connection))
-                            {
-                                insertCommand.Parameters.AddWithValue(
-                                    "@product_id",
-                                    model.product_id);
+                        //     using (SqlCommand insertCommand =
+                        //            new SqlCommand(insertStockQuery, connection))
+                        //     {
+                        //         insertCommand.Parameters.AddWithValue(
+                        //             "@product_id",
+                        //             model.product_id);
 
-                                insertCommand.Parameters.AddWithValue(
-                                    "@quantity",
-                                    model.quantity);
+                        //         insertCommand.Parameters.AddWithValue(
+                        //             "@quantity",
+                        //             model.quantity);
 
-                                await insertCommand.ExecuteNonQueryAsync();
-                            }
-                        }
+                        //         await insertCommand.ExecuteNonQueryAsync();
+                        //     }
+                        // }
                     }
 
                     // ====================================================
@@ -150,7 +151,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                         VALUES
                         (
                             @product_id,
-                            NULL,
+                            1,
                             'IN',
                             @quantity,
                             'Goods Receipt',
@@ -184,9 +185,10 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     return result > 0;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;
+                Console.WriteLine(ex.Message);
+                throw;
             }
         }
     }

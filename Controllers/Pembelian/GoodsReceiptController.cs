@@ -22,13 +22,23 @@ namespace trinova_erp_backend.Controllers.Pembelian
             [FromBody] GoodsReceipt goodsReceipt
         )
         {
-            var result = await _goodsReceiptUsecase
-                .InsertGoodsReceipt(goodsReceipt);
+            var goodsReceiptId =
+                await _goodsReceiptUsecase
+                    .InsertGoodsReceipt(goodsReceipt);
+
+            if (goodsReceiptId <= 0)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = "Insert Failed"
+                });
+            }
 
             return Ok(new
             {
                 status = true,
-                message = result
+                goods_receipt_id = goodsReceiptId
             });
         }
 

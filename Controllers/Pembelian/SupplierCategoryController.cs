@@ -83,25 +83,31 @@ namespace trinova_erp_backend.Controllers.Pembelian
         }
 
         [HttpDelete("/api/supplier-category/{id}")]
-        public async Task<IActionResult> DeleteSupplierCategory(int id)
+        public async Task<IActionResult>
+            DeleteSupplierCategory(
+                int id
+            )
         {
-            var result = await _supplierCategoryUsecase
-                .DeleteSupplierCategory(id);
-
-            if (result)
+            try
             {
+                var result =
+                    await _supplierCategoryUsecase
+                        .DeleteSupplierCategory(id);
+
                 return Ok(new
                 {
                     status = true,
                     message = "Success Delete Data"
                 });
             }
-
-            return BadRequest(new
+            catch (Exception ex)
             {
-                status = false,
-                message = "Failed Delete Data"
-            });
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
         }
     }
 }

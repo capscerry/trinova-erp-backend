@@ -1,0 +1,146 @@
+using trinova_erp_backend.Models;
+using trinova_erp_backend.Repositories.Pembelian;
+
+namespace trinova_erp_backend.Usecase.Pembelian
+{
+    public interface IPurchaseInvoiceUsecase
+    {
+        Task<int> InsertPurchaseInvoice(
+            PurchaseInvoice model
+        );
+
+        Task<List<PurchaseInvoice>>
+            GetAllPurchaseInvoice();
+
+        Task<bool> UpdatePurchaseInvoice(
+            PurchaseInvoice model
+        );
+
+        Task<bool> DeletePurchaseInvoice(
+            int id
+        );
+    }
+
+    public class PurchaseInvoiceUsecase
+        : IPurchaseInvoiceUsecase
+    {
+        private readonly IPurchaseInvoiceRepo
+            _purchaseInvoiceRepo;
+
+        public PurchaseInvoiceUsecase(
+            IPurchaseInvoiceRepo purchaseInvoiceRepo
+        )
+        {
+            _purchaseInvoiceRepo =
+                purchaseInvoiceRepo;
+        }
+
+        public async Task<int>
+            InsertPurchaseInvoice(
+                PurchaseInvoice model
+            )
+        {
+            model.created_at =
+                DateTime.Now;
+
+            model.invoice_date =
+                DateTime.Now;
+
+            model.status =
+                "Unpaid";
+
+            string today =
+                DateTime.Now.ToString(
+                    "yyyyMMdd"
+                );
+
+            model.invoice_number =
+                $"INV-{today}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
+
+            
+            bool isExist =
+                await _purchaseInvoiceRepo
+                    .IsInvoiceExist(
+                        model.goods_receipt_id
+                    );
+
+            if (isExist)
+            {
+                throw new Exception(
+                    "Invoice already exists for this Goods Receipt"
+                );
+            }
+
+            var result =
+                await _purchaseInvoiceRepo
+                    .InsertPurchaseInvoice(
+                        model
+                    );
+
+            return result;
+        }
+
+        public async Task<List<PurchaseInvoice>>
+            GetAllPurchaseInvoice()
+        {
+            return await _purchaseInvoiceRepo
+                .GetAllPurchaseInvoice();
+        }
+
+public async Task<bool>
+    UpdatePurchaseInvoice(
+        PurchaseInvoice model
+    )
+{
+    var existing =
+        await _purchaseInvoiceRepo
+            .GetPurchaseInvoiceById(
+                model.purchase_invoice_id
+            );
+
+    if (existing == null)
+    {
+        return false;
+    }
+
+    if (
+        existing.status == "Paid"
+        || existing.status == "Cancelled"
+    )
+    {
+        return false;
+    }
+
+    return await _purchaseInvoiceRepo
+        .UpdatePurchaseInvoice(
+            model
+        );
+}
+
+    public async Task<bool>
+        DeletePurchaseInvoice(
+            int id
+        )
+    {
+        var existing =
+            await _purchaseInvoiceRepo
+                .GetPurchaseInvoiceById(id);
+
+        if (existing == null)
+        {
+            return false;
+        }
+
+        if (
+            existing.status == "Paid"
+            || existing.status == "Cancelled"
+        )
+        {
+            return false;
+        }
+
+        return await _purchaseInvoiceRepo
+            .DeletePurchaseInvoice(id);
+    }
+        }
+    }
