@@ -35,6 +35,8 @@ builder.Services.AddScoped<MasterProductSubcategoryUsecase>();
 builder.Services.AddScoped<StockMovementRepo>();
 builder.Services.AddScoped<StockTransferUsecase>();
 builder.Services.AddScoped<OrderFulfillmentUsecase>();
+builder.Services.AddScoped<ForecastRepo>();
+builder.Services.AddScoped<DemandForecastUsecase>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowCors", policy =>
