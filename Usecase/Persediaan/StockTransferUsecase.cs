@@ -79,9 +79,12 @@ namespace trinova_erp_backend.Usecase.Persediaan
                         $"TRF-{DateTime.Now:yyyyMMddHHmmss}"
                 });
         }
-        public async Task<List<StockMovement>>GetAllAsync()
+        public async Task<List<StockMovement>>
+            GetAllAsync()
         {
-            return await _movementRepo.GetAllAsync();
+            return await _movementRepo
+                .GetByMovementTypeAsync(
+                    "TRANSFER");
         }
     }
 }
