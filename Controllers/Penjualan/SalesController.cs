@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Models.Penjualan;
 using trinova_erp_backend.Usecase.Penjualan;
 
@@ -44,7 +45,104 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 return Ok(new
                 {
                     success = true,
-                    message = result
+                    message = "Berhasil membuat penawaran penjualan",
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message,
+                    detail = ex.InnerException?.Message
+                });
+            }
+        }
+
+        [HttpGet("/api/SalesQuotation")]
+        public async Task<IActionResult> GetAllSalesQuotation()
+        {
+            try
+            {
+                var result = await _salesQuotationUsecase.GetAllQuotations();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Data Sales Quotation berhasil diambil",
+                    data = result ?? new List<QuotationHeaderDTO>()
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message,
+                    detail = ex.InnerException?.Message
+                });
+            }
+        }
+
+        [HttpGet("/api/header-detail/{quotationId}")]
+        public async Task<IActionResult> GetQuotationHeaderDetailById(int quotationId)
+        {
+            var result = await _salesQuotationUsecase
+                .GetQuotationHeaderDetailById(quotationId);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Sales Quotation tidak ditemukan"
+                });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                message = "Detail Sales Quotation berhasil diambil",
+                data = result
+            });
+        }
+
+        [HttpGet("/api/SalesQuotation/{customerId}")]
+        public async Task<IActionResult> GetAllSalesQuotationById(int customerId)
+        {
+            try
+            {
+                var result = await _salesQuotationUsecase.GetAllQuotationById(customerId);
+                return Ok(new
+                {
+                    success = true,
+                    message = "Data Sales Quotation Berhasil diambil",
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message,
+                    detail = ex.InnerException?.Message
+                });
+            }
+        }
+
+        [HttpGet("/api/quotation-detail/{quotationId}")]
+        public async Task<IActionResult> GetAllQuotationDetailById(int quotationId)
+        {
+            try
+            {
+                var result = await _salesQuotationUsecase.GetAllQuotationDetailById(quotationId);
+                return Ok(new
+                {
+                    success = true,
+                    message = "Data Detail Quotation Berhasil diambil",
+                    data = result
                 });
             }
             catch (Exception ex)

@@ -9,6 +9,7 @@
         public int CategoryId { get; set; }
         public string? CategoryName { get; set; }
         public string? Uom { get; set; }
+        public int UomId { get; set; }
 
         
     }

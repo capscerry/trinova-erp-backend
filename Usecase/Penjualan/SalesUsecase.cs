@@ -18,6 +18,10 @@ namespace trinova_erp_backend.Usecase.Penjualan
     
     public interface ISalesQuotationUsecase {
         Task<string> InsertSalesQuotation(SalesQuotation quotation);
+        Task<List<QuotationHeaderDTO>> GetAllQuotations();
+        Task<List<QuotationHeaderDTO>> GetAllQuotationById(int customerId);
+        Task<List<QuotationDetailDTO>> GetAllQuotationDetailById(int quotationId);
+        Task<QuotationHeaderDetailDTO?> GetQuotationHeaderDetailById(int quotationId);
     }
 
     public interface ISalesOrderUsecase
@@ -36,6 +40,31 @@ namespace trinova_erp_backend.Usecase.Penjualan
             _connectionString = options.Value.SQLServer;
             _salesQuotationRepo = salesQuotationRepo;
         }
+        public async Task<List<QuotationHeaderDTO>> GetAllQuotations()
+        {
+            var result = await _salesQuotationRepo.GetQuotationHeaders();
+            return result;
+        }
+
+        public async Task<List<QuotationHeaderDTO>> GetAllQuotationById(int customerId)
+        {
+            var result = await _salesQuotationRepo.GetQuotationHeaderById(customerId);
+            return result;
+        }
+
+        public async Task<QuotationHeaderDetailDTO?> GetQuotationHeaderDetailById(int quotationId)
+        {
+            if (quotationId <= 0)
+                throw new ArgumentException("QuotationId tidak valid");
+
+            return await _salesQuotationRepo.GetQuotationHeaderDetailById(quotationId);
+        }
+        public async Task<List<QuotationDetailDTO>> GetAllQuotationDetailById(int quotationId)
+        {
+            var result = await _salesQuotationRepo.GetQuotationDetailById(quotationId);
+            return result;
+        }
+
         public async Task<string> InsertSalesQuotation(SalesQuotation quotation)
         {
             using var conn = new SqlConnection(_connectionString);

@@ -608,3 +608,5 @@ C:\Viko\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-.B3CAAC3E.Up2Date
 C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.genruntimeconfig.cache
 C:\Viko\trinova-erp-backend\obj\Debug\net8.0\ref\trinova-erp-backend.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.DataSet.dll

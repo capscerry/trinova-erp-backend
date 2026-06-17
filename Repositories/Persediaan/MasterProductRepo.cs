@@ -32,7 +32,8 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     mp.product_type    AS ProductType,
                     mpc.category_id    AS CategoryId,
                     mpc.category_name  AS CategoryName,
-                    mu.uom_code        AS Uom
+                    mu.uom_code        AS Uom,
+                    mu.uom_id          AS UomId
                 FROM master_product mp
                 JOIN master_product_category mpc
                     ON mp.category_id = mpc.category_id

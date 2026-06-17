@@ -231,6 +231,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesController",
+    "Method": "GetQuotationHeaderDetailById",
+    "RelativePath": "api/header-detail/{quotationId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "quotationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Persediaan.InventoryStockController",
     "Method": "GetAll",
     "RelativePath": "api/InventoryStock",
@@ -403,6 +419,69 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseInvoiceController",
+    "Method": "InsertPurchaseInvoice",
+    "RelativePath": "api/purchase-invoice",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "purchaseInvoice",
+        "Type": "trinova_erp_backend.Models.PurchaseInvoice",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseInvoiceController",
+    "Method": "GetAllPurchaseInvoice",
+    "RelativePath": "api/purchase-invoice",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseInvoiceController",
+    "Method": "UpdatePurchaseInvoice",
+    "RelativePath": "api/purchase-invoice/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "purchaseInvoice",
+        "Type": "trinova_erp_backend.Models.PurchaseInvoice",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseInvoiceController",
+    "Method": "DeletePurchaseInvoice",
+    "RelativePath": "api/purchase-invoice/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseOrderController",
     "Method": "InsertPurchaseOrder",
     "RelativePath": "api/purchase-order",
@@ -536,6 +615,22 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesController",
+    "Method": "GetAllQuotationDetailById",
+    "RelativePath": "api/quotation-detail/{quotationId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "quotationId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": []
   },
   {
@@ -675,6 +770,32 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesController",
+    "Method": "GetAllSalesQuotation",
+    "RelativePath": "api/SalesQuotation",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesController",
+    "Method": "GetAllSalesQuotationById",
+    "RelativePath": "api/SalesQuotation/{customerId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "customerId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Persediaan.StockTransactionController",
     "Method": "GetAll",
     "RelativePath": "api/StockTransaction",
@@ -785,6 +906,37 @@
         "Name": "id",
         "Type": "System.Int32",
         "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierProductController",
+    "Method": "GetAllSupplierProduct",
+    "RelativePath": "api/supplier-product",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierProductController",
+    "Method": "ImportSupplierCatalog",
+    "RelativePath": "api/supplier-product/import/{supplierId}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "supplierId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "file",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
