@@ -3,6 +3,8 @@
     public class SalesOrderDetailDTO
     {
         public string? SoNumber { get; set; }
+        public int OrderId { get; set; }
+        public int CustomerId { get; set; }
         public string? CustomerName { get; set; }
         public DateTime SoDate { get; set; }
         public DateTime TanggalKirim { get; set; }
@@ -19,6 +21,7 @@
     public class SalesOrderProductDetail
     {
         public string? ProductName { get; set; }
+        public int ProductId { get; set; }
         public int ProductQty { get; set; }
         public decimal ProductPrice { get; set; }
         public int ProductDiscount { get; set; }

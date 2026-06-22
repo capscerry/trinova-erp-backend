@@ -2823,6 +2823,10 @@
             "type": "string",
             "nullable": true
           },
+          "noSo": {
+            "type": "string",
+            "nullable": true
+          },
           "soNumber": {
             "type": "string",
             "nullable": true

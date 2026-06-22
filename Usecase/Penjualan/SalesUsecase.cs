@@ -77,6 +77,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
                 var header = new QuotationHeader
                 {
+                    QuotationId = quotation?.Id ?? 0,
                     CustomerId = quotation.CustomerId,
                     QuotationNumber = quotation.QuotationNumber,
                     QuotationDate = quotation.QuotationDate,
@@ -91,7 +92,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
                     TaxTotal = quotation.TaxTotal ?? 0
                 };
 
-                int quotationId = await _salesQuotationRepo.InsertQuotationHeader(header, conn, tx);
+                int quotationId = await _salesQuotationRepo.UpsertQuotationHeader(header, conn, tx);
                 
                 foreach(var item in quotation.Details)
                 {
@@ -106,7 +107,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
                         DiscountAmount = item.DiscountAmount ?? 0
                     };
 
-                    await _salesQuotationRepo.InsertQuotationDetail(detail, conn, tx);
+                    await _salesQuotationRepo.UpsertQuotationDetail(detail, conn, tx);
 
 
                 }
@@ -190,7 +191,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
             try
             {
                 // Insert header dan ambil hasil header yang sudah ada Id
-                var insertedHeader = await _salesOrderRepo.InsertSalesOrderHeader(
+                var insertedHeader = await _salesOrderRepo.UpsertSalesOrderHeader(
                     model.Header,
                     connection,
                     tx
@@ -204,7 +205,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
                 {
                     detail.OrderId = insertedHeader.OrderId;
 
-                    var insertedDetail = await _salesOrderRepo.InsertSalesOrderDetail(
+                    var insertedDetail = await _salesOrderRepo.UpsertSalesOrderDetail(
                         detail,
                         connection,
                         tx

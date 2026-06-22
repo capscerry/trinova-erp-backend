@@ -16,13 +16,13 @@ namespace trinova_erp_backend.Repositories.Penjualan
 
         Task<QuotationHeaderDetailDTO?> GetQuotationHeaderDetailById(int quotationId);
 
-        Task<int> InsertQuotationHeader(
+        Task<int> UpsertQuotationHeader(
             QuotationHeader header,
             SqlConnection conn,
             SqlTransaction transaction
         );
 
-        Task<bool> InsertQuotationDetail(
+        Task<bool> UpsertQuotationDetail(
             QuotationDetail detail,
             SqlConnection conn,
             SqlTransaction transaction
@@ -86,6 +86,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 sq.quotation_number  AS QuotationNumber,
                 sq.quotation_date    AS QuotationDate,
                 mc.customer_name     AS CustomerName,
+                mc.customer_id       AS CustomerId,
+                sq.address           AS Address,
                 sq.notes             AS Notes,
                 sq.subtotal          AS Subtotal,
                 sq.discount_total    AS DiscountTotal,
@@ -161,13 +163,39 @@ namespace trinova_erp_backend.Repositories.Penjualan
 
 
 
-        public async Task<int> InsertQuotationHeader(
-            QuotationHeader header,
-            SqlConnection conn,
-            SqlTransaction transaction
-        )
+        public async Task<int> UpsertQuotationHeader(
+    QuotationHeader header,
+    SqlConnection conn,
+    SqlTransaction transaction
+)
         {
-            string query = @"
+            try
+            {
+                string query = @"
+            IF EXISTS (
+                SELECT 1
+                FROM sales_quotation
+                WHERE quotation_id = @QuotationId
+            )
+            BEGIN
+                UPDATE sales_quotation
+                SET
+                    customer_id = @CustomerId,
+                    quotation_number = @QuotationNumber,
+                    quotation_date = @QuotationDate,
+                    address = @Address,
+                    notes = @Notes,
+                    is_taxable = @IsTaxable,
+                    is_tax_included = @IsTaxIncluded,
+                    subtotal = @Subtotal,
+                    discount_total = @DiscountTotal,
+                    tax_total = @TaxTotal
+                WHERE quotation_id = @QuotationId;
+
+                SELECT @QuotationId;
+            END
+            ELSE
+            BEGIN
                 INSERT INTO sales_quotation
                 (
                     customer_id,
@@ -195,37 +223,64 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @TaxTotal
                 );
 
-                SELECT CAST(SCOPE_IDENTITY() as int);
-            ";
+                SELECT CAST(SCOPE_IDENTITY() AS INT);
+            END
+        ";
 
-            int quotationId = await conn.ExecuteScalarAsync<int>(
-                query,
-                new
-                {
-                    header.CustomerId,
-                    header.QuotationNumber,
-                    header.QuotationDate,
-                    header.Address,
-                    header.Notes,
-                    header.IsTaxable,
-                    header.IsTaxIncluded,
-                    header.Subtotal,
-                    header.DiscountTotal,
-                    header.TaxTotal
-                },
-                transaction
-            );
+                int quotationId = await conn.ExecuteScalarAsync<int>(
+                    query,
+                    new
+                    {
+                        header.QuotationId,
+                        header.CustomerId,
+                        header.QuotationNumber,
+                        header.QuotationDate,
+                        header.Address,
+                        header.Notes,
+                        header.IsTaxable,
+                        header.IsTaxIncluded,
+                        header.Subtotal,
+                        header.DiscountTotal,
+                        header.TaxTotal
+                    },
+                    transaction
+                );
 
-            return quotationId;
+                return quotationId;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Gagal melakukan upsert quotation header: {ex.Message}", ex);
+            }
         }
 
-        public async Task<bool> InsertQuotationDetail(
-            QuotationDetail detail,
-            SqlConnection conn,
-            SqlTransaction transaction
-        )
+        public async Task<bool> UpsertQuotationDetail(
+    QuotationDetail detail,
+    SqlConnection conn,
+    SqlTransaction transaction
+)
         {
-            string query = @"
+            try
+            {
+                string query = @"
+            IF EXISTS (
+                SELECT 1
+                FROM quotation_detail
+                WHERE quotation_id = @QuotationId
+                  AND product_id = @ProductId
+            )
+            BEGIN
+                UPDATE quotation_detail
+                SET
+                    quantity = @Quantity,
+                    uom_id = @UomId,
+                    price = @Price,
+                    discount_percent = @DiscountPercent
+                WHERE quotation_id = @QuotationId
+                  AND product_id = @ProductId;
+            END
+            ELSE
+            BEGIN
                 INSERT INTO quotation_detail
                 (
                     quotation_id,
@@ -244,25 +299,31 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @Price,
                     @DiscountPercent
                 );
-            ";
+            END
+        ";
 
-            int result = await conn.ExecuteAsync(
-                query,
-                new
-                {
-                    detail.QuotationId,
-                    detail.ProductId,
-                    detail.Quantity,
-                    detail.UomId,
-                    detail.Price,
-                    detail.DiscountPercent
-                },
-                transaction
-            );
+                int result = await conn.ExecuteAsync(
+                    query,
+                    new
+                    {
+                        detail.QuotationId,
+                        detail.ProductId,
+                        detail.Quantity,
+                        detail.UomId,
+                        detail.Price,
+                        detail.DiscountPercent
+                    },
+                    transaction
+                );
 
-            return result > 0;
+                return result > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Gagal melakukan upsert quotation detail: {ex.Message}", ex);
+            }
         }
 
-       
+
     }
 }

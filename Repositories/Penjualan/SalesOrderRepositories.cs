@@ -11,7 +11,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
 {
     public interface ISalesOrderRepositories
     {
-        Task<SalesOrderHeader> InsertSalesOrderHeader(
+        Task<SalesOrderHeader> UpsertSalesOrderHeader(
             SalesOrderHeader header,
             IDbConnection connection,
             IDbTransaction tx
@@ -19,7 +19,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
 
         Task<List<SalesOrderHeader>> GetSalesOrderByCustomerId(int customerId);
 
-        Task<SalesOrderDetail> InsertSalesOrderDetail(
+        Task<SalesOrderDetail> UpsertSalesOrderDetail(
             SalesOrderDetail detail,
             IDbConnection connection,
             IDbTransaction tx
@@ -39,114 +39,184 @@ namespace trinova_erp_backend.Repositories.Penjualan
             _connectionString = options.Value.SQLServer;
         }
 
-        public async Task<SalesOrderHeader> InsertSalesOrderHeader(
-            SalesOrderHeader header,
-            IDbConnection connection,
-            IDbTransaction tx
-        )
+        public async Task<SalesOrderHeader> UpsertSalesOrderHeader(
+    SalesOrderHeader header,
+    IDbConnection connection,
+    IDbTransaction tx
+)
         {
-            string query = @"
-    INSERT INTO sales_order
-    (
-        so_number,
-        tanggal_kirim,
-        so_date,
-        po_number,
-        subtotal,
-        customer_id,
-        is_taxable,
-        is_tax_included,
-        address,
-        notes,
-        discount_total,
-        tax_total
-    )
-    OUTPUT
-        INSERTED.order_id AS OrderId,
-        INSERTED.customer_id AS CustomerId,
-        INSERTED.so_number AS SoNumber,
-        INSERTED.tanggal_kirim AS TanggalKirim,
-        INSERTED.so_date AS SoDate,
-        INSERTED.po_number AS PoNumber,
-        INSERTED.subtotal AS SubTotal,
-        INSERTED.is_taxable AS IsTaxAble,
-        INSERTED.is_tax_included AS IsTaxIncluded,
-        INSERTED.address AS Address,
-        INSERTED.notes AS Notes,
-        INSERTED.discount_total AS DiscountTotal,
-        INSERTED.tax_total AS TaxTotal
-    VALUES
-    (
-        @SoNumber,
-        @TanggalKirim,
-        @SoDate,
-        @PoNumber,
-        @SubTotal,
-        @CustomerId,
-        @IsTaxAble,
-        @IsTaxIncluded,
-        @Address,
-        @Notes,
-        @DiscountTotal,
-        @TaxTotal
-    );
-";
+            try
+            {
+                string query = @"
+            IF EXISTS (
+                SELECT 1
+                FROM sales_order
+                WHERE order_id = @OrderId
+            )
+            BEGIN
+                UPDATE sales_order
+                SET
+                    so_number = @SoNumber,
+                    tanggal_kirim = @TanggalKirim,
+                    so_date = @SoDate,
+                    po_number = @PoNumber,
+                    subtotal = @SubTotal,
+                    customer_id = @CustomerId,
+                    is_taxable = @IsTaxAble,
+                    is_tax_included = @IsTaxIncluded,
+                    address = @Address,
+                    notes = @Notes,
+                    discount_total = @DiscountTotal,
+                    tax_total = @TaxTotal
+                WHERE order_id = @OrderId;
+            END
+            ELSE
+            BEGIN
+                INSERT INTO sales_order
+                (
+                    so_number,
+                    tanggal_kirim,
+                    so_date,
+                    po_number,
+                    subtotal,
+                    customer_id,
+                    is_taxable,
+                    is_tax_included,
+                    address,
+                    notes,
+                    discount_total,
+                    tax_total
+                )
+                VALUES
+                (
+                    @SoNumber,
+                    @TanggalKirim,
+                    @SoDate,
+                    @PoNumber,
+                    @SubTotal,
+                    @CustomerId,
+                    @IsTaxAble,
+                    @IsTaxIncluded,
+                    @Address,
+                    @Notes,
+                    @DiscountTotal,
+                    @TaxTotal
+                );
 
-            return await connection.QuerySingleAsync<SalesOrderHeader>(
-                query,
-                header,
-                tx
-            );
+                SET @OrderId = CAST(SCOPE_IDENTITY() AS INT);
+            END
+
+            SELECT
+                order_id AS OrderId,
+                customer_id AS CustomerId,
+                so_number AS SoNumber,
+                tanggal_kirim AS TanggalKirim,
+                so_date AS SoDate,
+                po_number AS PoNumber,
+                subtotal AS SubTotal,
+                is_taxable AS IsTaxAble,
+                is_tax_included AS IsTaxIncluded,
+                address AS Address,
+                notes AS Notes,
+                discount_total AS DiscountTotal,
+                tax_total AS TaxTotal
+            FROM sales_order
+            WHERE order_id = @OrderId;
+        ";
+
+                return await connection.QuerySingleAsync<SalesOrderHeader>(
+                    query,
+                    header,
+                    tx
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Gagal melakukan upsert sales order header: {ex.Message}", ex);
+            }
         }
 
-        public async Task<SalesOrderDetail> InsertSalesOrderDetail(
+        public async Task<SalesOrderDetail> UpsertSalesOrderDetail(
     SalesOrderDetail detail,
     IDbConnection connection,
     IDbTransaction tx
 )
         {
-            string query = @"
-    INSERT INTO sales_order_detail
-    (
-        order_id,
-        product_id,
-        product_code,
-        product_name,
-        product_qty,
-        product_price,
-        discount_percent,
-        total_price,
-        warehouse_id
-    )
-    OUTPUT
-        INSERTED.order_id AS OrderId,
-        INSERTED.product_id AS ProductId,
-        INSERTED.product_code AS ProductCode,
-        INSERTED.product_name AS ProductName,
-        INSERTED.product_qty AS ProductQty,
-        INSERTED.product_price AS ProductPrice,
-        INSERTED.discount_percent AS DiscountPercent,
-        INSERTED.total_price AS TotalPrice,
-        INSERTED.warehouse_id AS WarehouseId
-    VALUES
-    (
-        @OrderId,
-        @ProductId,
-        @ProductCode,
-        @ProductName,
-        @ProductQty,
-        @ProductPrice,
-        @DiscountPercent,
-        @TotalPrice,
-        @WarehouseId
-    );
-";
+            try
+            {
+                string query = @"
+            IF EXISTS (
+                SELECT 1
+                FROM sales_order_detail
+                WHERE order_id = @OrderId
+                  AND product_id = @ProductId
+            )
+            BEGIN
+                UPDATE sales_order_detail
+                SET
+                    product_code = @ProductCode,
+                    product_name = @ProductName,
+                    product_qty = @ProductQty,
+                    product_price = @ProductPrice,
+                    discount_percent = @DiscountPercent,
+                    total_price = @TotalPrice,
+                    warehouse_id = @WarehouseId
+                WHERE order_id = @OrderId
+                  AND product_id = @ProductId;
+            END
+            ELSE
+            BEGIN
+                INSERT INTO sales_order_detail
+                (
+                    order_id,
+                    product_id,
+                    product_code,
+                    product_name,
+                    product_qty,
+                    product_price,
+                    discount_percent,
+                    total_price,
+                    warehouse_id
+                )
+                VALUES
+                (
+                    @OrderId,
+                    @ProductId,
+                    @ProductCode,
+                    @ProductName,
+                    @ProductQty,
+                    @ProductPrice,
+                    @DiscountPercent,
+                    @TotalPrice,
+                    @WarehouseId
+                );
+            END
 
-            return await connection.QuerySingleAsync<SalesOrderDetail>(
-                query,
-                detail,
-                tx
-            );
+            SELECT
+                order_id AS OrderId,
+                product_id AS ProductId,
+                product_code AS ProductCode,
+                product_name AS ProductName,
+                product_qty AS ProductQty,
+                product_price AS ProductPrice,
+                discount_percent AS DiscountPercent,
+                total_price AS TotalPrice,
+                warehouse_id AS WarehouseId
+            FROM sales_order_detail
+            WHERE order_id = @OrderId
+              AND product_id = @ProductId;
+        ";
+
+                return await connection.QuerySingleAsync<SalesOrderDetail>(
+                    query,
+                    detail,
+                    tx
+                );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Gagal melakukan upsert sales order detail: {ex.Message}", ex);
+            }
         }
 
         public async Task<List<SalesOrderHeader>> GetAllSalesOrder()
@@ -218,6 +288,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
             SELECT 
                 so.so_number AS SoNumber,
                 mc.customer_name AS CustomerName,
+                mc.customer_id  AS CustomerId,
+                so.order_id AS OrderId,
                 so.so_date AS SoDate,
                 so.tanggal_kirim AS TanggalKirim,
                 so.po_number AS PoNumber,
@@ -235,6 +307,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 string detailQuery = @"
             SELECT 
                 mp.product_name AS ProductName,
+                mp.product_id   AS ProductId,
                 sod.product_qty AS ProductQty,
                 sod.product_price AS ProductPrice,
                 sod.discount_percent AS ProductDiscount,
