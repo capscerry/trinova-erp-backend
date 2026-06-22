@@ -5,6 +5,7 @@ using System.Data;
 using trinova_erp_backend.Config;
 using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Models.Penjualan;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace trinova_erp_backend.Repositories.Penjualan
 {
@@ -15,6 +16,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
             IDbConnection connection,
             IDbTransaction tx
         );
+
+        Task<List<SalesOrderHeader>> GetSalesOrderByCustomerId(int customerId);
 
         Task<SalesOrderDetail> InsertSalesOrderDetail(
             SalesOrderDetail detail,
@@ -54,7 +57,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
         is_taxable,
         is_tax_included,
         address,
-        notes
+        notes,
+        discount_total,
+        tax_total
     )
     OUTPUT
         INSERTED.order_id AS OrderId,
@@ -67,7 +72,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
         INSERTED.is_taxable AS IsTaxAble,
         INSERTED.is_tax_included AS IsTaxIncluded,
         INSERTED.address AS Address,
-        INSERTED.notes AS Notes
+        INSERTED.notes AS Notes,
+        INSERTED.discount_total AS DiscountTotal,
+        INSERTED.tax_total AS TaxTotal
     VALUES
     (
         @SoNumber,
@@ -79,7 +86,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
         @IsTaxAble,
         @IsTaxIncluded,
         @Address,
-        @Notes
+        @Notes,
+        @DiscountTotal,
+        @TaxTotal
     );
 ";
 
@@ -105,7 +114,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
         product_name,
         product_qty,
         product_price,
-        discount_amount,
+        discount_percent,
         total_price,
         warehouse_id
     )
@@ -116,7 +125,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
         INSERTED.product_name AS ProductName,
         INSERTED.product_qty AS ProductQty,
         INSERTED.product_price AS ProductPrice,
-        INSERTED.discount_amount AS DiscountAmount,
+        INSERTED.discount_percent AS DiscountPercent,
         INSERTED.total_price AS TotalPrice,
         INSERTED.warehouse_id AS WarehouseId
     VALUES
@@ -127,7 +136,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
         @ProductName,
         @ProductQty,
         @ProductPrice,
-        @DiscountAmount,
+        @DiscountPercent,
         @TotalPrice,
         @WarehouseId
     );
@@ -167,57 +176,99 @@ namespace trinova_erp_backend.Repositories.Penjualan
             return result.ToList();
         }
 
-        public async Task<SalesOrderDetailDTO> GetSalesOrderDetail(int orderId)
+        public async Task<List<SalesOrderHeader>> GetSalesOrderByCustomerId(int customerId)
         {
+            string query = @"
+                SELECT
+                     so.order_id        AS OrderId,
+                     so.customer_id     AS CustomerId,         
+                     mc.customer_name   AS CustomerName,
+                     so.so_number       AS SoNumber,
+                     so.tanggal_kirim   AS TanggalKirim,
+                     so.so_date         AS SoDate,
+                     so.po_number       AS PoNumber,
+                     so.subtotal        AS SubTotal,
+                     so.is_taxable      AS IsTaxAble,
+                     so.is_tax_included AS IsTaxIncluded,
+                     so.address         AS Address,
+                     so.notes           AS Notes
+                 FROM sales_order so JOIN master_customer mc  ON so.customer_id  = mc.customer_id 
+                 WHERE mc.customer_id = @CustomerId
+                 ORDER BY order_id DESC";
+
             using var connection = new SqlConnection(_connectionString);
 
-            string headerQuery = @"
-                SELECT 
-                    so.so_number AS SoNumber,
-                    mc.customer_name AS CustomerName,
-                    so.so_date AS SoDate,
-                    so.tanggal_kirim AS TanggalKirim,
-                    so.po_number AS PoNumber,
-                    so.address AS Address,
-                    so.subtotal AS Total,
-                    so.notes AS Keterangan
-                FROM sales_order so
-                JOIN master_customer mc 
-                    ON mc.customer_id = so.customer_id
-                WHERE so.order_id = @OrderId
-            ";
+            var result = await connection.QueryAsync<SalesOrderHeader>(
+               query,
+               new
+               {
+                   CustomerId = customerId
+               });
 
-            string detailQuery = @"
-                SELECT 
-                    mp.product_name AS ProductName,
-                    sod.product_qty AS ProductQty,
-                    sod.product_price AS ProductPrice,
-                    sod.discount_amount AS ProductDiscount,
-                    sod.total_price AS TotalPrice
-                FROM sales_order_detail sod
-                JOIN master_product mp 
-                    ON mp.product_id = sod.product_id
-                WHERE sod.order_id = @OrderId
-            ";
+            return result.ToList();
+        }
 
-            var header = await connection.QueryFirstOrDefaultAsync<SalesOrderDetailDTO>(
-                headerQuery,
-                new { OrderId = orderId }
-            );
+        public async Task<SalesOrderDetailDTO?> GetSalesOrderDetail(int orderId)
+        {
+            try
+            {
+                using var connection = new SqlConnection(_connectionString);
 
-            if (header == null)
-                return null;
+                string headerQuery = @"
+            SELECT 
+                so.so_number AS SoNumber,
+                mc.customer_name AS CustomerName,
+                so.so_date AS SoDate,
+                so.tanggal_kirim AS TanggalKirim,
+                so.po_number AS PoNumber,
+                so.address AS Address,
+                so.subtotal AS Total,
+                so.discount_total AS DiscountTotal,
+                so.tax_total AS TaxTotal,
+                so.notes AS Keterangan
+            FROM sales_order so
+            JOIN master_customer mc 
+                ON mc.customer_id = so.customer_id
+            WHERE so.order_id = @OrderId
+        ";
 
-            var details = await connection.QueryAsync<SalesOrderProductDetail>(
-                detailQuery,
-                new { OrderId = orderId }
-            );
+                string detailQuery = @"
+            SELECT 
+                mp.product_name AS ProductName,
+                sod.product_qty AS ProductQty,
+                sod.product_price AS ProductPrice,
+                sod.discount_percent AS ProductDiscount,
+                sod.total_price AS TotalPrice
+            FROM sales_order_detail sod
+            JOIN master_product mp 
+                ON mp.product_id = sod.product_id
+            WHERE sod.order_id = @OrderId
+        ";
 
-            header.Detail = details.ToList();
+                var header = await connection.QueryFirstOrDefaultAsync<SalesOrderDetailDTO>(
+                    headerQuery,
+                    new { OrderId = orderId }
+                );
 
-            return header;
+                if (header == null)
+                    return null;
 
+                var details = await connection.QueryAsync<SalesOrderProductDetail>(
+                    detailQuery,
+                    new { OrderId = orderId }
+                );
 
+                header.Detail = details.ToList();
+
+                return header;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(
+                    $"Terjadi kesalahan saat mengambil Sales Order Detail. OrderId: {orderId}. Error: {ex.Message}",
+                    ex
+                );
+            }
         }
     }
 }

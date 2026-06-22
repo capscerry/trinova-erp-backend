@@ -10,6 +10,8 @@
         public string? Address { get; set; }
         public string? Keterangan { get; set; }
         public decimal Total { get; set; }
+        public decimal DiscountTotal { get; set; }
+        public decimal TaxTotal { get; set; }
 
         public List<SalesOrderProductDetail> Detail { get; set; } = new();
     }
@@ -19,7 +21,7 @@
         public string? ProductName { get; set; }
         public int ProductQty { get; set; }
         public decimal ProductPrice { get; set; }
-        public decimal ProductDiscount { get; set; }
+        public int ProductDiscount { get; set; }
         public decimal TotalPrice { get; set; }
     }
 }

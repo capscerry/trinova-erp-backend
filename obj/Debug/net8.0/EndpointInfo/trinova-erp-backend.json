@@ -729,6 +729,59 @@
         }
       }
     },
+    "/api/bank": {
+      "get": {
+        "tags": [
+          "PenerimaanPenjualan"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sales-receipt": {
+      "get": {
+        "tags": [
+          "PenerimaanPenjualan"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PenerimaanPenjualan"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PenerimaanPenjualan"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PenerimaanPenjualan"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PenerimaanPenjualan"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/purchase-invoice": {
       "post": {
         "tags": [
@@ -1326,6 +1379,29 @@
         "parameters": [
           {
             "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sales-order/by-customer/{customerId}": {
+      "get": {
+        "tags": [
+          "Sales"
+        ],
+        "parameters": [
+          {
+            "name": "customerId",
             "in": "path",
             "required": true,
             "schema": {
@@ -2112,6 +2188,54 @@
         },
         "additionalProperties": false
       },
+      "PenerimaanPenjualan": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "noBukti": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "customerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "bankId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bankName": {
+            "type": "string",
+            "nullable": true
+          },
+          "nilaiPembayaran": {
+            "type": "number",
+            "format": "double"
+          },
+          "tanggalBayar": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uangMukaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "salesOrderId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "PurchaseInvoice": {
         "type": "object",
         "properties": {
@@ -2278,9 +2402,9 @@
             "type": "number",
             "format": "double"
           },
-          "discountAmount": {
-            "type": "number",
-            "format": "double"
+          "discountPercent": {
+            "type": "integer",
+            "format": "int32"
           },
           "totalPrice": {
             "type": "number",
@@ -2328,6 +2452,16 @@
             "nullable": true
           },
           "subTotal": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "discountTotal": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "taxTotal": {
             "type": "number",
             "format": "double",
             "nullable": true

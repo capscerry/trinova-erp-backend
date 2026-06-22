@@ -8,6 +8,8 @@
         public DateTime QuotationDate { get; set; }
         public string? Notes { get; set; }
         public decimal Subtotal { get; set; }
+        public decimal DiscountTotal { get; set; }
+        public decimal TaxTotal { get; set; }
 
     }
 }

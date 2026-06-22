@@ -10,6 +10,7 @@
         public int UomId { get; set; }
         public string? UomCode { get; set; }
         public decimal Price { get; set; }
+        public int DiscountPercent { get; set; }
 
     }
 }

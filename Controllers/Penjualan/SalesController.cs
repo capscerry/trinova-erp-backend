@@ -256,7 +256,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
         {
             try
             {
-                if (data == null)
+                if (data == null)   
                 {
                     return BadRequest(new
                     {
@@ -324,6 +324,40 @@ namespace trinova_erp_backend.Controllers.Penjualan
             {
                 status = true,
                 data = result
+            });
+        }
+
+        [HttpGet("/api/sales-order/by-customer/{customerId}")]
+        public async Task<IActionResult> GetSalesOrderByCustId(int customerId)
+        {
+            var result = await _salesOrderUsecase.GetSalesOrderByCustomerId(customerId);
+
+            if (result == null || !result.Any())
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Data Sales Order tidak ditemukan untuk customer ini",
+                    data = Array.Empty<object>()
+                });
+            }
+
+            var data = result.Select(so => new
+            {
+                id = so.OrderId,
+                soNumber = so.SoNumber,
+                soDate = so.SoDate,
+                customerName = so.CustomerName,
+                poNumber = so.PoNumber,
+                notes = so.Notes,
+                subTotal = so.SubTotal ?? 0
+            });
+
+            return Ok(new
+            {
+                success = true,
+                message = "Data Sales Order Berhasil diambil",
+                data
             });
         }
 

@@ -28,6 +28,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
     {
         Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model);
         Task<List<SalesOrderHeader>> GetAllSalesOrder();
+        Task<List<SalesOrderHeader>> GetSalesOrderByCustomerId(int customerId);
         Task<SalesOrderDetailDTO?> GetSalesOrderDetail(int orderId);
     }
 
@@ -87,6 +88,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
                     Subtotal = quotation.Subtotal ?? 0,
                     DiscountTotal = quotation.DiscountTotal ?? 0,
+                    TaxTotal = quotation.TaxTotal ?? 0
                 };
 
                 int quotationId = await _salesQuotationRepo.InsertQuotationHeader(header, conn, tx);
@@ -170,6 +172,12 @@ namespace trinova_erp_backend.Usecase.Penjualan
             _salesOrderRepo = salesOrderRepo;
             _connectionString = options.Value.SQLServer;
 
+        }
+
+        public async Task<List<SalesOrderHeader>> GetSalesOrderByCustomerId(int customerId)
+        {
+            var result = await _salesOrderRepo.GetSalesOrderByCustomerId(customerId);
+            return result;
         }
 
         public async Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model)

@@ -87,7 +87,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 sq.quotation_date    AS QuotationDate,
                 mc.customer_name     AS CustomerName,
                 sq.notes             AS Notes,
-                sq.subtotal          AS Subtotal
+                sq.subtotal          AS Subtotal,
+                sq.discount_total    AS DiscountTotal,
+                sq.tax_total         AS TaxTotal
             FROM sales_quotation sq
             JOIN master_customer mc
                 ON sq.customer_id = mc.customer_id
@@ -101,7 +103,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 qd.quantity        AS Quantity,
                 mu.uom_id          AS UomId,
                 mu.uom_code        AS UomCode,
-                qd.price           AS Price
+                qd.price           AS Price,
+                qd.discount_percent AS DiscountPercent
             FROM quotation_detail qd
             JOIN master_product mp
                 ON qd.product_id = mp.product_id
@@ -140,7 +143,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                             qd.quantity     AS Quantity,
                             mu.uom_id       AS UomId,
                             mu.uom_code		AS UomCode,
-                            qd.price 		AS Price
+                            qd.price 		AS Price,
+                            qd.discount_percent AS DiscountPercent
                             FROM quotation_detail qd JOIN master_product mp on qd.product_id  = mp.product_id join
                             master_uom mu on qd.uom_id  = mu.uom_id
                             WHERE qd.quotation_id  = @QuotationId";
@@ -174,7 +178,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     is_taxable,
                     is_tax_included,
                     subtotal,
-                    discount_total
+                    discount_total,
+                    tax_total
                 )
                 VALUES
                 (
@@ -186,7 +191,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @IsTaxable,
                     @IsTaxIncluded,
                     @Subtotal,
-                    @DiscountTotal
+                    @DiscountTotal,
+                    @TaxTotal
                 );
 
                 SELECT CAST(SCOPE_IDENTITY() as int);
@@ -204,7 +210,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     header.IsTaxable,
                     header.IsTaxIncluded,
                     header.Subtotal,
-                    header.DiscountTotal
+                    header.DiscountTotal,
+                    header.TaxTotal
                 },
                 transaction
             );
@@ -226,8 +233,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     quantity,
                     uom_id,
                     price,
-                    discount_percent,
-                    discount_amount
+                    discount_percent
                 )
                 VALUES
                 (
@@ -236,8 +242,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @Quantity,
                     @UomId,
                     @Price,
-                    @DiscountPercent,
-                    @DiscountAmount
+                    @DiscountPercent
                 );
             ";
 
@@ -250,8 +255,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     detail.Quantity,
                     detail.UomId,
                     detail.Price,
-                    detail.DiscountPercent,
-                    detail.DiscountAmount
+                    detail.DiscountPercent
                 },
                 transaction
             );

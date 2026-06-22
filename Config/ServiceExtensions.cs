@@ -22,12 +22,14 @@ namespace trinova_erp_backend.Config
             services.AddScoped<ISalesCategoryRepo, SalesCategoryRepo>();
             services.AddScoped<ISalesOrderRepositories,SalesOrderRepositories>();
             services.AddScoped<IUangMukaRepositories, UangMukaRepositories>();
+            services.AddScoped<IPenerimaanPenjualanRepo, PenerimaanPenjualanRepo>();
             // PENJUALAN USECASE
             services.AddScoped<ICustomerUsecase, CustomerUsecase>();
             services.AddScoped<ISalesQuotationUsecase, SalesQuotationUsecase>();
             services.AddScoped<ISalesCategoryUsecase, SalesCategoryUsecase>();
             services.AddScoped<ISalesOrderUsecase, SalesOrderUsecase>();
             services.AddScoped<IUangMukaUsecase, UangMukaUsecase>();
+            services.AddScoped<IPenerimaanPenjualanUsecase, PenerimaanPenjualanUsecase>();
             
             // PEMBELIAN REPOSITORY
             services.AddScoped<ISupplierRepo, SupplierRepo>();

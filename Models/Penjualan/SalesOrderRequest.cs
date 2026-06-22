@@ -16,6 +16,8 @@
         public DateTime? SoDate { get; set; }
         public string? PoNumber { get; set; }
         public decimal? SubTotal { get; set; }
+        public decimal? DiscountTotal { get; set; }
+        public decimal? TaxTotal { get; set; }
         public Boolean? IsTaxAble { get; set; }
         public Boolean IsTaxIncluded { get; set; }
         public string? Address { get; set; }
@@ -30,7 +32,7 @@
         public string ProductName { get; set; }
         public int ProductQty { get; set; }
         public decimal ProductPrice { get; set; }
-        public decimal DiscountAmount { get; set; }
+        public int DiscountPercent { get; set; }
         public decimal TotalPrice {  get; set; }
         public int? WareHouseId { get; set; }
     }

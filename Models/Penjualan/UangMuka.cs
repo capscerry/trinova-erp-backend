@@ -12,6 +12,7 @@
 
         public string? CustomerName { get; set; }
         public string? NoPO { get; set; }
+        public string? NoSo { get; set; }
         public string? SoNumber { get; set; }
 
         public decimal NominalUangMuka { get; set; }

@@ -114,7 +114,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @TaxAmount,
                     @TotalAmount,
                     @SyaratPembayaran,
-                    @SoNumber,
+                    @NoSo,
                     @Alamat,
                     @Keterangan,
                     @CreatedBy

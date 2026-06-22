@@ -16,6 +16,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.PenerimaanPenjualanController",
+    "Method": "GetBankAsync",
+    "RelativePath": "api/bank",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.CustomerController",
     "Method": "InsertCategory",
     "RelativePath": "api/category-customer",
@@ -748,6 +758,48 @@
       {
         "Name": "orderId",
         "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesController",
+    "Method": "GetSalesOrderByCustId",
+    "RelativePath": "api/sales-order/by-customer/{customerId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "customerId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.PenerimaanPenjualanController",
+    "Method": "GetAllSalesReceipt",
+    "RelativePath": "api/sales-receipt",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.PenerimaanPenjualanController",
+    "Method": "InsertSalesReceipt",
+    "RelativePath": "api/sales-receipt",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "trinova_erp_backend.Models.Penjualan.PenerimaanPenjualan",
         "IsRequired": true
       }
     ],
