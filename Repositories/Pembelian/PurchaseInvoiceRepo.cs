@@ -182,6 +182,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     id
                 );
 
+                Console.WriteLine(query);
+
                 using (SqlDataReader reader =
                     await command.ExecuteReaderAsync())
                 {
@@ -294,14 +296,57 @@ namespace trinova_erp_backend.Repositories.Pembelian
         public async Task<List<PurchaseInvoice>>
             GetAllPurchaseInvoice()
         {
-            const string query = @"
-                SELECT
-                    pi.*,
-                    ms.supplier_name
-                FROM purchase_invoice pi
-                LEFT JOIN master_supplier ms
-                    ON pi.supplier_id = ms.supplier_id
-                ORDER BY pi.purchase_invoice_id DESC";
+        const string query = @"
+        SELECT
+            pi.*,
+            ms.supplier_name,
+
+            ISNULL(
+                (
+                    SELECT SUM(pdp.amount)
+                    FROM purchase_down_payment pdp
+                    WHERE pdp.purchase_order_id =
+                        gr.purchase_order_id
+                ),
+                0
+            ) AS dp_paid,
+
+            ISNULL(
+                pi.total_amount
+                -
+                (
+                    SELECT ISNULL(
+                        SUM(pdp.amount),
+                        0
+                    )
+                    FROM purchase_down_payment pdp
+                    WHERE pdp.purchase_order_id =
+                        gr.purchase_order_id
+                )
+                -
+                (
+                    SELECT ISNULL(
+                        SUM(pp.amount),
+                        0
+                    )
+                    FROM purchase_payment pp
+                    WHERE pp.purchase_invoice_id =
+                        pi.purchase_invoice_id
+                ),
+                pi.total_amount
+            ) AS outstanding_amount
+
+        FROM purchase_invoice pi
+
+        LEFT JOIN goods_receipt gr
+            ON pi.goods_receipt_id =
+            gr.goods_receipt_id
+
+        LEFT JOIN master_supplier ms
+            ON pi.supplier_id =
+            ms.supplier_id
+
+        ORDER BY pi.purchase_invoice_id DESC";
 
             var response =
                 new List<PurchaseInvoice>();
@@ -364,7 +409,21 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                         ),
 
                                     supplier_name =
-                                     reader["supplier_name"]?.ToString() ?? "",
+                                     reader["supplier_name"]?.ToString() ?? "",              
+
+                                     dp_paid =
+                                        reader["dp_paid"] == DBNull.Value
+                                            ? 0
+                                            : Convert.ToDecimal(
+                                                reader["dp_paid"]
+                                            ),
+
+                                    outstanding_amount =
+                                        reader["outstanding_amount"] == DBNull.Value
+                                            ? 0
+                                            : Convert.ToDecimal(
+                                                reader["outstanding_amount"]
+                                            ),
                                 }
                             );
                         }

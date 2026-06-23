@@ -40,6 +40,7 @@ namespace trinova_erp_backend.Config
             services.AddScoped<ISupplierProductRepo, SupplierProductRepo>();
             services.AddScoped<IPurchaseInvoiceRepo, PurchaseInvoiceRepo>();
             services.AddScoped<IPurchaseDownPaymentRepo, PurchaseDownPaymentRepo>();
+            services.AddScoped<IPurchasePaymentRepo, PurchasePaymentRepo>();
 
             // PEMBELIAN USECASE
             services.AddScoped<ISupplierUsecase, SupplierUsecase>();
@@ -52,6 +53,7 @@ namespace trinova_erp_backend.Config
             services.AddScoped<ISupplierProductUsecase, SupplierProductUsecase>();
             services.AddScoped<IPurchaseInvoiceUsecase, PurchaseInvoiceUsecase>();
             services.AddScoped<IPurchaseDownPaymentUsecase, PurchaseDownPaymentUsecase>();
+            services.AddScoped<IPurchasePaymentUsecase, PurchasePaymentUsecase>();
 
             // PERSEDIAAN REPOSITORY
             services.AddScoped<MasterProductRepo>();

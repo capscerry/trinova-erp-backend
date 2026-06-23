@@ -22,5 +22,10 @@ namespace trinova_erp_backend.Models
         public string? supplier_name { get; set; }
 
         public DateTime created_at { get; set; }
+
+        public decimal dp_paid { get; set; }
+
+        public decimal outstanding_amount { get; set; }
+
     }
 }

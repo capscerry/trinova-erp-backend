@@ -38,5 +38,7 @@ namespace trinova_erp_backend.Models
 
         [NotMapped]
         public string? po_number { get; set; }
+        public decimal? po_total { get; set; }
+        
     }
 }
