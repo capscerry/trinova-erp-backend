@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("trinova-erp-backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+68582e7383ad4dfab9d52ec63736f96c7d5f63b1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+facedfc4db3a08f93e286619ea00de9182e291a2")]
 [assembly: System.Reflection.AssemblyProductAttribute("trinova-erp-backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("trinova-erp-backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

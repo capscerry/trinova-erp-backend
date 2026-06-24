@@ -237,6 +237,30 @@
         }
       }
     },
+    "/api/shipping-type": {
+      "get": {
+        "tags": [
+          "DeliveryOrder"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/do-header": {
+      "get": {
+        "tags": [
+          "DeliveryOrder"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/goods-receipt": {
       "post": {
         "tags": [

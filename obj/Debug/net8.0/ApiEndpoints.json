@@ -183,6 +183,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.DeliveryOrderController",
+    "Method": "GetDoHeader",
+    "RelativePath": "api/do-header",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Pembelian.GoodsReceiptController",
     "Method": "InsertGoodsReceipt",
     "RelativePath": "api/goods-receipt",
@@ -845,6 +855,16 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.DeliveryOrderController",
+    "Method": "GetShippingCategory",
+    "RelativePath": "api/shipping-type",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {
