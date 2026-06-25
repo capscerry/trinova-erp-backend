@@ -13,15 +13,18 @@
         public string? CustomerName { get; set; }
         public string? DoNumber { get; set; }
         public string? SoNumber { get; set; }
+        public string? PoNumber { get; set; }
 
         public int DeliveryCategoryId { get; set; }
         public string? DeliveryShippingName { get; set; }
         public string? Address { get; set; }
         public string? Notes { get; set; }
+        public int? SoId { get; set; }
     }
 
     public class DeliveryOrderDetailDTO
     {
+        public int DoId { get; set; }
         public int ProductId { get; set; }
         public string? ProductCode { get; set; }
         public string? ProductName { get; set; }

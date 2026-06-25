@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using trinova_erp_backend.Models.Penjualan;
 using trinova_erp_backend.Usecase.Penjualan;
 
 namespace trinova_erp_backend.Controllers.Penjualan
@@ -35,6 +36,28 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 message = "Success Fetch Data",
                 data = result
             });
+        }
+
+        [HttpPost("/api/delivery-order")]
+        public async Task<IActionResult> InsertDeliveryOrder([FromBody] PengirimanPenjualan model)
+        {
+            try
+            {
+                await _pengirimanUsecase.InsertDeliveryOrder(model);
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Insert Data"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
         }
     }
 }

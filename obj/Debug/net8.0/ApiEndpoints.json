@@ -184,6 +184,22 @@
   },
   {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.DeliveryOrderController",
+    "Method": "InsertDeliveryOrder",
+    "RelativePath": "api/delivery-order",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "trinova_erp_backend.Models.Penjualan.PengirimanPenjualan",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.DeliveryOrderController",
     "Method": "GetDoHeader",
     "RelativePath": "api/do-header",
     "HttpMethod": "GET",

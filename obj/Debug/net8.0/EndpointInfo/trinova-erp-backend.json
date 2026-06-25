@@ -261,6 +261,37 @@
         }
       }
     },
+    "/api/delivery-order": {
+      "post": {
+        "tags": [
+          "DeliveryOrder"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PengirimanPenjualan"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PengirimanPenjualan"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PengirimanPenjualan"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/goods-receipt": {
       "post": {
         "tags": [
@@ -1886,6 +1917,99 @@
         },
         "additionalProperties": false
       },
+      "DeliveryOrderDetailDTO": {
+        "type": "object",
+        "properties": {
+          "doId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "productId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "productCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "productName": {
+            "type": "string",
+            "nullable": true
+          },
+          "uomId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "uomName": {
+            "type": "string",
+            "nullable": true
+          },
+          "qtyDikirim": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "qtyDipesan": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeliveryOrderHeaderDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "customerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "doDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "customerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "doNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "soNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "poNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveryCategoryId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deliveryShippingName": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "soId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "GoodsReceipt": {
         "type": "object",
         "properties": {
@@ -2255,6 +2379,22 @@
           "salesOrderId": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PengirimanPenjualan": {
+        "type": "object",
+        "properties": {
+          "header": {
+            "$ref": "#/components/schemas/DeliveryOrderHeaderDTO"
+          },
+          "detail": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryOrderDetailDTO"
+            },
             "nullable": true
           }
         },

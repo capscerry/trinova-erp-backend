@@ -160,7 +160,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     product_price = @ProductPrice,
                     discount_percent = @DiscountPercent,
                     total_price = @TotalPrice,
-                    warehouse_id = @WarehouseId
+                    warehouse_id = @WareHouseId
                 WHERE order_id = @OrderId
                   AND product_id = @ProductId;
             END
@@ -311,10 +311,14 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 sod.product_qty AS ProductQty,
                 sod.product_price AS ProductPrice,
                 sod.discount_percent AS ProductDiscount,
-                sod.total_price AS TotalPrice
+                sod.total_price AS TotalPrice,
+                sod.warehouse_id AS WareHouseId,
+                mw.warehouse_name AS WarehouseName
             FROM sales_order_detail sod
             JOIN master_product mp 
                 ON mp.product_id = sod.product_id
+            JOIN master_warehouse mw
+	            ON sod.warehouse_id  = mw.warehouse_id
             WHERE sod.order_id = @OrderId
         ";
 

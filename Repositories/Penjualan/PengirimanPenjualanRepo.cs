@@ -12,6 +12,15 @@ namespace trinova_erp_backend.Repositories.Penjualan
         Task<List<ShippingDTO>> GetShippingCategory();
         Task<List<DeliveryOrderHeaderDTO>> GetDoHeader();
 
+        Task<int> InsertDeliveryOrderHeader(
+        DeliveryOrderHeaderDTO dto,
+        SqlConnection connection,
+        SqlTransaction transaction);
+        Task InsertDeliveryOrderDetail(
+    DeliveryOrderDetailDTO dto,
+    SqlConnection connection,
+    SqlTransaction transaction);
+
 
     }
     public class PengirimanPenjualanRepo : IPengirimanPenjualanRepo
@@ -60,9 +69,69 @@ namespace trinova_erp_backend.Repositories.Penjualan
             return result.ToList();
         }
 
-        //public async Task<List<DeliveryOrderHeaderDTO>> GetDoDetailById(int id)
-        //{
-        //    string query = @""
-        //}
+
+        public async Task<int> InsertDeliveryOrderHeader(
+    DeliveryOrderHeaderDTO dto,
+    SqlConnection connection,
+    SqlTransaction transaction)
+        {
+            string query = @"
+        INSERT INTO delivery_order_header
+        (
+            customer_id,
+            do_number,
+            delivery_category_id,
+            po_number,
+            address,
+            notes,
+            do_date,
+            so_id
+        )
+        OUTPUT INSERTED.id
+        VALUES
+        (
+            @CustomerId,
+            @DoNumber,
+            @DeliveryCategoryId,
+            @PoNumber,
+            @Address,
+            @Notes,
+            @DoDate,
+            @SoId
+        )";
+
+            return await connection.ExecuteScalarAsync<int>(
+                query,
+                dto,
+                transaction);
+        }
+
+        public async Task InsertDeliveryOrderDetail(
+    DeliveryOrderDetailDTO dto,
+    SqlConnection connection,
+    SqlTransaction transaction)
+        {
+            string query = @"
+        INSERT INTO delivery_order_detail
+        (
+            delivery_id,
+            product_id,
+            qty_dikirim,
+            qty_dipesan
+        )
+        VALUES
+        (
+            @DoId,
+            @ProductId,
+            @QtyDikirim,
+            @QtyDipesan
+        )";
+
+            await connection.ExecuteAsync(
+                query,
+                dto,
+                transaction);
+        }
+ 
     }
 }

@@ -26,5 +26,7 @@
         public decimal ProductPrice { get; set; }
         public int ProductDiscount { get; set; }
         public decimal TotalPrice { get; set; }
+        public int? WareHouseId { get; set; }
+        public string? WarehouseName { get; set; }
     }
 }
