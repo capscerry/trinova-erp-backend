@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
+using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Models.Penjualan;
 using trinova_erp_backend.Repositories.Penjualan;
 
@@ -23,6 +24,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
     {
         Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model);
         Task<List<SalesOrderHeader>> GetAllSalesOrder();
+        Task<SalesOrderDetailDTO?> GetSalesOrderDetail(int orderId);
     }
 
     public class SalesQuotationUsecase : ISalesQuotationUsecase
@@ -190,6 +192,11 @@ namespace trinova_erp_backend.Usecase.Penjualan
         public async Task<List<SalesOrderHeader>> GetAllSalesOrder()
         {
             return await _salesOrderRepo.GetAllSalesOrder();
+        }
+
+        public async Task<SalesOrderDetailDTO?> GetSalesOrderDetail(int orderId)
+        {
+            return await _salesOrderRepo.GetSalesOrderDetail(orderId);
         }
     }
 }

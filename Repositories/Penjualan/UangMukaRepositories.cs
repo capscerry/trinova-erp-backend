@@ -10,6 +10,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
     public interface IUangMukaRepositories
     {
         Task<bool> InsertUangMuka(UangMuka data);
+        Task<UangMuka> GetUangMukaById(int id);
+
         //Task<UangMuka> GetAllUangMuka();
         Task<IEnumerable<UangMuka>> GetAllUangMuka();
         
@@ -43,6 +45,45 @@ namespace trinova_erp_backend.Repositories.Penjualan
             var result = await connection.QueryAsync<UangMuka>(query);
 
             return result;
+        }
+
+        public async Task<UangMuka> GetUangMukaById(int id)
+        {
+            string query = @"
+        SELECT 
+            um.Id,
+            um.NoFaktur,
+            um.Tanggal,
+            um.CustomerId,
+            mc.customer_name AS CustomerName,
+            um.NoPO,
+            um.NoSo AS SoNumber,
+            um.NominalUangMuka,
+            um.IsTaxable,
+            um.IsTaxIncluded,
+            um.TaxAmount,
+            um.TotalAmount,
+            um.SyaratPembayaran,
+            um.Alamat,
+            um.Keterangan,
+            um.CreatedAt,
+            um.UpdatedAt,
+            um.CreatedBy,
+            um.UpdatedBy
+        FROM uang_muka um
+        LEFT JOIN master_customer mc 
+            ON um.CustomerId = mc.customer_id
+        WHERE um.Id = @Id";
+
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            var result = await connection.QueryFirstOrDefaultAsync<UangMuka>(
+                query,
+                new { Id = id }
+            );
+
+            return result!;
         }
         public async Task<bool> InsertUangMuka(UangMuka data)
         {

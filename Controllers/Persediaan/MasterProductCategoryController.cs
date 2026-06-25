@@ -55,6 +55,30 @@ namespace trinova_erp_backend.Controllers.Persediaan
             });
         }
 
+        [HttpPut("/api/master-product-category")]
+        public async Task<IActionResult> UpdateMasterProductCategory(
+            [FromBody] MasterProductCategory masterProductCategory
+        )
+        {
+            var result = await _masterProductCategoryUsecase
+                .UpdateMasterProductCategory(masterProductCategory);
+
+            if (result)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Update Data"
+                });
+            }
+
+            return BadRequest(new
+            {
+                status = false,
+                message = "Failed Update Data"
+            });
+        }
+
         [HttpDelete("/api/master-product-category/{id}")]
         public async Task<IActionResult> DeleteMasterProductCategory(int id)
         {

@@ -117,5 +117,63 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 data = customerList ?? new List<Customer>() // 🔥 jaga-jaga null
             });
         }
+
+        [HttpGet("api/customer/active")]
+        public async Task<IActionResult> GetCustomerActive()
+        {
+            var customerActive = await _customerCategoryUsecase.GetCustomerActive();
+            return Ok(new
+            {
+                status = true,
+                data = customerActive ?? new List<Customer>()
+            });
+        }
+
+
+        [HttpPut("api/customer/{id}")]
+        public async Task<IActionResult> UpdateCustomer(
+        int id,
+        [FromBody] Customer customer)
+        {
+            customer.CustomerId = id;
+
+            var result = await _customerCategoryUsecase.UpdateMasterCustomer(customer);
+
+            if (result)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Update Customer"
+                });
+            }
+
+            return BadRequest(new
+            {
+                status = false,
+                message = "Failed Update Customer"
+            });
+        }
+
+        [HttpPatch("api/customer/{id}/status")]
+        public async Task<IActionResult> ToggleCustomerStatus(int id)
+        {
+            var result = await _customerCategoryUsecase.ToggleCustomerStatus(id);
+
+            if (result)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Update Customer Status"
+                });
+            }
+
+            return BadRequest(new
+            {
+                status = false,
+                message = "Failed Update Customer Status"
+            });
+        }
     }
 }
