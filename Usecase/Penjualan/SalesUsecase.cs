@@ -17,11 +17,13 @@ namespace trinova_erp_backend.Usecase.Penjualan
     }
     
     public interface ISalesQuotationUsecase {
+        Task<string> GetNextSQNumber();
         Task<string> InsertSalesQuotation(SalesQuotation quotation);
     }
 
     public interface ISalesOrderUsecase
     {
+        Task<string> GetNextSONumber();
         Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model);
         Task<List<SalesOrderHeader>> GetAllSalesOrder();
         Task<SalesOrderDetailDTO?> GetSalesOrderDetail(int orderId);
@@ -36,6 +38,14 @@ namespace trinova_erp_backend.Usecase.Penjualan
             _connectionString = options.Value.SQLServer;
             _salesQuotationRepo = salesQuotationRepo;
         }
+        public async Task<string> GetNextSQNumber()
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+            using var tx = conn.BeginTransaction();
+            return await _salesQuotationRepo.GenerateSQNumber(conn, tx);
+        }
+
         public async Task<string> InsertSalesQuotation(SalesQuotation quotation)
         {
             using var conn = new SqlConnection(_connectionString);
@@ -44,11 +54,15 @@ namespace trinova_erp_backend.Usecase.Penjualan
          
             try
             {
+                // AUTO GENERATE QUOTATION NUMBER
+                string sqNumber =
+                    await _salesQuotationRepo
+                        .GenerateSQNumber(conn, tx);
 
                 var header = new QuotationHeader
                 {
                     CustomerId = quotation.CustomerId,
-                    QuotationNumber = quotation.QuotationNumber,
+                    QuotationNumber = sqNumber,
                     QuotationDate = quotation.QuotationDate,
                     Address = quotation.Address,
                     Notes = quotation.Notes,
@@ -143,6 +157,14 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
         }
 
+        public async Task<string> GetNextSONumber()
+        {
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            using var tx = connection.BeginTransaction();
+            return await _salesOrderRepo.GenerateSONumber(connection, tx);
+        }
+
         public async Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model)
         {
             using var connection = new SqlConnection(_connectionString);
@@ -152,6 +174,13 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
             try
             {
+                // AUTO GENERATE SO NUMBER
+                model.Header.SoNumber =
+                    await _salesOrderRepo.GenerateSONumber(
+                        connection,
+                        tx
+                    );
+
                 // Insert header dan ambil hasil header yang sudah ada Id
                 var insertedHeader = await _salesOrderRepo.InsertSalesOrderHeader(
                     model.Header,

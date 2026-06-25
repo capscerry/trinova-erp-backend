@@ -5,6 +5,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface IPurchaseOrderUsecase
     {
+        Task<string> GetNextPONumber();
+
         Task<int> InsertPurchaseOrder(PurchaseOrder model);
 
         Task<List<PurchaseOrder>> GetAllPurchaseOrder();
@@ -28,9 +30,13 @@ namespace trinova_erp_backend.Usecase.Pembelian
             _supplierRepo = supplierRepo;
         }
 
+        public async Task<string> GetNextPONumber()
+        {
+            return await _purchaseOrderRepo.GeneratePONumber();
+        }
+
         public async Task<int> InsertPurchaseOrder(PurchaseOrder model)
         {
-            // VALIDATE SUPPLIER
             var supplier =
                 await _supplierRepo.GetSupplierById(
                     model.supplier_id
@@ -46,17 +52,12 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 return 0;
             }
 
-            // AUTO CREATED DATE
             model.created_at = DateTime.Now;
 
-            // DEFAULT STATUS
             model.status = "Draft";
 
-            // AUTO GENERATE PO NUMBER
-            string today = DateTime.Now.ToString("yyyyMMdd");
-
             model.po_number =
-                $"PO-{today}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
+                await _purchaseOrderRepo.GeneratePONumber();
 
             var result =
                 await _purchaseOrderRepo.InsertPurchaseOrder(model);

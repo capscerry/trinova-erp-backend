@@ -42,6 +42,19 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        [HttpGet("/api/purchase-order/next-number")]
+        public async Task<IActionResult> GetNextPONumber()
+        {
+            var number = await _purchaseOrderUsecase.GetNextPONumber();
+            
+            return Ok(new
+            {
+                status = true,
+                po_number = number,
+                next_number = number
+            });
+        }
+
         [HttpGet("/api/purchase-order")]
         public async Task<IActionResult> GetAllPurchaseOrder()
         {

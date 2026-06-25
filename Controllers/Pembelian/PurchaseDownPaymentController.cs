@@ -60,6 +60,20 @@ namespace trinova_erp_backend.Controllers.Pembelian
             );
         }
 
+        [HttpGet("/api/purchase-down-payment/next-number")]
+        public async Task<IActionResult> GetNextDPNumber()
+        {
+            var number = await _purchaseDownPaymentUsecase
+                .GetNextDPNumber();
+
+            return Ok(new
+            {
+                status = true,
+                dp_number = number,
+                next_number = number
+            });
+        }
+
         [HttpGet("/api/purchase-down-payment")]
         public async Task<IActionResult>
             GetAllPurchaseDownPayment()

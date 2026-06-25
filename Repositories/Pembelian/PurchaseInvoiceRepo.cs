@@ -7,6 +7,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
 {
     public interface IPurchaseInvoiceRepo
     {
+        Task<string> GenerateInvoiceNumber();
+
         Task<int> InsertPurchaseInvoice(
             PurchaseInvoice model
         );
@@ -44,6 +46,42 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 ?? throw new InvalidOperationException(
                     "Database connection string is not configured."
                 );
+        }
+
+        // GENERATE INVOICE NUMBER
+        public async Task<string> GenerateInvoiceNumber()
+        {
+            const string query = @"
+                SELECT TOP 1 invoice_number
+                FROM purchase_invoice
+                ORDER BY purchase_invoice_id DESC";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            await connection.OpenAsync();
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            object? result =
+                await command.ExecuteScalarAsync();
+
+            int nextNumber = 1;
+
+            if (result != null && result != DBNull.Value)
+            {
+                string lastInv =
+                    result.ToString() ?? "INV000000";
+
+                string numericPart =
+                    lastInv.Replace("INV", "");
+
+                if (int.TryParse(numericPart, out int parsed))
+                    nextNumber = parsed + 1;
+            }
+
+            return $"INV{nextNumber:D6}";
         }
 
         // INSERT

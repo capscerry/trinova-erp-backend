@@ -5,6 +5,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface IPurchaseDownPaymentUsecase
     {
+        Task<string> GetNextDPNumber();
+
         Task<int> InsertPurchaseDownPayment(
             PurchaseDownPayment model
         );
@@ -39,6 +41,12 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 supplierRepo;
         }
 
+        public async Task<string> GetNextDPNumber()
+        {
+            return await _purchaseDownPaymentRepo
+                .GenerateDPNumber();
+        }
+
         public async Task<int>
             InsertPurchaseDownPayment(
                 PurchaseDownPayment model
@@ -65,12 +73,9 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
             model.status = "Paid";
 
-            string today =
-                DateTime.Now
-                    .ToString("yyyyMMdd");
-
             model.dp_number =
-                $"PDP-{today}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
+                await _purchaseDownPaymentRepo
+                    .GenerateDPNumber();
 
             var result =
                 await _purchaseDownPaymentRepo

@@ -5,6 +5,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
 {
     public interface IUangMukaUsecase
     {
+        Task<string> GetNextNoFaktur();
         Task<bool> InsertUangMuka(UangMuka model);
         Task<IEnumerable<UangMuka>> GetAllUangMuka();
         Task<UangMuka?> GetUangMukaById(int id);
@@ -19,19 +20,25 @@ namespace trinova_erp_backend.Usecase.Penjualan
             _uangMuka = uangMuka;
         }
 
+        public async Task<string> GetNextNoFaktur()
+        {
+            return await _uangMuka.GenerateNoFaktur();
+        }
+
         public async Task<bool> InsertUangMuka(UangMuka model)
         {
             if (model == null)
                 throw new Exception("Data uang muka tidak boleh kosong");
-
-            if (string.IsNullOrWhiteSpace(model.NoFaktur))
-                throw new Exception("No faktur wajib diisi");
 
             if (model.CustomerId <= 0)
                 throw new Exception("Customer wajib dipilih");
 
             if (model.NominalUangMuka <= 0)
                 throw new Exception("Nominal uang muka harus lebih dari 0");
+
+            // AUTO GENERATE NO FAKTUR
+            model.NoFaktur =
+                await _uangMuka.GenerateNoFaktur();
 
             if (string.IsNullOrWhiteSpace(model.CreatedBy))
                 model.CreatedBy = "SYSTEM";

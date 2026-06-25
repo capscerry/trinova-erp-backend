@@ -5,6 +5,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface IPurchasePaymentUsecase
     {
+        Task<string> GetNextPaymentNumber();
+
         Task<int> InsertPurchasePayment(
             PurchasePayment model
         );
@@ -33,13 +35,20 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 purchasePaymentRepo;
         }
 
+        public async Task<string> GetNextPaymentNumber()
+        {
+            return await _purchasePaymentRepo
+                .GeneratePaymentNumber();
+        }
+
         public async Task<int>
             InsertPurchasePayment(
                 PurchasePayment model
             )
         {
             model.payment_number =
-                $"PAY-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..4].ToUpper()}";
+                await _purchasePaymentRepo
+                    .GeneratePaymentNumber();
 
             return await
                 _purchasePaymentRepo

@@ -10,6 +10,11 @@ namespace trinova_erp_backend.Repositories.Penjualan
 {
     public interface ISalesOrderRepositories
     {
+        Task<string> GenerateSONumber(
+            IDbConnection connection,
+            IDbTransaction tx
+        );
+
         Task<SalesOrderHeader> InsertSalesOrderHeader(
             SalesOrderHeader header,
             IDbConnection connection,
@@ -34,6 +39,33 @@ namespace trinova_erp_backend.Repositories.Penjualan
         public SalesOrderRepositories(IOptions<DatabaseConnection> options)
         {
             _connectionString = options.Value.SQLServer;
+        }
+
+        public async Task<string> GenerateSONumber(
+            IDbConnection connection,
+            IDbTransaction tx
+        )
+        {
+            string query = @"
+                SELECT TOP 1 so_number
+                FROM sales_order
+                ORDER BY order_id DESC";
+
+            string? lastSo = await connection
+                .ExecuteScalarAsync<string>(query, transaction: tx);
+
+            int nextNumber = 1;
+
+            if (!string.IsNullOrEmpty(lastSo))
+            {
+                string numericPart =
+                    lastSo.Replace("SO", "");
+
+                if (int.TryParse(numericPart, out int parsed))
+                    nextNumber = parsed + 1;
+            }
+
+            return $"SO{nextNumber:D6}";
         }
 
         public async Task<SalesOrderHeader> InsertSalesOrderHeader(

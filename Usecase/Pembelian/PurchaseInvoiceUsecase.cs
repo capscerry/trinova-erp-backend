@@ -5,6 +5,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface IPurchaseInvoiceUsecase
     {
+        Task<string> GetNextInvoiceNumber();
+
         Task<int> InsertPurchaseInvoice(
             PurchaseInvoice model
         );
@@ -35,6 +37,12 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 purchaseInvoiceRepo;
         }
 
+        public async Task<string> GetNextInvoiceNumber()
+        {
+            return await _purchaseInvoiceRepo
+                .GenerateInvoiceNumber();
+        }
+
         public async Task<int>
             InsertPurchaseInvoice(
                 PurchaseInvoice model
@@ -49,13 +57,9 @@ namespace trinova_erp_backend.Usecase.Pembelian
             model.status =
                 "Unpaid";
 
-            string today =
-                DateTime.Now.ToString(
-                    "yyyyMMdd"
-                );
-
             model.invoice_number =
-                $"INV-{today}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
+                await _purchaseInvoiceRepo
+                    .GenerateInvoiceNumber();
 
             
             bool isExist =

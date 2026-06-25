@@ -7,6 +7,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
 {
     public interface IPurchaseOrderRepo
     {
+        Task<string> GeneratePONumber();
+
         Task<int> InsertPurchaseOrder(PurchaseOrder model);
 
         Task<List<PurchaseOrder>> GetAllPurchaseOrder();
@@ -26,6 +28,42 @@ namespace trinova_erp_backend.Repositories.Pembelian
         {
             _connectionString = options.Value.SQLServer
                 ?? throw new InvalidOperationException("Database connection string is not configured.");
+        }
+
+        // GENERATE PO NUMBER
+        public async Task<string> GeneratePONumber()
+        {
+            const string query = @"
+                SELECT TOP 1 po_number
+                FROM purchase_order
+                ORDER BY purchase_order_id DESC";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            await connection.OpenAsync();
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            object? result =
+                await command.ExecuteScalarAsync();
+
+            int nextNumber = 1;
+
+            if (result != null && result != DBNull.Value)
+            {
+                string lastPo =
+                    result.ToString() ?? "PO-0000000000";
+
+                string numericPart =
+                    lastPo.Replace("PO-", "");
+
+                if (int.TryParse(numericPart, out int parsed))
+                    nextNumber = parsed + 1;
+            }
+
+            return $"PO-{nextNumber:D10}";
         }
 
         // INSERT

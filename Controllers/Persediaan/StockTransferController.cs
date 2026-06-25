@@ -29,6 +29,19 @@ namespace trinova_erp_backend.Controllers.Persediaan
             });
         }
 
+        [HttpGet("next-number")]
+        public async Task<IActionResult> GetNextTRFNumber()
+        {
+            var number = await _usecase.GetNextTRFNumber();
+
+            return Ok(new
+            {
+                status = true,
+                reference_number = number,
+                next_number = number
+            });
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {

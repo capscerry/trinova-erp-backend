@@ -16,6 +16,43 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 options.Value.SQLServer!;
         }
 
+        // GENERATE TRF NUMBER
+        public async Task<string> GenerateTRFNumber()
+        {
+            const string query = @"
+                SELECT TOP 1 reference_number
+                FROM stock_movement
+                WHERE movement_type = 'TRANSFER'
+                ORDER BY movement_id DESC";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            await connection.OpenAsync();
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            object? result =
+                await command.ExecuteScalarAsync();
+
+            int nextNumber = 1;
+
+            if (result != null && result != DBNull.Value)
+            {
+                string lastTrf =
+                    result.ToString() ?? "TRF000000";
+
+                string numericPart =
+                    lastTrf.Replace("TRF", "");
+
+                if (int.TryParse(numericPart, out int parsed))
+                    nextNumber = parsed + 1;
+            }
+
+            return $"TRF{nextNumber:D6}";
+        }
+
         public async Task InsertAsync(
             StockMovement movement)
         {

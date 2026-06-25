@@ -7,6 +7,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
 {
     public interface IPurchaseDownPaymentRepo
     {
+        Task<string> GenerateDPNumber();
+
         Task<int> InsertPurchaseDownPayment(
             PurchaseDownPayment model
         );
@@ -42,6 +44,41 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 ?? throw new InvalidOperationException(
                     "Database connection string is not configured."
                 );
+        }
+
+        public async Task<string> GenerateDPNumber()
+        {
+            const string query = @"
+                SELECT TOP 1 dp_number
+                FROM purchase_down_payment
+                ORDER BY purchase_down_payment_id DESC";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            await connection.OpenAsync();
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            object? result =
+                await command.ExecuteScalarAsync();
+
+            int nextNumber = 1;
+
+            if (result != null && result != DBNull.Value)
+            {
+                string lastDp =
+                    result.ToString() ?? "DP000000";
+
+                string numericPart =
+                    lastDp.Replace("DP", "");
+
+                if (int.TryParse(numericPart, out int parsed))
+                    nextNumber = parsed + 1;
+            }
+
+            return $"DP{nextNumber:D6}";
         }
 
         public async Task<int>

@@ -7,9 +7,11 @@ namespace trinova_erp_backend.Repositories.Pembelian
 {
 public interface IPurchasePaymentRepo
 {
-Task<int> InsertPurchasePayment(
-PurchasePayment model
-);
+    Task<string> GeneratePaymentNumber();
+
+    Task<int> InsertPurchasePayment(
+    PurchasePayment model
+    );
 
     Task<List<PurchasePayment>>
         GetAllPurchasePayment();
@@ -33,6 +35,42 @@ public class PurchasePaymentRepo
             ?? throw new InvalidOperationException(
                 "Database connection string is not configured."
             );
+    }
+
+    // GENERATE PAYMENT NUMBER
+    public async Task<string> GeneratePaymentNumber()
+    {
+        const string query = @"
+            SELECT TOP 1 payment_number
+            FROM purchase_payment
+            ORDER BY purchase_payment_id DESC";
+
+        using SqlConnection connection =
+            new SqlConnection(_connectionString);
+
+        await connection.OpenAsync();
+
+        using SqlCommand command =
+            new SqlCommand(query, connection);
+
+        object? result =
+            await command.ExecuteScalarAsync();
+
+        int nextNumber = 1;
+
+        if (result != null && result != DBNull.Value)
+        {
+            string lastPay =
+                result.ToString() ?? "PAY000000";
+
+            string numericPart =
+                lastPay.Replace("PAY", "");
+
+            if (int.TryParse(numericPart, out int parsed))
+                nextNumber = parsed + 1;
+        }
+
+        return $"PAY{nextNumber:D6}";
     }
 
     // INSERT

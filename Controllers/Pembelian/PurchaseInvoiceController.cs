@@ -51,6 +51,20 @@ namespace trinova_erp_backend.Controllers.Pembelian
             }
         }
 
+        [HttpGet("/api/purchase-invoice/next-number")]
+        public async Task<IActionResult> GetNextInvoiceNumber()
+        {
+            var number = await _purchaseInvoiceUsecase
+                .GetNextInvoiceNumber();
+
+            return Ok(new
+            {
+                status = true,
+                invoice_number = number,
+                next_number = number
+            });
+        }
+
         [HttpGet("/api/purchase-invoice")]
         public async Task<IActionResult>
             GetAllPurchaseInvoice()
