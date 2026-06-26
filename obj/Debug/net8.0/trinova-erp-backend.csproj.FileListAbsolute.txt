@@ -26,7 +26,6 @@ C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.bu
 C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.build.json.cache
 C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.development.json
 C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.build.endpoints.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.upToDateCheck.txt
 C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-.B3CAAC3E.Up2Date
 C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.dll
 C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/refint/trinova-erp-backend.dll
@@ -314,7 +313,6 @@ C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.bu
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.development.json
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-.B3CAAC3E.Up2Date
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.genruntimeconfig.cache
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\ref\trinova-erp-backend.dll
@@ -612,3 +610,4 @@ C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.dl
 C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.DataSet.dll
 C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.dll
 C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.DataSet.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

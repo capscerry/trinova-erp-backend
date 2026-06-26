@@ -11,6 +11,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
     {
         Task<List<ShippingDTO>> GetShippingCategory();
         Task<List<DeliveryOrderHeaderDTO>> GetDoHeader();
+        Task<List<DeliveryOrderDetailDTO>> GetDoDetail(int deliveryOrderId);
 
         Task<int> InsertDeliveryOrderHeader(
         DeliveryOrderHeaderDTO dto,
@@ -53,6 +54,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                             doh.do_date     						AS DoDate,
                             mc.customer_name 						AS CustomerName,
                             doh.do_number							AS DoNumber,
+                            doh.po_number							AS PoNumber,
+                            doh.so_id                              AS SoId,
                             so.so_number 							AS SoNumber,
                             doh.delivery_category_id  				AS DeliveryCategoryId,
                             dc.category_name 						AS DeliveryShippingName,
@@ -66,6 +69,36 @@ namespace trinova_erp_backend.Repositories.Penjualan
             using var connection = new SqlConnection(_connectionString);
 
             var result = await connection.QueryAsync<DeliveryOrderHeaderDTO>(query);
+            return result.ToList();
+        }
+
+        public async Task<List<DeliveryOrderDetailDTO>> GetDoDetail(int deliveryOrderId)
+        {
+            const string query = @"
+                SELECT
+                    dod.delivery_id AS DoId,
+                    dod.product_id AS ProductId,
+                    mp.product_code AS ProductCode,
+                    mp.product_name AS ProductName,
+                    dod.qty_dikirim AS QtyDikirim,
+                    dod.qty_dipesan AS QtyDipesan,
+                    sod.uom_id AS UomId,
+                    mu.uom_code AS UomName
+                FROM delivery_order_detail dod
+                LEFT JOIN master_product mp ON mp.product_id = dod.product_id
+                LEFT JOIN delivery_order_header doh ON doh.id = dod.delivery_id
+                LEFT JOIN sales_order_detail sod
+                    ON sod.order_id = doh.so_id
+                   AND sod.product_id = dod.product_id
+                LEFT JOIN master_uom mu ON mu.uom_id = sod.uom_id
+                WHERE dod.delivery_id = @DeliveryOrderId
+                ORDER BY dod.product_id ASC";
+
+            using var connection = new SqlConnection(_connectionString);
+            var result = await connection.QueryAsync<DeliveryOrderDetailDTO>(
+                query,
+                new { DeliveryOrderId = deliveryOrderId });
+
             return result.ToList();
         }
 

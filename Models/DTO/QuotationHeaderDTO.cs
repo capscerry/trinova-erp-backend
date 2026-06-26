@@ -12,6 +12,7 @@
         public decimal Subtotal { get; set; }
         public decimal DiscountTotal { get; set; }
         public decimal TaxTotal { get; set; }
+        public bool IsTaxAble { get; set; }
 
     }
 }

@@ -200,6 +200,22 @@
   },
   {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.DeliveryOrderController",
+    "Method": "GetDoDetail",
+    "RelativePath": "api/do-detail/{deliveryOrderId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "deliveryOrderId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.DeliveryOrderController",
     "Method": "GetDoHeader",
     "RelativePath": "api/do-header",
     "HttpMethod": "GET",
@@ -745,6 +761,127 @@
         "IsRequired": false
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesInvoiceController",
+    "Method": "GetAll",
+    "RelativePath": "api/sales-invoice",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesInvoiceController",
+    "Method": "Create",
+    "RelativePath": "api/sales-invoice",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "trinova_erp_backend.Models.Penjualan.SalesInvoice",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesInvoiceController",
+    "Method": "GetById",
+    "RelativePath": "api/sales-invoice/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesInvoiceController",
+    "Method": "Update",
+    "RelativePath": "api/sales-invoice/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "model",
+        "Type": "trinova_erp_backend.Models.Penjualan.SalesInvoice",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesInvoiceController",
+    "Method": "Delete",
+    "RelativePath": "api/sales-invoice/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesInvoiceController",
+    "Method": "Confirm",
+    "RelativePath": "api/sales-invoice/{id}/confirm",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesInvoiceController",
+    "Method": "GetByCustomerId",
+    "RelativePath": "api/sales-invoice/customer/{customerId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "customerId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesInvoiceController",
+    "Method": "GetOutstanding",
+    "RelativePath": "api/sales-invoice/outstanding",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {

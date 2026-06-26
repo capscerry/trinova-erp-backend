@@ -38,6 +38,29 @@ namespace trinova_erp_backend.Controllers.Penjualan
             });
         }
 
+        [HttpGet("/api/do-detail/{deliveryOrderId}")]
+        public async Task<IActionResult> GetDoDetail(int deliveryOrderId)
+        {
+            try
+            {
+                var result = await _pengirimanUsecase.GetDoDetail(deliveryOrderId);
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Fetch Data",
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
+        }
+
         [HttpPost("/api/delivery-order")]
         public async Task<IActionResult> InsertDeliveryOrder([FromBody] PengirimanPenjualan model)
         {

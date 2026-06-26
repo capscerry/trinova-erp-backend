@@ -78,6 +78,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
             return result.ToList();
         }
 
+
+        // QUERY UNTUK PAGE DETAIL SALES QUOTATION / PENAWARAN PENJUALAN
         public async Task<QuotationHeaderDetailDTO?> GetQuotationHeaderDetailById(int quotationId)
         {
             string headerQuery = @"
@@ -91,6 +93,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 sq.notes             AS Notes,
                 sq.subtotal          AS Subtotal,
                 sq.discount_total    AS DiscountTotal,
+                sq.is_taxable        AS IsTaxAble,
                 sq.tax_total         AS TaxTotal
             FROM sales_quotation sq
             JOIN master_customer mc
@@ -135,6 +138,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 Detail = detail.ToList()
             };
         }
+
+        // END QUERY
 
         public async Task<List<QuotationDetailDTO>> GetQuotationDetailById(int quotationId)
         {

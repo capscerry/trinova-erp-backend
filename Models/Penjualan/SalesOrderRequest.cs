@@ -22,6 +22,7 @@
         public Boolean IsTaxIncluded { get; set; }
         public string? Address { get; set; }
         public string? Notes { get; set; }
+        public int? QuotationId { get; set; }
 
 
     }
@@ -35,6 +36,7 @@
         public int DiscountPercent { get; set; }
         public decimal TotalPrice {  get; set; }
         public int? WareHouseId { get; set; }
+        public int UomId { get; set; }
     }
 
 }

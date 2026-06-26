@@ -251,7 +251,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
         }
         // SALES ORDER CONTROLER 
 
-        [HttpPost("/api/sales-order")]
+        [HttpPost("/api/sales-order")]  
         public async Task<IActionResult> PopulateSalesOrder([FromBody] SalesOrderRequest data)
         {
             try

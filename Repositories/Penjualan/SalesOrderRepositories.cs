@@ -67,6 +67,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     address = @Address,
                     notes = @Notes,
                     discount_total = @DiscountTotal,
+                    quotation_id = @QuotationId,
                     tax_total = @TaxTotal
                 WHERE order_id = @OrderId;
             END
@@ -85,6 +86,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     address,
                     notes,
                     discount_total,
+                    quotation_id,
                     tax_total
                 )
                 VALUES
@@ -100,6 +102,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @Address,
                     @Notes,
                     @DiscountTotal,
+                    @QuotationId,
                     @TaxTotal
                 );
 
@@ -119,6 +122,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 address AS Address,
                 notes AS Notes,
                 discount_total AS DiscountTotal,
+                quotation_id   AS QuotationId,
                 tax_total AS TaxTotal
             FROM sales_order
             WHERE order_id = @OrderId;
@@ -160,7 +164,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     product_price = @ProductPrice,
                     discount_percent = @DiscountPercent,
                     total_price = @TotalPrice,
-                    warehouse_id = @WareHouseId
+                    warehouse_id = @WareHouseId,
+                    uom_id = @UomId
                 WHERE order_id = @OrderId
                   AND product_id = @ProductId;
             END
@@ -176,7 +181,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     product_price,
                     discount_percent,
                     total_price,
-                    warehouse_id
+                    warehouse_id,
+                    uom_id
                 )
                 VALUES
                 (
@@ -188,7 +194,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @ProductPrice,
                     @DiscountPercent,
                     @TotalPrice,
-                    @WarehouseId
+                    @WarehouseId,
+                    @UomId
                 );
             END
 
@@ -201,7 +208,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 product_price AS ProductPrice,
                 discount_percent AS DiscountPercent,
                 total_price AS TotalPrice,
-                warehouse_id AS WarehouseId
+                warehouse_id AS WarehouseId,
+                uom_id AS UomId
             FROM sales_order_detail
             WHERE order_id = @OrderId
               AND product_id = @ProductId;
@@ -297,10 +305,15 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 so.subtotal AS Total,
                 so.discount_total AS DiscountTotal,
                 so.tax_total AS TaxTotal,
-                so.notes AS Keterangan
+                so.is_taxable AS IsTaxAble,
+                so.notes AS Keterangan,
+                so.quotation_id AS QuotationId,
+                sq.quotation_number AS QuotationNumber
             FROM sales_order so
             JOIN master_customer mc 
                 ON mc.customer_id = so.customer_id
+            JOIN sales_quotation sq
+                ON sq.quotation_id = so.quotation_id
             WHERE so.order_id = @OrderId
         ";
 
@@ -313,12 +326,16 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 sod.discount_percent AS ProductDiscount,
                 sod.total_price AS TotalPrice,
                 sod.warehouse_id AS WareHouseId,
-                mw.warehouse_name AS WarehouseName
+                mw.warehouse_name AS WarehouseName,
+                sod.uom_id AS UomId,
+                mu.uom_code AS UomCode
             FROM sales_order_detail sod
             JOIN master_product mp 
                 ON mp.product_id = sod.product_id
             JOIN master_warehouse mw
 	            ON sod.warehouse_id  = mw.warehouse_id
+            JOIN master_uom mu 
+                ON sod.uom_id = mu.uom_id
             WHERE sod.order_id = @OrderId
         ";
 

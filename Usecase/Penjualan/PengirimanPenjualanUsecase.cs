@@ -11,6 +11,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
     {
         Task<List<ShippingDTO>> GetShippingCategory();
         Task<List<DeliveryOrderHeaderDTO>> GetDoHeader();
+        Task<List<DeliveryOrderDetailDTO>> GetDoDetail(int deliveryOrderId);
         Task InsertDeliveryOrder(PengirimanPenjualan model);
 
     }
@@ -34,6 +35,15 @@ namespace trinova_erp_backend.Usecase.Penjualan
         public async Task<List<DeliveryOrderHeaderDTO>> GetDoHeader()
         {
             var result = await _pengirimanRepo.GetDoHeader();
+            return result;
+        }
+
+        public async Task<List<DeliveryOrderDetailDTO>> GetDoDetail(int deliveryOrderId)
+        {
+            if (deliveryOrderId <= 0)
+                throw new Exception("Id pengiriman tidak valid.");
+
+            var result = await _pengirimanRepo.GetDoDetail(deliveryOrderId);
             return result;
         }
 
