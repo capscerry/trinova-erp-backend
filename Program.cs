@@ -7,6 +7,8 @@ using trinova_erp_backend.Usecase.Persediaan;
 
 Env.Load();
 
+Console.WriteLine(Env.GetString("SQL_CONNECTION_STRING_DEV"));
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<DatabaseConnection>(options =>
@@ -37,6 +39,7 @@ builder.Services.AddScoped<StockTransferUsecase>();
 builder.Services.AddScoped<OrderFulfillmentUsecase>();
 builder.Services.AddScoped<ForecastRepo>();
 builder.Services.AddScoped<DemandForecastUsecase>();
+builder.Services.AddScoped<PurchaseRequisitionDetailRepo>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowCors", policy =>
