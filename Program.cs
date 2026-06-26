@@ -37,7 +37,7 @@ builder.Services.AddScoped<MasterProductSubcategoryUsecase>();
 builder.Services.AddScoped<StockMovementRepo>();
 builder.Services.AddScoped<StockTransferUsecase>();
 builder.Services.AddScoped<OrderFulfillmentUsecase>();
-builder.Services.AddScoped<ForecastRepo>();
+builder.Services.AddHttpClient<ForecastClient>(client =>{client.BaseAddress = new Uri("http://127.0.0.1:8000");});
 builder.Services.AddScoped<DemandForecastUsecase>();
 builder.Services.AddScoped<PurchaseRequisitionDetailRepo>();
 builder.Services.AddCors(options =>
