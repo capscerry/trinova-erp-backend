@@ -9,12 +9,16 @@ namespace trinova_erp_backend.Models.Persediaan
         [Key]
         public int warehouse_id { get; set; }
 
+        [Required]
         public string? warehouse_name { get; set; }
 
         public string? description { get; set; }
 
+        [Required]
         public string? warehouse_address { get; set; }
 
+
+        [Required]
         public string? warehouse_type { get; set; }
 
         public DateTime? created_at { get; set; }

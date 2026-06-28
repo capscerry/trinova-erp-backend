@@ -15,20 +15,23 @@ namespace trinova_erp_backend.Models.Persediaan
 
         public string? product_type { get; set; }
 
-        public string? barcode { get; set; }
-
         public int uom_id { get; set; }
 
         public int category_id { get; set; }
+
+        public int subcategory_id { get; set; }
 
         public DateTime? created_at { get; set; }
 
         public DateTime? updated_at { get; set; }
 
-        [ForeignKey("uom_id")]
+        [ForeignKey(nameof(uom_id))]
         public MasterUom? MasterUom { get; set; }
 
-        [ForeignKey("category_id")]
+        [ForeignKey(nameof(category_id))]
         public MasterProductCategory? MasterProductCategory { get; set; }
+
+        [ForeignKey(nameof(subcategory_id))]
+        public ProductSubcategory? ProductSubcategory { get; set; }
     }
 }

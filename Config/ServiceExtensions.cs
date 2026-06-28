@@ -47,6 +47,8 @@ namespace trinova_erp_backend.Config
             services.AddScoped<IPurchasingDashboardRepo, PurchasingDashboardRepo>();
             services.AddScoped<ISupplierProductRepo, SupplierProductRepo>();
             services.AddScoped<IPurchaseInvoiceRepo, PurchaseInvoiceRepo>();
+            services.AddScoped<IPurchaseDownPaymentRepo, PurchaseDownPaymentRepo>();
+            services.AddScoped<IPurchasePaymentRepo, PurchasePaymentRepo>();
 
             // PEMBELIAN USECASE
             services.AddScoped<ISupplierUsecase, SupplierUsecase>();
@@ -58,6 +60,8 @@ namespace trinova_erp_backend.Config
             services.AddScoped<IPurchasingDashboardUsecase, PurchasingDashboardUsecase>();
             services.AddScoped<ISupplierProductUsecase, SupplierProductUsecase>();
             services.AddScoped<IPurchaseInvoiceUsecase, PurchaseInvoiceUsecase>();
+            services.AddScoped<IPurchaseDownPaymentUsecase, PurchaseDownPaymentUsecase>();
+            services.AddScoped<IPurchasePaymentUsecase, PurchasePaymentUsecase>();
 
             // PERSEDIAAN REPOSITORY
             services.AddScoped<MasterProductRepo>();
@@ -66,6 +70,7 @@ namespace trinova_erp_backend.Config
             services.AddScoped<MasterWarehouseRepo>();
             services.AddScoped<InventoryStockRepo>();
             services.AddScoped<StockTransactionRepo>();
+            services.AddScoped<PurchaseRequisitionRepo>();
 
             // PERSEDIAAN USECASE
             services.AddScoped<IMasterProductUsecase, MasterProductUsecase>();
@@ -74,6 +79,7 @@ namespace trinova_erp_backend.Config
             services.AddScoped<IMasterWarehouseUsecase, MasterWarehouseUsecase>();
             services.AddScoped<InventoryStockUsecase>();
             services.AddScoped<StockTransactionUsecase>();
+            services.AddScoped<PurchaseRequisitionUsecase>();
 
 
 

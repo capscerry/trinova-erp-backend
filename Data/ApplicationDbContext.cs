@@ -33,6 +33,7 @@ namespace trinova_erp_backend.Data
      
         public DbSet<StockTransaction> StockTransactions { get; set; }
 
+        public DbSet<ProductSubcategory> MasterProductSubcategories { get; set; }
         // =========================
         // TRANSACTION
         // =========================
@@ -42,6 +43,10 @@ namespace trinova_erp_backend.Data
         public DbSet<PurchaseOrderDetail> PurchaseOrderDetails { get; set; }
 
         public DbSet<GoodsReceipt> GoodsReceipts { get; set; }
+
+        public DbSet<PurchaseRequisition> PurchaseRequisitions { get; set; }
+
+        public DbSet<PurchaseRequisitionDetail> PurchaseRequisitionDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -69,6 +74,31 @@ namespace trinova_erp_backend.Data
             modelBuilder.Entity<MasterWarehouse>()
                 .ToTable("master_warehouse");
 
+            modelBuilder.Entity<ProductSubcategory>()
+                .HasOne(x => x.Category)
+                .WithMany()
+                .HasForeignKey(x => x.category_id);
+
+            modelBuilder.Entity<InventoryStock>()
+                .HasOne(x => x.Product)
+                .WithMany()
+                .HasForeignKey(x => x.product_id);
+
+            modelBuilder.Entity<InventoryStock>()
+                .HasOne(x => x.Warehouse)
+                .WithMany()
+                .HasForeignKey(x => x.warehouse_id);
+
+            modelBuilder.Entity<StockTransaction>()
+                .HasOne(x => x.Product)
+                .WithMany()
+                .HasForeignKey(x => x.product_id);
+
+            modelBuilder.Entity<StockTransaction>()
+                .HasOne(x => x.Warehouse)
+                .WithMany()
+                .HasForeignKey(x => x.warehouse_id);
+
             // =========================
             // TRANSACTION
             // =========================
@@ -81,6 +111,28 @@ namespace trinova_erp_backend.Data
 
             modelBuilder.Entity<GoodsReceipt>()
                 .ToTable("goods_receipt");
+
+            modelBuilder.Entity<PurchaseRequisition>()
+                .ToTable("purchase_requisition");
+
+            modelBuilder.Entity<PurchaseRequisitionDetail>()
+                .ToTable("purchase_requisition_detail");
+            
+            modelBuilder.Entity<PurchaseRequisition>()
+                .HasOne(x => x.Warehouse)
+                .WithMany()
+                .HasForeignKey(x => x.warehouse_id);
+
+            modelBuilder.Entity<PurchaseRequisitionDetail>()
+                .HasOne(x => x.Product)
+                .WithMany()
+                .HasForeignKey(x => x.product_id);
+
+            modelBuilder.Entity<PurchaseRequisitionDetail>()
+                .HasOne(x => x.PurchaseRequisition)
+                .WithMany(x => x.Details)
+                .HasForeignKey(x => x.pr_id);
+
         }
     }
 }

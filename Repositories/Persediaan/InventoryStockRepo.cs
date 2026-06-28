@@ -293,5 +293,48 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
             await command.ExecuteNonQueryAsync();
         }
+
+        public async Task<InventoryStock?> GetByProductWarehouseAsync(
+            int productId,
+            int warehouseId)
+        {
+            const string query = @"
+                SELECT *
+                FROM inventory_stock
+                WHERE product_id = @product_id
+                AND warehouse_id = @warehouse_id";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            command.Parameters.AddWithValue(
+                "@product_id",
+                productId);
+
+            command.Parameters.AddWithValue(
+                "@warehouse_id",
+                warehouseId);
+
+            await connection.OpenAsync();
+
+            using SqlDataReader reader =
+                await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+                return null;
+
+            return new InventoryStock
+            {
+                stock_id = Convert.ToInt32(reader["stock_id"]),
+                product_id = Convert.ToInt32(reader["product_id"]),
+                warehouse_id = Convert.ToInt32(reader["warehouse_id"]),
+                qty_on_hand = Convert.ToDecimal(reader["qty_on_hand"]),
+                qty_reserved = Convert.ToDecimal(reader["qty_reserved"]),
+                qty_available = Convert.ToDecimal(reader["qty_available"])
+            };
+        }
     }
 }

@@ -18,14 +18,14 @@ namespace trinova_erp_backend.Controllers.Persediaan
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            return Ok(await _usecase.GetAllAsync());
+           return Ok(await _usecase.GetAllAsync());
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(InventoryStock stock)
         {
-            var result = await _usecase.CreateAsync(stock);
-            return Ok(result);
+           var result = await _usecase.CreateAsync(stock);
+           return Ok(result);
         }
     }
 }
