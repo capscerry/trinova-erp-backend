@@ -31,8 +31,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
         public async Task<bool> InsertCategoryCust(CategoryCustomer model)
         {
 
-            const string query = @"INSERT INTO master_customer_category (category_name) 
-                                   VALUES (@category_name)";
+            const string query = @"INSERT INTO master_customer_category (category_name, is_active) 
+                                   VALUES (@category_name, 1)";
 
             try
             {
@@ -115,7 +115,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         {
                             var category = new CategoryCustomer() {
                                 Id = reader.GetInt32(reader.GetOrdinal("id")),
-                                NamaKategori = reader.GetString(reader.GetOrdinal("category_name"))
+                                NamaKategori = reader.GetString(reader.GetOrdinal("category_name")),
+                                IsActive = reader["is_active"] != DBNull.Value && Convert.ToBoolean(reader["is_active"])
                             };
 
                             response.Add(category);

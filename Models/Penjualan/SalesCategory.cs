@@ -5,5 +5,6 @@
         public int Id { get; set; }
         public string? NamaKategori { get; set; }
         public string? Keterangan { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }

@@ -4,5 +4,6 @@
     {
         public int Id { get; set; }
         public string? NamaKategori { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }

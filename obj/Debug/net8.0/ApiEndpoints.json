@@ -86,9 +86,9 @@
         "IsRequired": true
       },
       {
-        "Name": "status",
-        "Type": "System.Int32",
-        "IsRequired": false
+        "Name": "request",
+        "Type": "trinova_erp_backend.Models.Penjualan.CategoryStatusRequest",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -756,11 +756,21 @@
         "IsRequired": true
       },
       {
-        "Name": "status",
-        "Type": "System.Int32",
-        "IsRequired": false
+        "Name": "request",
+        "Type": "trinova_erp_backend.Models.Penjualan.CategoryStatusRequest",
+        "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesDashboardController",
+    "Method": "GetDashboard",
+    "RelativePath": "api/sales-dashboard",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {

@@ -32,8 +32,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
         public async Task<bool> InsertCategorySales(SalesCategory model)
         {
 
-            const string query = @"INSERT INTO sales_category (category_name,keterangan) 
-                                   VALUES (@category_name,@keterangan)";
+            const string query = @"INSERT INTO sales_category (category_name,keterangan,is_active) 
+                                   VALUES (@category_name,@keterangan,1)";
 
             try
             {
@@ -59,7 +59,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
         public async Task<bool> UpdateCategorySales(SalesCategory model)
         {
             const string query = @"UPDATE sales_category 
-                                   SET category_name = @categoryName
+                                   SET category_name = @categoryName,
+                                       keterangan = @keterangan
                                     WHERE id = @id";
             try
             {
@@ -68,6 +69,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 {
                     await connection.OpenAsync();
                     command.Parameters.AddWithValue("@categoryName", model.NamaKategori);
+                    command.Parameters.AddWithValue("@keterangan", model.Keterangan ?? string.Empty);
                     command.Parameters.AddWithValue("@id", model.Id);
                     int result = await command.ExecuteNonQueryAsync();
                     return result > 0;
@@ -121,7 +123,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                             var category = new SalesCategory() {
                                 Id = reader.GetInt32(reader.GetOrdinal("id")),
                                 NamaKategori = reader.GetString(reader.GetOrdinal("category_name")),
-                                Keterangan = reader.GetString(reader.GetOrdinal("keterangan"))
+                                Keterangan = reader["keterangan"] == DBNull.Value ? string.Empty : reader.GetString(reader.GetOrdinal("keterangan")),
+                                IsActive = reader["is_active"] != DBNull.Value && Convert.ToBoolean(reader["is_active"])
                             };
 
                             response.Add(category);

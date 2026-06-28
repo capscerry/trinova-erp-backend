@@ -101,16 +101,27 @@
               "type": "integer",
               "format": "int32"
             }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryStatusRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryStatusRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryStatusRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1349,16 +1360,27 @@
               "type": "integer",
               "format": "int32"
             }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryStatusRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryStatusRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryStatusRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1487,6 +1509,18 @@
               "format": "int32"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sales-dashboard": {
+      "get": {
+        "tags": [
+          "SalesDashboard"
         ],
         "responses": {
           "200": {
@@ -2059,6 +2093,18 @@
           "namaKategori": {
             "type": "string",
             "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CategoryStatusRequest": {
+        "type": "object",
+        "properties": {
+          "isActive": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -2741,6 +2787,9 @@
           "keterangan": {
             "type": "string",
             "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false

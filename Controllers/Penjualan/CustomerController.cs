@@ -37,8 +37,9 @@ namespace trinova_erp_backend.Controllers.Penjualan
         }
 
         [HttpPost("/api/category-customer/{id}/status")]
-        public async Task<IActionResult> UpdateStatusCategory(int id,int status)
+        public async Task<IActionResult> UpdateStatusCategory(int id, [FromBody] CategoryStatusRequest request)
         {
+            var status = request.IsActive ? 1 : 0;
             var result = await _customerCategoryUsecase.UpdateStatusCategory(id, status);
             if (result)
             {

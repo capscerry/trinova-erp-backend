@@ -610,3 +610,4 @@ C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.dl
 C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.DataSet.dll
 C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.dll
 C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.DataSet.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
