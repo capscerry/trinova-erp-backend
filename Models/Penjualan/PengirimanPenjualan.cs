@@ -20,6 +20,7 @@
         public string? Address { get; set; }
         public string? Notes { get; set; }
         public int? SoId { get; set; }
+        public string? Status { get; set; }
     }
 
     public class DeliveryOrderDetailDTO

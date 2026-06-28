@@ -30,6 +30,7 @@
         public string? Alamat { get; set; }
 
         public string? Keterangan { get; set; }
+        public string? Status { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

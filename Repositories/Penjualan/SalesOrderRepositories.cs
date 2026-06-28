@@ -242,7 +242,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                      so.is_taxable      AS IsTaxAble,
                      so.is_tax_included AS IsTaxIncluded,
                      so.address         AS Address,
-                     so.notes           AS Notes
+                     so.notes           AS Notes,
+                     ISNULL(so.status, 'Draft') AS Status
                  FROM sales_order so JOIN master_customer mc  ON so.customer_id  = mc.customer_id 
                  ORDER BY order_id DESC;
             ";
@@ -269,7 +270,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                      so.is_taxable      AS IsTaxAble,
                      so.is_tax_included AS IsTaxIncluded,
                      so.address         AS Address,
-                     so.notes           AS Notes
+                     so.notes           AS Notes,
+                     ISNULL(so.status, 'Draft') AS Status
                  FROM sales_order so JOIN master_customer mc  ON so.customer_id  = mc.customer_id 
                  WHERE mc.customer_id = @CustomerId
                  ORDER BY order_id DESC";
@@ -307,6 +309,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 so.tax_total AS TaxTotal,
                 so.is_taxable AS IsTaxAble,
                 so.notes AS Keterangan,
+                ISNULL(so.status, 'Draft') AS Status,
                 so.quotation_id AS QuotationId,
                 sq.quotation_number AS QuotationNumber
             FROM sales_order so

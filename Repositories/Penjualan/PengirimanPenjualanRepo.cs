@@ -60,7 +60,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                             doh.delivery_category_id  				AS DeliveryCategoryId,
                             dc.category_name 						AS DeliveryShippingName,
                             doh.address 							AS Address,
-                            doh.notes 								AS Notes
+                            doh.notes 								AS Notes,
+                            ISNULL(doh.status, 'Draft')            AS Status
                             FROM delivery_order_header doh 
                             JOIN master_customer mc ON doh.customer_id = mc.customer_id
                             LEFT JOIN sales_order so  on doh.so_id = so.order_id 

@@ -171,6 +171,18 @@
         }
       }
     },
+    "/api/customer/active": {
+      "get": {
+        "tags": [
+          "Customer"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/customer/{id}": {
       "put": {
         "tags": [
@@ -314,6 +326,18 @@
         }
       }
     },
+    "/api/DemandForecast": {
+      "get": {
+        "tags": [
+          "DemandForecast"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/goods-receipt": {
       "post": {
         "tags": [
@@ -398,6 +422,47 @@
             "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/GoodsReceiptDetail"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/InventoryStock": {
+      "get": {
+        "tags": [
+          "InventoryStock"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "InventoryStock"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryStock"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryStock"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryStock"
               }
             }
           }
@@ -1000,6 +1065,47 @@
         }
       }
     },
+    "/api/OrderFulfillment": {
+      "post": {
+        "tags": [
+          "OrderFulfillment"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderFulfillmentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderFulfillmentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderFulfillmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "OrderFulfillment"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/bank": {
       "get": {
         "tags": [
@@ -1046,6 +1152,47 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-down-payment": {
+      "post": {
+        "tags": [
+          "PurchaseDownPayment"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseDownPayment"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseDownPayment"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseDownPayment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "PurchaseDownPayment"
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1346,6 +1493,70 @@
       "delete": {
         "tags": [
           "PurchaseOrderDetail"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-payment": {
+      "post": {
+        "tags": [
+          "PurchasePayment"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchasePayment"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchasePayment"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchasePayment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "PurchasePayment"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-payment/{id}": {
+      "delete": {
+        "tags": [
+          "PurchasePayment"
         ],
         "parameters": [
           {
@@ -2019,10 +2230,130 @@
         }
       }
     },
+    "/api/sales-status/{module}/{id}": {
+      "patch": {
+        "tags": [
+          "SalesStatus"
+        ],
+        "parameters": [
+          {
+            "name": "module",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesStatusRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesStatusRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesStatusRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/StockTransaction": {
       "get": {
         "tags": [
           "StockTransaction"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "StockTransaction"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockTransaction"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockTransaction"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockTransaction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/StockTransfer": {
+      "post": {
+        "tags": [
+          "StockTransfer"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockTransferRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockTransferRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockTransferRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "StockTransfer"
         ],
         "responses": {
           "200": {
@@ -2334,6 +2665,29 @@
           }
         }
       }
+    },
+    "/api/uang-muka/{id}": {
+      "get": {
+        "tags": [
+          "UangMuka"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2513,6 +2867,10 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -2589,6 +2947,56 @@
           },
           "goodsReceipt": {
             "$ref": "#/components/schemas/GoodsReceipt"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InventoryStock": {
+        "type": "object",
+        "properties": {
+          "stock_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "product_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "qty_on_hand": {
+            "type": "number",
+            "format": "double"
+          },
+          "qty_reserved": {
+            "type": "number",
+            "format": "double"
+          },
+          "qty_available": {
+            "type": "number",
+            "format": "double"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "product": {
+            "$ref": "#/components/schemas/MasterProduct"
+          },
+          "warehouse": {
+            "$ref": "#/components/schemas/MasterWarehouse"
           }
         },
         "additionalProperties": false
@@ -2815,7 +3223,36 @@
         },
         "additionalProperties": false
       },
-<<<<<<< HEAD
+      "OrderFulfillmentRequest": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_by": {
+            "type": "string",
+            "nullable": true
+          },
+          "reference_no": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "PenerimaanPenjualan": {
         "type": "object",
         "properties": {
@@ -2860,6 +3297,10 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -2875,6 +3316,117 @@
             "items": {
               "$ref": "#/components/schemas/DeliveryOrderDetailDTO"
             },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductSubcategory": {
+        "required": [
+          "category_id",
+          "code",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "subcategory_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "category_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "category": {
+            "$ref": "#/components/schemas/MasterProductCategory"
+          },
+          "code": {
+            "maxLength": 2,
+            "minLength": 0,
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseDownPayment": {
+        "type": "object",
+        "properties": {
+          "purchase_down_payment_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dp_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "purchase_order_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplier_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "payment_date": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "payment_type": {
+            "type": "string",
+            "nullable": true
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "purchaseOrder": {
+            "$ref": "#/components/schemas/PurchaseOrder"
+          },
+          "supplier": {
+            "$ref": "#/components/schemas/Supplier"
+          },
+          "supplier_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "po_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "po_total": {
+            "type": "number",
+            "format": "double",
             "nullable": true
           }
         },
@@ -2914,50 +3466,18 @@
           "supplier_name": {
             "type": "string",
             "nullable": true
-=======
-      "ProductSubcategory": {
-        "required": [
-          "category_id",
-          "code",
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "subcategory_id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "category_id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "category": {
-            "$ref": "#/components/schemas/MasterProductCategory"
-          },
-          "code": {
-            "maxLength": 2,
-            "minLength": 0,
-            "type": "string"
-          },
-          "name": {
-            "maxLength": 100,
-            "minLength": 0,
-            "type": "string"
-          },
-          "is_active": {
-            "type": "boolean"
->>>>>>> origin/feature/purchasing
           },
           "created_at": {
             "type": "string",
             "format": "date-time"
-<<<<<<< HEAD
-=======
           },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
->>>>>>> origin/feature/purchasing
+          "dp_paid": {
+            "type": "number",
+            "format": "double"
+          },
+          "outstanding_amount": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -3037,6 +3557,57 @@
           },
           "purchaseOrder": {
             "$ref": "#/components/schemas/PurchaseOrder"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchasePayment": {
+        "type": "object",
+        "properties": {
+          "purchase_payment_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "payment_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "purchase_invoice_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "payment_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "payment_method": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "invoice_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplier_name": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -3622,6 +4193,113 @@
         },
         "additionalProperties": false
       },
+      "SalesStatusRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedBy": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StockTransaction": {
+        "required": [
+          "product_id",
+          "quantity",
+          "transaction_type",
+          "warehouse_id"
+        ],
+        "type": "object",
+        "properties": {
+          "transaction_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "product_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warehouse_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "transaction_type": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "reference_no": {
+            "type": "string",
+            "nullable": true
+          },
+          "reference_module": {
+            "type": "string",
+            "nullable": true
+          },
+          "reference_id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "remarks": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "product": {
+            "$ref": "#/components/schemas/MasterProduct"
+          },
+          "warehouse": {
+            "$ref": "#/components/schemas/MasterWarehouse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StockTransferRequest": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "source_warehouse_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "destination_warehouse_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_by": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "Supplier": {
         "type": "object",
         "properties": {
@@ -3792,6 +4470,10 @@
             "nullable": true
           },
           "keterangan": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
             "type": "string",
             "nullable": true
           },

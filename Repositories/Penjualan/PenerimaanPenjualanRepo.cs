@@ -53,7 +53,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 sr.nilai_pembayaran AS NilaiPembayaran,
                 sr.tanggal_bayar AS TanggalBayar,
                 sr.uang_muka_id AS UangMukaId,
-                sr.sales_order_id AS SalesOrderId
+                sr.sales_order_id AS SalesOrderId,
+                ISNULL(sr.status, 'Draft') AS Status
             FROM sales_receipt sr
             INNER JOIN master_customer mc
                 ON sr.customer_id = mc.customer_id
@@ -85,7 +86,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
             nilai_pembayaran,
             tanggal_bayar,
             uang_muka_id,
-            sales_order_id
+            sales_order_id,
+            status
         )
         OUTPUT
             INSERTED.id,
@@ -104,7 +106,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
             @NilaiPembayaran,
             @TanggalBayar,
             @UangMukaId,
-            @SalesOrderId
+            @SalesOrderId,
+            'Draft'
         );
     ";
 

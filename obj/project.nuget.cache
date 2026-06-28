@@ -159,15 +159,5 @@
     "C:\\Users\\aisya\\.nuget\\packages\\system.xml.readerwriter\\4.3.0\\system.xml.readerwriter.4.3.0.nupkg.sha512",
     "C:\\Users\\aisya\\.nuget\\packages\\system.xml.xdocument\\4.3.0\\system.xml.xdocument.4.3.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "Undefined",
-      "level": "Warning",
-      "message": "Problem reading the cache file C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\obj\\project.nuget.cache : '<' is an invalid start of a property name. Expected a '\"'. Path: $ | LineNumber: 2 | BytePositionInLine: 0.",
-      "projectPath": "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\trinova-erp-backend.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\trinova-erp-backend.csproj",
-      "targetGraphs": []
-    }
-  ]
+  "logs": []
 }

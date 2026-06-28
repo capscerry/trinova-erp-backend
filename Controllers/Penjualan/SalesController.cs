@@ -256,7 +256,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
         public async Task<IActionResult> PopulateSalesOrder([FromBody] SalesOrderRequest data)
         {
             try
-            {
+                {
                 if (data == null)   
                 {
                     return BadRequest(new
@@ -295,6 +295,14 @@ namespace trinova_erp_backend.Controllers.Penjualan
                         header = result.Header,
                         detail = result.Detail
                     }
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
                 });
             }
             catch (Exception ex)

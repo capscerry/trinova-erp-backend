@@ -4,6 +4,7 @@ using trinova_erp_backend.Config;
 using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Models.Penjualan;
 using trinova_erp_backend.Repositories.Penjualan;
+using trinova_erp_backend.Repositories.Persediaan;
 
 namespace trinova_erp_backend.Usecase.Penjualan
 {
@@ -167,10 +168,16 @@ namespace trinova_erp_backend.Usecase.Penjualan
     public class SalesOrderUsecase : ISalesOrderUsecase
     {
         private readonly ISalesOrderRepositories _salesOrderRepo;
+        private readonly InventoryStockRepo _inventoryStockRepo;
         private readonly string _connectionString;
-        public SalesOrderUsecase(ISalesOrderRepositories salesOrderRepo,IOptions<DatabaseConnection> options)
+        public SalesOrderUsecase(
+            ISalesOrderRepositories salesOrderRepo,
+            InventoryStockRepo inventoryStockRepo,
+            IOptions<DatabaseConnection> options
+        )
         {
             _salesOrderRepo = salesOrderRepo;
+            _inventoryStockRepo = inventoryStockRepo;
             _connectionString = options.Value.SQLServer;
 
         }
@@ -183,6 +190,8 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
         public async Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model)
         {
+            await ValidateStockAvailability(model.Detail);
+
             using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
 
@@ -235,6 +244,38 @@ namespace trinova_erp_backend.Usecase.Penjualan
         public async Task<SalesOrderDetailDTO?> GetSalesOrderDetail(int orderId)
         {
             return await _salesOrderRepo.GetSalesOrderDetail(orderId);
+        }
+
+        private async Task ValidateStockAvailability(List<SalesOrderDetail>? details)
+        {
+            if (details == null || details.Count == 0)
+                throw new InvalidOperationException("Detail sales order wajib diisi");
+
+            foreach (var detail in details)
+            {
+                if (detail.ProductId <= 0)
+                    throw new InvalidOperationException("Produk pada detail sales order wajib dipilih");
+
+                if (detail.ProductQty <= 0)
+                    throw new InvalidOperationException($"Qty untuk produk {detail.ProductName} harus lebih dari 0");
+
+                if (!detail.WareHouseId.HasValue || detail.WareHouseId.Value <= 0)
+                    throw new InvalidOperationException($"Gudang untuk produk {detail.ProductName} wajib dipilih");
+
+                var stock = await _inventoryStockRepo.GetByProductWarehouseAsync(
+                    detail.ProductId,
+                    detail.WareHouseId.Value
+                );
+
+                var availableQty = stock?.qty_available ?? 0;
+
+                if (stock == null || detail.ProductQty > availableQty)
+                {
+                    throw new InvalidOperationException(
+                        $"Stok produk {detail.ProductName} di gudang terpilih tidak mencukupi. Qty diminta: {detail.ProductQty}, tersedia: {availableQty}."
+                    );
+                }
+            }
         }
     }
 }

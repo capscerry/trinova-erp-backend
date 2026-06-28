@@ -35,7 +35,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                                  um.NoSo As SoNumber,
                                  um.NoPO,
                                  um.NominalUangMuka,
-                                 um.TotalAmount
+                                 um.TotalAmount,
+                                 ISNULL(um.Status, 'Draft') AS Status
                              FROM uang_muka as um join master_customer as mc
                              ON um.CustomerId = mc.customer_id ";
 
@@ -66,6 +67,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
             um.SyaratPembayaran,
             um.Alamat,
             um.Keterangan,
+            ISNULL(um.Status, 'Draft') AS Status,
             um.CreatedAt,
             um.UpdatedAt,
             um.CreatedBy,

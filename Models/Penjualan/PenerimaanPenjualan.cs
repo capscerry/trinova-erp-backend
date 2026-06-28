@@ -12,6 +12,7 @@
         public DateTime TanggalBayar { get; set; }
         public int? UangMukaId { get; set; }
         public int? SalesOrderId { get; set; }
+        public string? Status { get; set; }
     }
 
     public class BankDTO

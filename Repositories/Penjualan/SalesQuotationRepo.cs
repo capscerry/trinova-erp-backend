@@ -47,7 +47,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                             sq.quotation_date   AS QuotationDate,
                             mc.customer_name    AS CustomerName,
                             sq.notes            AS Notes,
-                            sq.subtotal         AS Subtotal
+                            sq.subtotal         AS Subtotal,
+                            ISNULL(sq.status, 'Draft') AS Status
                             FROM sales_quotation sq JOIN master_customer mc  on sq.customer_id = mc.customer_id ";
 
             using var connection = new SqlConnection(_connectionString);
@@ -63,7 +64,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                             sq.quotation_date   AS QuotationDate,
                             mc.customer_name    AS CustomerName,
                             sq.notes            AS Notes,
-                            sq.subtotal         AS Subtotal
+                            sq.subtotal         AS Subtotal,
+                            ISNULL(sq.status, 'Draft') AS Status
                             FROM sales_quotation sq JOIN master_customer mc  on sq.customer_id = mc.customer_id
                             WHERE mc.customer_id = @CustomerId";
 
@@ -94,7 +96,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 sq.subtotal          AS Subtotal,
                 sq.discount_total    AS DiscountTotal,
                 sq.is_taxable        AS IsTaxAble,
-                sq.tax_total         AS TaxTotal
+                sq.tax_total         AS TaxTotal,
+                ISNULL(sq.status, 'Draft') AS Status
             FROM sales_quotation sq
             JOIN master_customer mc
                 ON sq.customer_id = mc.customer_id
