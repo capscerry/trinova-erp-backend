@@ -171,13 +171,23 @@ public class PurchasePaymentRepo
         SELECT
             pp.*,
             pi.invoice_number,
-            ms.supplier_name
+            ms.supplier_name,
+            po.transaction_name,
+            po.transaction_detail
 
         FROM purchase_payment pp
 
         LEFT JOIN purchase_invoice pi
             ON pp.purchase_invoice_id =
             pi.purchase_invoice_id
+
+        LEFT JOIN goods_receipt gr
+            ON pi.goods_receipt_id =
+            gr.goods_receipt_id
+
+        LEFT JOIN purchase_order po
+            ON gr.purchase_order_id =
+            po.purchase_order_id
 
         LEFT JOIN master_supplier ms
             ON pi.supplier_id =
@@ -247,7 +257,17 @@ public class PurchasePaymentRepo
 
                             supplier_name =
                                 reader["supplier_name"]
-                                    ?.ToString()
+                                    ?.ToString(),
+
+                            transaction_name =
+                                reader["transaction_name"] == DBNull.Value
+                                    ? null
+                                    : reader["transaction_name"]?.ToString(),
+
+                            transaction_detail =
+                                reader["transaction_detail"] == DBNull.Value
+                                    ? null
+                                    : reader["transaction_detail"]?.ToString()
                         }
                     );
                 }

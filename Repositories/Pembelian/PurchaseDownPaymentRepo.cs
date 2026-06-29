@@ -185,6 +185,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 pdp.*,
                 po.po_number,
                 po.total_amount AS po_total,
+                po.transaction_name,
+                po.transaction_detail,
                 s.supplier_name
             FROM purchase_down_payment pdp
             LEFT JOIN purchase_order po
@@ -298,7 +300,17 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                                 reader.GetOrdinal(
                                                     "po_total"
                                                 )
-                                            )
+                                            ),
+
+                                    transaction_name =
+                                        reader["transaction_name"] == DBNull.Value
+                                            ? null
+                                            : reader["transaction_name"]?.ToString(),
+
+                                    transaction_detail =
+                                        reader["transaction_detail"] == DBNull.Value
+                                            ? null
+                                            : reader["transaction_detail"]?.ToString()
                                 };
 
                             response.Add(pdp);

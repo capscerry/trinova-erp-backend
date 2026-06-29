@@ -18,6 +18,10 @@ namespace trinova_erp_backend.Repositories.Pembelian
         Task<bool> BulkInsertSupplierProduct(
             List<SupplierProduct> models
         );
+
+        Task<bool> DeductStock(int productId, int supplierId, int quantity);
+
+        Task<bool> RestoreStock(int productId, int supplierId, int quantity);
     }
 
     public class SupplierProductRepo
@@ -372,6 +376,54 @@ namespace trinova_erp_backend.Repositories.Pembelian
             }
 
             return response;
+        }
+
+        // ─── DEDUCT STOCK (hard reserve on PO approval) ──────────────────
+
+        public async Task<bool> DeductStock(int productId, int supplierId, int quantity)
+        {
+            // Only deduct if enough stock exists; fail if it would go negative.
+            const string query = @"
+                UPDATE supplier_products
+                SET available_stock = available_stock - @quantity
+                WHERE product_id  = @product_id
+                  AND supplier_id = @supplier_id
+                  AND available_stock >= @quantity";
+
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlCommand command = new SqlCommand(query, connection);
+
+            await connection.OpenAsync();
+
+            command.Parameters.AddWithValue("@product_id",  productId);
+            command.Parameters.AddWithValue("@supplier_id", supplierId);
+            command.Parameters.AddWithValue("@quantity",    quantity);
+
+            int rows = await command.ExecuteNonQueryAsync();
+            return rows > 0;
+        }
+
+        // ─── RESTORE STOCK (undo reservation on return / unapprove) ──────
+
+        public async Task<bool> RestoreStock(int productId, int supplierId, int quantity)
+        {
+            const string query = @"
+                UPDATE supplier_products
+                SET available_stock = available_stock + @quantity
+                WHERE product_id  = @product_id
+                  AND supplier_id = @supplier_id";
+
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlCommand command = new SqlCommand(query, connection);
+
+            await connection.OpenAsync();
+
+            command.Parameters.AddWithValue("@product_id",  productId);
+            command.Parameters.AddWithValue("@supplier_id", supplierId);
+            command.Parameters.AddWithValue("@quantity",    quantity);
+
+            int rows = await command.ExecuteNonQueryAsync();
+            return rows > 0;
         }
     }
 }

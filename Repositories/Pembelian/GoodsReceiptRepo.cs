@@ -15,6 +15,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
         Task<List<GoodsReceipt>> GetAllWithoutInvoice();
 
+        Task<GoodsReceipt?> GetGoodsReceiptById(int id);
+
         Task<bool> UpdateGoodsReceipt(GoodsReceipt model);
 
         Task<bool> DeleteGoodsReceipt(int id);
@@ -185,6 +187,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 gr.*,
                 po.supplier_id,
                 po.total_amount,
+                po.po_number,
+                po.transaction_name,
+                po.transaction_detail,
                 s.supplier_name
             FROM goods_receipt gr
             INNER JOIN purchase_order po
@@ -246,6 +251,19 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                     ? Convert.ToDecimal(reader["total_amount"])
                                     : 0,
 
+                                po_number =
+                                    reader["po_number"]?.ToString() ?? "",
+
+                                transaction_name =
+                                    reader["transaction_name"] != DBNull.Value
+                                    ? reader["transaction_name"]?.ToString()
+                                    : null,
+
+                                transaction_detail =
+                                    reader["transaction_detail"] != DBNull.Value
+                                    ? reader["transaction_detail"]?.ToString()
+                                    : null,
+
                             };
 
                             response.Add(receipt);
@@ -261,8 +279,74 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
             return response;
         }
-        // GET ALL WITHOUT INVOICE
-        // Returns only GR records that do NOT yet have a purchase_invoice
+        // GET BY ID
+        public async Task<GoodsReceipt?> GetGoodsReceiptById(int id)
+        {
+            const string query = @"
+            SELECT
+                gr.*,
+                po.supplier_id,
+                po.total_amount,
+                po.po_number,
+                s.supplier_name
+            FROM goods_receipt gr
+            INNER JOIN purchase_order po
+                ON gr.purchase_order_id = po.purchase_order_id
+            INNER JOIN master_supplier s
+                ON po.supplier_id = s.supplier_id
+            WHERE gr.goods_receipt_id = @id";
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    await connection.OpenAsync();
+                    command.Parameters.AddWithValue("@id", id);
+
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new GoodsReceipt
+                            {
+                                goods_receipt_id =
+                                    Convert.ToInt32(reader["goods_receipt_id"]),
+                                purchase_order_id =
+                                    Convert.ToInt32(reader["purchase_order_id"]),
+                                receipt_number =
+                                    reader["receipt_number"]?.ToString() ?? "",
+                                receipt_date =
+                                    reader["receipt_date"] != DBNull.Value
+                                    ? Convert.ToDateTime(reader["receipt_date"])
+                                    : DateTime.Now,
+                                received_by =
+                                    reader["received_by"]?.ToString() ?? "",
+                                status =
+                                    reader["status"]?.ToString() ?? "",
+                                supplier_id =
+                                    Convert.ToInt32(reader["supplier_id"]),
+                                supplier_name =
+                                    reader["supplier_name"]?.ToString() ?? "",
+                                total_amount =
+                                    reader["total_amount"] != DBNull.Value
+                                    ? Convert.ToDecimal(reader["total_amount"]) : 0,
+                                po_number =
+                                    reader["po_number"]?.ToString() ?? ""
+                            };
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+
+            return null;
+        }
+
+        // GET ALL WITHOUT INVOICE        // Returns only GR records that do NOT yet have a purchase_invoice
         public async Task<List<GoodsReceipt>> GetAllWithoutInvoice()
         {
             const string query = @"
@@ -270,6 +354,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 gr.*,
                 po.supplier_id,
                 po.total_amount,
+                po.po_number,
+                po.transaction_name,
+                po.transaction_detail,
                 s.supplier_name
             FROM goods_receipt gr
             INNER JOIN purchase_order po
@@ -334,6 +421,19 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                     reader["total_amount"] != DBNull.Value
                                     ? Convert.ToDecimal(reader["total_amount"])
                                     : 0,
+
+                                po_number =
+                                    reader["po_number"]?.ToString() ?? "",
+
+                                transaction_name =
+                                    reader["transaction_name"] != DBNull.Value
+                                    ? reader["transaction_name"]?.ToString()
+                                    : null,
+
+                                transaction_detail =
+                                    reader["transaction_detail"] != DBNull.Value
+                                    ? reader["transaction_detail"]?.ToString()
+                                    : null,
                             });
                         }
                     }

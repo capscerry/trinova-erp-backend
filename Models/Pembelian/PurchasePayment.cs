@@ -26,5 +26,9 @@ namespace trinova_erp_backend.Models
         public string? invoice_number { get; set; }
 
         public string? supplier_name { get; set; }
+
+        public string? transaction_name { get; set; }
+
+        public string? transaction_detail { get; set; }
     }
 }

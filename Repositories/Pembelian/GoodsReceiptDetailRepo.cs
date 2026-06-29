@@ -8,6 +8,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
     public interface IGoodsReceiptDetailRepo
     {
         Task<bool> InsertGoodsReceiptDetail(GoodsReceiptDetail model);
+
+        Task<List<GoodsReceiptDetail>> GetDetailsByGoodsReceiptId(int goodsReceiptId);
     }
 
     public class GoodsReceiptDetailRepo : IGoodsReceiptDetailRepo
@@ -190,6 +192,44 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 Console.WriteLine(ex.Message);
                 throw;
             }
+        }
+
+        // ─── GET DETAILS BY GOODS RECEIPT ID ────────────────────────────
+
+        public async Task<List<GoodsReceiptDetail>> GetDetailsByGoodsReceiptId(int goodsReceiptId)
+        {
+            const string query = @"
+                SELECT * FROM goods_receipt_detail
+                WHERE goods_receipt_id = @goods_receipt_id";
+
+            var response = new List<GoodsReceiptDetail>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                await connection.OpenAsync();
+                command.Parameters.AddWithValue("@goods_receipt_id", goodsReceiptId);
+
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        response.Add(new GoodsReceiptDetail
+                        {
+                            goods_receipt_detail_id =
+                                reader.GetInt32(reader.GetOrdinal("goods_receipt_detail_id")),
+                            goods_receipt_id =
+                                reader.GetInt32(reader.GetOrdinal("goods_receipt_id")),
+                            product_id =
+                                Convert.ToInt32(reader["product_id"]),
+                            quantity =
+                                reader.GetInt32(reader.GetOrdinal("quantity"))
+                        });
+                    }
+                }
+            }
+
+            return response;
         }
     }
 }

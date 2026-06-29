@@ -26,6 +26,17 @@ builder.Services.Configure<JwtSettings>(options =>
 
 
 builder.Services.AddApplicationServices();
+
+// Named HttpClient for the XGBoost FastAPI service.
+// Base URL is read from appsettings.json → ExternalServices:XGBoostApiUrl
+builder.Services.AddHttpClient("XGBoost", (serviceProvider, client) =>
+{
+    var config  = serviceProvider.GetRequiredService<IConfiguration>();
+    var baseUrl = config["ExternalServices:XGBoostApiUrl"] ?? "http://localhost:8000";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout     = TimeSpan.FromSeconds(60);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();

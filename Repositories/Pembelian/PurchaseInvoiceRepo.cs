@@ -338,6 +338,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
         SELECT
             pi.*,
             ms.supplier_name,
+            po.transaction_name,
+            po.transaction_detail,
 
             ISNULL(
                 (
@@ -379,6 +381,10 @@ namespace trinova_erp_backend.Repositories.Pembelian
         LEFT JOIN goods_receipt gr
             ON pi.goods_receipt_id =
             gr.goods_receipt_id
+
+        LEFT JOIN purchase_order po
+            ON gr.purchase_order_id =
+            po.purchase_order_id
 
         LEFT JOIN master_supplier ms
             ON pi.supplier_id =
@@ -462,6 +468,16 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                             : Convert.ToDecimal(
                                                 reader["outstanding_amount"]
                                             ),
+
+                                    transaction_name =
+                                        reader["transaction_name"] == DBNull.Value
+                                            ? null
+                                            : reader["transaction_name"]?.ToString(),
+
+                                    transaction_detail =
+                                        reader["transaction_detail"] == DBNull.Value
+                                            ? null
+                                            : reader["transaction_detail"]?.ToString(),
                                 }
                             );
                         }
