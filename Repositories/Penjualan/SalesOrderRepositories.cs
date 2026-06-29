@@ -234,7 +234,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                      so.order_id        AS OrderId,
                      so.customer_id     AS CustomerId,         
                      mc.customer_name   AS CustomerName,
-                     so.so_number       AS SoNumber,
+                     so.so_number       AS SoNumber,    
                      so.tanggal_kirim   AS TanggalKirim,
                      so.so_date         AS SoDate,
                      so.po_number       AS PoNumber,

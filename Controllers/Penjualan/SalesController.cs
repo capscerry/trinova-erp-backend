@@ -359,7 +359,11 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 customerName = so.CustomerName,
                 poNumber = so.PoNumber,
                 notes = so.Notes,
-                subTotal = so.SubTotal ?? 0
+                subTotal = so.SubTotal ?? 0,
+                isTaxAble = so.IsTaxAble ?? false,
+                isTaxIncluded = so.IsTaxIncluded,
+                taxTotal = so.TaxTotal ?? 0,
+                status = so.Status ?? "Draft"
             });
 
             return Ok(new

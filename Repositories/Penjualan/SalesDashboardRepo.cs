@@ -41,7 +41,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     mc.customer_name AS CustomerName,
                     so.so_date AS Date,
                     ISNULL(so.subtotal, 0) AS Total,
-                    'Draft' AS Status
+                    ISNULL(so.status, 'Draft') AS Status
                 FROM sales_order so
                 LEFT JOIN master_customer mc ON mc.customer_id = so.customer_id
                 ORDER BY so.order_id DESC;";

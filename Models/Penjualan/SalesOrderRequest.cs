@@ -23,6 +23,7 @@
         public string? Address { get; set; }
         public string? Notes { get; set; }
         public int? QuotationId { get; set; }
+        public string? Status { get; set; }
 
 
     }
