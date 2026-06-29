@@ -25,32 +25,41 @@ namespace trinova_erp_backend.Usecase.Persediaan
         public async Task<InventoryStock> CreateAsync(InventoryStock stock)
         {
             if (stock.qty_on_hand < 0)
-                {
-                    throw new Exception(
-                        "Stock cannot be negative"
-                    );
-                }
+                throw new Exception("Stock cannot be negative");
 
-                stock.qty_available =
-                    stock.qty_on_hand -
-                    stock.qty_reserved;
+            stock.qty_available = stock.qty_on_hand - stock.qty_reserved;
+            stock.created_at    = DateTime.Now;
+            stock.updated_at    = DateTime.Now;
 
-                stock.created_at =
-                    DateTime.Now;
+            var result = await _repo.CreateAsync(stock);
 
-                stock.updated_at =
-                    DateTime.Now;
-            return await _repo.CreateAsync(stock);
+            // Keep supplier_products.available_stock in sync so the PO form
+            // always reflects the current inventory level.
+            await _repo.SyncToSupplierProductsAsync(stock.product_id);
+
+            return result;
         }
 
         public async Task UpdateAsync(InventoryStock stock)
         {
-           await _repo.UpdateAsync(stock);
+            if (stock.qty_on_hand < 0)
+                throw new Exception("Stock cannot be negative");
+
+            stock.qty_available = stock.qty_on_hand - stock.qty_reserved;
+            stock.updated_at    = DateTime.Now;
+
+            await _repo.UpdateAsync(stock);
+
+            // Sync the updated total back to supplier_products.
+            await _repo.SyncToSupplierProductsAsync(stock.product_id);
         }
 
         public async Task DeleteAsync(InventoryStock stock)
         {
-           await _repo.DeleteAsync(stock);
+            await _repo.DeleteAsync(stock);
+
+            // After deletion the total available may drop — re-sync.
+            await _repo.SyncToSupplierProductsAsync(stock.product_id);
         }
     }
 }

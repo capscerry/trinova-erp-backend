@@ -96,42 +96,71 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 await updateCommand.ExecuteNonQueryAsync();
                             }
                         }
-                        // else
-                        // {
-                        //     const string insertStockQuery = @"
-                        //         INSERT INTO inventory_stock
-                        //         (
-                        //             product_id,
-                        //             quantity,
-                        //             minimum_stock,
-                        //             maximum_stock,
-                        //             created_at,
-                        //             updated_at
-                        //         )
-                        //         VALUES
-                        //         (
-                        //             @product_id,
-                        //             @quantity,
-                        //             0,
-                        //             0,
-                        //             GETDATE(),
-                        //             GETDATE()
-                        //         )";
+                        else
+                        {
+                            // No inventory row yet — create one using warehouse 1
+                            // (default warehouse). The persediaan/stok page can
+                            // reassign to the correct warehouse afterwards.
+                            const string insertStockQuery = @"
+                                INSERT INTO inventory_stock
+                                (
+                                    product_id,
+                                    warehouse_id,
+                                    qty_on_hand,
+                                    qty_reserved,
+                                    qty_available,
+                                    created_at,
+                                    updated_at
+                                )
+                                VALUES
+                                (
+                                    @product_id,
+                                    1,
+                                    @quantity,
+                                    0,
+                                    @quantity,
+                                    GETDATE(),
+                                    GETDATE()
+                                )";
 
-                        //     using (SqlCommand insertCommand =
-                        //            new SqlCommand(insertStockQuery, connection))
-                        //     {
-                        //         insertCommand.Parameters.AddWithValue(
-                        //             "@product_id",
-                        //             model.product_id);
+                            using (SqlCommand insertCommand =
+                                   new SqlCommand(insertStockQuery, connection))
+                            {
+                                insertCommand.Parameters.AddWithValue(
+                                    "@product_id",
+                                    model.product_id);
 
-                        //         insertCommand.Parameters.AddWithValue(
-                        //             "@quantity",
-                        //             model.quantity);
+                                insertCommand.Parameters.AddWithValue(
+                                    "@quantity",
+                                    model.quantity);
 
-                        //         await insertCommand.ExecuteNonQueryAsync();
-                        //     }
-                        // }
+                                await insertCommand.ExecuteNonQueryAsync();
+                            }
+                        }
+
+                        // ────────────────────────────────────────────────
+                        // SYNC inventory totals → supplier_products
+                        // so the PO form's available_stock stays current.
+                        // ────────────────────────────────────────────────
+                        const string syncSupplierQuery = @"
+                            UPDATE supplier_products
+                            SET
+                                available_stock = (
+                                    SELECT ISNULL(SUM(qty_available), 0)
+                                    FROM inventory_stock
+                                    WHERE product_id = @product_id
+                                )
+                            WHERE product_id = @product_id";
+
+                        using (SqlCommand syncCommand =
+                               new SqlCommand(syncSupplierQuery, connection))
+                        {
+                            syncCommand.Parameters.AddWithValue(
+                                "@product_id",
+                                model.product_id);
+
+                            await syncCommand.ExecuteNonQueryAsync();
+                        }
                     }
 
                     // ====================================================
