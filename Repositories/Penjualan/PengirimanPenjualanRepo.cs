@@ -134,10 +134,25 @@ namespace trinova_erp_backend.Repositories.Penjualan
             @SoId
         )";
 
-            return await connection.ExecuteScalarAsync<int>(
+            var deliveryOrderId = await connection.ExecuteScalarAsync<int>(
                 query,
                 dto,
                 transaction);
+
+            if (dto.SoId.HasValue && dto.SoId.Value > 0)
+            {
+                const string updateSalesOrderStatusQuery = @"
+                    UPDATE sales_order
+                    SET status = 'Approved'
+                    WHERE order_id = @SalesOrderId;";
+
+                await connection.ExecuteAsync(
+                    updateSalesOrderStatusQuery,
+                    new { SalesOrderId = dto.SoId.Value },
+                    transaction);
+            }
+
+            return deliveryOrderId;
         }
 
         public async Task InsertDeliveryOrderDetail(

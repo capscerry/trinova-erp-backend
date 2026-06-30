@@ -123,16 +123,32 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 notes AS Notes,
                 discount_total AS DiscountTotal,
                 quotation_id   AS QuotationId,
-                tax_total AS TaxTotal
+                tax_total AS TaxTotal   
             FROM sales_order
             WHERE order_id = @OrderId;
         ";
 
-                return await connection.QuerySingleAsync<SalesOrderHeader>(
+                var result = await connection.QuerySingleAsync<SalesOrderHeader>(
                     query,
                     header,
                     tx
                 );
+
+                if (header.QuotationId.HasValue && header.QuotationId.Value > 0)
+                {
+                    const string updateQuotationStatusQuery = @"
+                        UPDATE sales_quotation
+                        SET status = 'Approved'
+                        WHERE quotation_id = @QuotationId;";
+
+                    await connection.ExecuteAsync(
+                        updateQuotationStatusQuery,
+                        new { header.QuotationId },
+                        tx
+                    );
+                }
+
+                return result;
             }
             catch (Exception ex)
             {

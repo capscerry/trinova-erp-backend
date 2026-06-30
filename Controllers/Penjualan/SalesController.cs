@@ -358,6 +358,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 soDate = so.SoDate,
                 customerName = so.CustomerName,
                 poNumber = so.PoNumber,
+                address = so.Address,
                 notes = so.Notes,
                 subTotal = so.SubTotal ?? 0,
                 isTaxAble = so.IsTaxAble ?? false,

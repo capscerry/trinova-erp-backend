@@ -54,6 +54,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 sr.tanggal_bayar AS TanggalBayar,
                 sr.uang_muka_id AS UangMukaId,
                 sr.sales_order_id AS SalesOrderId,
+                sr.sales_invoice_id AS SalesInvoiceId,
                 ISNULL(sr.status, 'Draft') AS Status
             FROM sales_receipt sr
             INNER JOIN master_customer mc
@@ -87,6 +88,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
             tanggal_bayar,
             uang_muka_id,
             sales_order_id,
+            sales_invoice_id,
             status
         )
         OUTPUT
@@ -97,7 +99,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
             INSERTED.nilai_pembayaran AS NilaiPembayaran,
             INSERTED.tanggal_bayar AS TanggalBayar,
             INSERTED.uang_muka_id AS UangMukaId,
-            INSERTED.sales_order_id AS SalesOrderId
+            INSERTED.sales_order_id AS SalesOrderId,
+            INSERTED.sales_invoice_id AS SalesInvoiceId,
+            INSERTED.status AS Status
         VALUES
         (
             @NoBukti,
@@ -107,26 +111,125 @@ namespace trinova_erp_backend.Repositories.Penjualan
             @TanggalBayar,
             @UangMukaId,
             @SalesOrderId,
-            'Draft'
+            @SalesInvoiceId,
+            'Validated'
         );
     ";
 
             using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            using var transaction = connection.BeginTransaction();
 
-            var result = await connection.QueryFirstOrDefaultAsync<PenerimaanPenjualan>(
-                query,
+            try
+            {
+                var result = await connection.QueryFirstOrDefaultAsync<PenerimaanPenjualan>(
+                    query,
+                    new
+                    {
+                        dto.NoBukti,
+                        dto.CustomerId,
+                        dto.BankId,
+                        dto.NilaiPembayaran,
+                        dto.TanggalBayar,
+                        UangMukaId = dto.UangMukaId == 0 ? null : dto.UangMukaId,
+                        SalesOrderId = dto.SalesOrderId == 0 ? null : dto.SalesOrderId,
+                        SalesInvoiceId = dto.SalesInvoiceId == 0 ? null : dto.SalesInvoiceId
+                    },
+                    transaction);
+
+                await ApplyPaymentToOutstandingInvoices(dto, connection, transaction);
+
+                await transaction.CommitAsync();
+
+                return result;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        private static async Task ApplyPaymentToOutstandingInvoices(
+            PenerimaanPenjualan dto,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            var remainingPayment = dto.NilaiPembayaran;
+            if (remainingPayment <= 0)
+                return;
+
+            const string outstandingQuery = @"
+                SELECT
+                    id AS Id,
+                    remaining_amount AS RemainingAmount
+                FROM sales_invoice
+                WHERE customer_id = @CustomerId
+                  AND remaining_amount > 0
+                  AND status NOT IN ('Paid', 'Cancelled', 'Lunas', 'Dibatalkan')
+                  AND (
+                        (
+                            @SalesInvoiceId IS NOT NULL
+                            AND id = @SalesInvoiceId
+                        )
+                        OR (
+                            @SalesInvoiceId IS NULL
+                            AND (
+                                @SalesOrderId IS NULL
+                                OR sales_order_id = @SalesOrderId
+                            )
+                        )
+                  )
+                ORDER BY due_date ASC, id ASC;";
+
+            var invoices = await connection.QueryAsync<OutstandingInvoicePaymentTarget>(
+                outstandingQuery,
                 new
                 {
-                    dto.NoBukti,
                     dto.CustomerId,
-                    dto.BankId,
-                    dto.NilaiPembayaran,
-                    dto.TanggalBayar,
-                    UangMukaId = dto.UangMukaId == 0 ? null : dto.UangMukaId,
-                    SalesOrderId = dto.SalesOrderId == 0 ? null : dto.SalesOrderId
-                });
+                    SalesOrderId = dto.SalesOrderId == 0 ? null : dto.SalesOrderId,
+                    SalesInvoiceId = dto.SalesInvoiceId == 0 ? null : dto.SalesInvoiceId
+                },
+                transaction);
 
-            return result;
+            foreach (var invoice in invoices)
+            {
+                if (remainingPayment <= 0)
+                    break;
+
+                var paymentApplied = Math.Min(remainingPayment, invoice.RemainingAmount);
+                remainingPayment -= paymentApplied;
+
+                const string updateInvoiceQuery = @"
+                    UPDATE sales_invoice
+                    SET
+                        paid_amount = ISNULL(paid_amount, 0) + @PaymentApplied,
+                        remaining_amount = CASE
+                            WHEN ISNULL(remaining_amount, 0) - @PaymentApplied <= 0 THEN 0
+                            ELSE ISNULL(remaining_amount, 0) - @PaymentApplied
+                        END,
+                        status = CASE
+                            WHEN ISNULL(remaining_amount, 0) - @PaymentApplied <= 0 THEN 'Paid'
+                            ELSE 'Partially Paid'
+                        END,
+                        updated_at = GETDATE()
+                    WHERE id = @InvoiceId;";
+
+                await connection.ExecuteAsync(
+                    updateInvoiceQuery,
+                    new
+                    {
+                        InvoiceId = invoice.Id,
+                        PaymentApplied = paymentApplied
+                    },
+                    transaction);
+            }
+        }
+
+        private sealed class OutstandingInvoicePaymentTarget
+        {
+            public int Id { get; set; }
+            public decimal RemainingAmount { get; set; }
         }
     }
 }

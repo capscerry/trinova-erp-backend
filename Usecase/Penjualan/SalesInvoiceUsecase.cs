@@ -1,3 +1,4 @@
+using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
@@ -86,6 +87,8 @@ namespace trinova_erp_backend.Usecase.Penjualan
                     await _salesInvoiceRepo.InsertDetail(detail, connection, transaction);
                 }
 
+                await UpdateRelatedDocumentStatuses(model.Header, connection, transaction);
+
                 await transaction.CommitAsync();
 
                 var created = await GetById(invoiceId);
@@ -107,7 +110,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
             if (existing == null)
                 throw new Exception("Faktur penjualan tidak ditemukan.");
 
-            if (existing.Status == "Lunas")
+            if (existing.Status == "Paid" || existing.Status == "Lunas")
                 throw new Exception("Faktur yang sudah lunas tidak dapat diubah.");
 
             model.Header.Id = id;
@@ -130,6 +133,8 @@ namespace trinova_erp_backend.Usecase.Penjualan
                     await _salesInvoiceRepo.InsertDetail(detail, connection, transaction);
                 }
 
+                await UpdateRelatedDocumentStatuses(model.Header, connection, transaction);
+
                 await transaction.CommitAsync();
 
                 var updated = await GetById(id);
@@ -151,7 +156,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
             if (existing == null)
                 throw new Exception("Faktur penjualan tidak ditemukan.");
 
-            if (existing.PaidAmount > 0 || existing.Status == "Lunas")
+            if (existing.PaidAmount > 0 || existing.Status == "Paid" || existing.Status == "Lunas")
                 throw new Exception("Faktur yang sudah memiliki pembayaran tidak dapat dihapus.");
 
             await _salesInvoiceRepo.DeleteInvoice(id);
@@ -244,12 +249,46 @@ namespace trinova_erp_backend.Usecase.Penjualan
             header.RemainingAmount = Math.Max(0, header.GrandTotal - header.PaidAmount);
 
             if (string.IsNullOrWhiteSpace(header.Status))
-                header.Status = "Draft";
+                header.Status = "Issued";
 
             if (header.RemainingAmount <= 0 && header.GrandTotal > 0)
-                header.Status = "Lunas";
+                header.Status = "Paid";
             else if (header.PaidAmount > 0)
-                header.Status = "Dibayar Sebagian";
+                header.Status = "Partially Paid";
+            else if (header.Status == "Draft")
+                header.Status = "Issued";
+        }
+
+        private static async Task UpdateRelatedDocumentStatuses(
+            SalesInvoiceHeader header,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            if (header.DeliveryOrderId.HasValue && header.DeliveryOrderId.Value > 0)
+            {
+                const string updateDeliveryQuery = @"
+                    UPDATE delivery_order_header
+                    SET status = 'Invoiced'
+                    WHERE id = @DeliveryOrderId;";
+
+                await connection.ExecuteAsync(
+                    updateDeliveryQuery,
+                    new { DeliveryOrderId = header.DeliveryOrderId.Value },
+                    transaction);
+            }
+
+            if (header.SalesOrderId.HasValue && header.SalesOrderId.Value > 0)
+            {
+                const string updateSalesOrderQuery = @"
+                    UPDATE sales_order
+                    SET status = 'Completed'
+                    WHERE order_id = @SalesOrderId;";
+
+                await connection.ExecuteAsync(
+                    updateSalesOrderQuery,
+                    new { SalesOrderId = header.SalesOrderId.Value },
+                    transaction);
+            }
         }
     }
 }

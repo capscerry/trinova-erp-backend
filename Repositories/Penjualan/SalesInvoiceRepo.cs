@@ -97,7 +97,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 LEFT JOIN sales_order so ON so.order_id = si.sales_order_id
                 LEFT JOIN delivery_order_header doh ON doh.id = si.delivery_order_id
                 WHERE si.remaining_amount > 0
-                  AND si.status IN ('Belum Dibayar', 'Dibayar Sebagian', 'Draft')
+                  AND si.status IN ('Issued', 'Partially Paid', 'Overdue', 'Belum Dibayar', 'Dibayar Sebagian', 'Draft')
                 ORDER BY si.due_date ASC, si.id DESC";
 
             using var connection = new SqlConnection(_connectionString);
@@ -362,9 +362,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 UPDATE sales_invoice
                 SET
                     status = CASE
-                        WHEN remaining_amount <= 0 THEN 'Lunas'
-                        WHEN paid_amount > 0 THEN 'Dibayar Sebagian'
-                        ELSE 'Belum Dibayar'
+                        WHEN remaining_amount <= 0 THEN 'Paid'
+                        WHEN paid_amount > 0 THEN 'Partially Paid'
+                        ELSE 'Issued'
                     END,
                     updated_at = GETDATE()
                 WHERE id = @Id";
