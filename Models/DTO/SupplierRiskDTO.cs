@@ -97,18 +97,81 @@ namespace trinova_erp_backend.Models.DTO
     }
 
     /// <summary>
+    /// Metrics for a single TimeSeriesSplit CV fold — matches FastAPI's FoldMetrics model.
+    /// </summary>
+    public class SupplierRiskFoldMetrics
+    {
+        public int    fold     { get; set; }
+        public double log_loss { get; set; }
+        public double mse      { get; set; }
+        public double mae      { get; set; }
+        public double r2       { get; set; }
+        public double accuracy { get; set; }
+        public double auc_roc  { get; set; }
+    }
+
+    /// <summary>
+    /// Aggregated TimeSeriesSplit cross-validation results — matches FastAPI's CVResults model.
+    ///
+    /// CV is run on the training set only (first 80% of data in chronological order).
+    /// Each fold expands forward in time so validation rows always come after training
+    /// rows, preventing any future-data leakage.
+    /// </summary>
+    public class SupplierRiskCVResults
+    {
+        public List<SupplierRiskFoldMetrics> fold_metrics  { get; set; } = new();
+
+        /// <summary>Mean log-loss across all folds. Null when CV was skipped.</summary>
+        public double? avg_log_loss  { get; set; }
+
+        /// <summary>Mean MSE across all folds.</summary>
+        public double? avg_mse       { get; set; }
+
+        /// <summary>Mean MAE across all folds.</summary>
+        public double? avg_mae       { get; set; }
+
+        /// <summary>Mean R² across all folds.</summary>
+        public double? avg_r2        { get; set; }
+
+        /// <summary>Mean accuracy across all folds.</summary>
+        public double? avg_accuracy  { get; set; }
+
+        /// <summary>Mean AUC-ROC across all folds.</summary>
+        public double? avg_auc_roc   { get; set; }
+    }
+
+    /// <summary>
     /// Response returned by all /train* endpoints on the FastAPI service.
     /// Matches FastAPI's TrainResponse Pydantic model exactly.
     /// </summary>
     public class SupplierRiskTrainResponse
     {
-        public string                   message         { get; set; } = string.Empty;
-        public int                      samples_trained { get; set; }
-        public int                      samples_tested  { get; set; }
-        public string                   model_path      { get; set; } = string.Empty;
-        public string                   data_source     { get; set; } = string.Empty;
-        public SupplierRiskSplitMetrics train_metrics   { get; set; } = new();
-        public SupplierRiskSplitMetrics test_metrics    { get; set; } = new();
+        public string message         { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Always "time_based_80_20" — the first 80% of rows (chronologically)
+        /// are used for training, the last 20% for testing. No random shuffling.
+        /// </summary>
+        public string split_method    { get; set; } = string.Empty;
+
+        public int    samples_trained { get; set; }
+        public int    samples_tested  { get; set; }
+
+        /// <summary>Number of XGBoost trees used after early stopping.</summary>
+        public int    best_round      { get; set; }
+
+        public string model_path      { get; set; } = string.Empty;
+        public string data_source     { get; set; } = string.Empty;
+
+        public SupplierRiskSplitMetrics train_metrics { get; set; } = new();
+        public SupplierRiskSplitMetrics test_metrics  { get; set; } = new();
+
+        /// <summary>
+        /// TimeSeriesSplit cross-validation results computed on the training set.
+        /// Use avg_accuracy / avg_auc_roc to compare model iterations without
+        /// touching the held-out test set.
+        /// </summary>
+        public SupplierRiskCVResults    cv_results    { get; set; } = new();
     }
 
     // ─── Batch predict ───────────────────────────────────────────────────────────
