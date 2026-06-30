@@ -13,7 +13,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
         Task<List<PurchaseReturn>> GetAllPurchaseReturn();
 
-        Task<bool> UpdatePurchaseReturn(int id, string status, string notes);
+        Task<bool> UpdatePurchaseReturn(int id, string status, string notes, string closingCondition);
 
         Task<bool> DeletePurchaseReturn(int id);
     }
@@ -56,14 +56,14 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
             if (result != null && result != DBNull.Value)
             {
-                string last = result.ToString() ?? "PR-0000000000";
-                string numericPart = last.Replace("PR-", "");
+                string last = result.ToString() ?? "RTN-0000000000";
+                string numericPart = last.Replace("RTN-", "").Replace("PR-", "");
 
                 if (int.TryParse(numericPart, out int parsed))
                     nextNumber = parsed + 1;
             }
 
-            return $"PR-{nextNumber:D10}";
+            return $"RTN-{nextNumber:D10}";
         }
 
         // INSERT
@@ -205,14 +205,15 @@ namespace trinova_erp_backend.Repositories.Pembelian
             return response;
         }
 
-        // UPDATE (status + notes only — used by settlement actions)
-        public async Task<bool> UpdatePurchaseReturn(int id, string status, string notes)
+        // UPDATE (status + notes + closing_condition — used by settlement actions)
+        public async Task<bool> UpdatePurchaseReturn(int id, string status, string notes, string closingCondition)
         {
             const string query = @"
                 UPDATE purchase_return
                 SET
-                    status = @status,
-                    notes  = @notes
+                    status            = @status,
+                    notes             = @notes,
+                    closing_condition = @closing_condition
                 WHERE purchase_return_id = @id";
 
             using (SqlConnection connection =
@@ -221,9 +222,10 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 new SqlCommand(query, connection))
             {
                 await connection.OpenAsync();
-                command.Parameters.AddWithValue("@id",     id);
-                command.Parameters.AddWithValue("@status", status);
-                command.Parameters.AddWithValue("@notes",  notes);
+                command.Parameters.AddWithValue("@id",                id);
+                command.Parameters.AddWithValue("@status",            status);
+                command.Parameters.AddWithValue("@notes",             notes);
+                command.Parameters.AddWithValue("@closing_condition", closingCondition);
                 int result = await command.ExecuteNonQueryAsync();
                 return result > 0;
             }

@@ -90,5 +90,33 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 }
             );
         }
+
+        [HttpDelete("/api/purchase-down-payment/{id}")]
+        public async Task<IActionResult>
+            DeletePurchaseDownPayment(int id)
+        {
+            var result =
+                await _purchaseDownPaymentUsecase
+                    .DeletePurchaseDownPayment(id);
+
+            if (result)
+            {
+                return Ok(
+                    new
+                    {
+                        status = true,
+                        message = "Delete Successfully"
+                    }
+                );
+            }
+
+            return NotFound(
+                new
+                {
+                    status = false,
+                    message = "Down Payment not found"
+                }
+            );
+        }
     }
 }

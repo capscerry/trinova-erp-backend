@@ -4,11 +4,20 @@ using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
 {
-    // DTO for settlement updates (only status + notes are mutable after creation)
+    // DTO for settlement updates (status, notes, and closing_condition are mutable after creation)
     public class PurchaseReturnUpdateRequest
     {
-        public string? status { get; set; }
-        public string? notes  { get; set; }
+        public string? status            { get; set; }
+        public string? notes             { get; set; }
+        public string? closing_condition { get; set; }
+
+        /// <summary>
+        /// Optional. When the Cash Refund settlement dialog lets the user pick
+        /// a specific invoice, pass its purchase_invoice_id here so the credit
+        /// is applied to exactly that invoice. If omitted the system falls back
+        /// to the oldest eligible invoice for the supplier (legacy behaviour).
+        /// </summary>
+        public int? target_invoice_id    { get; set; }
     }
 
     [Route("api/[controller]")]
@@ -85,8 +94,10 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 var result = await _purchaseReturnUsecase
                     .UpdatePurchaseReturn(
                         id,
-                        request.status ?? "",
-                        request.notes  ?? ""
+                        request.status            ?? "",
+                        request.notes             ?? "",
+                        request.closing_condition ?? "",
+                        request.target_invoice_id
                     );
 
                 if (!result)

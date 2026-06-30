@@ -13,6 +13,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
         Task<List<PurchaseDownPayment>>
             GetAllPurchaseDownPayment();
+
+        Task<bool> DeletePurchaseDownPayment(int id);
     }
 
     public class PurchaseDownPaymentUsecase
@@ -92,6 +94,13 @@ namespace trinova_erp_backend.Usecase.Pembelian
             return await
                 _purchaseDownPaymentRepo
                     .GetAllPurchaseDownPayment();
+        }
+
+        public async Task<bool> DeletePurchaseDownPayment(int id)
+        {
+            return await
+                _purchaseDownPaymentRepo
+                    .DeletePurchaseDownPayment(id);
         }
     }
 }

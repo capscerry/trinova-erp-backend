@@ -32,6 +32,37 @@ namespace trinova_erp_backend.Repositories.Pembelian
         Task<bool> DeletePurchaseInvoice(
             int id
         );
+
+        /// <summary>
+        /// Returns the oldest unpaid or partially-paid invoice for the given
+        /// supplier, or null if no such invoice exists.
+        /// An invoice qualifies when its status is NOT 'Paid' (i.e. 'Unpaid'
+        /// or 'Partial').
+        /// </summary>
+        Task<PurchaseInvoice?> GetUnfinishedInvoiceBySupplier(
+            int supplierId
+        );
+
+        /// <summary>
+        /// Returns ALL unpaid / partially-paid invoices for the given supplier
+        /// with their real-time outstanding_amount calculated fresh from the DB.
+        /// Used to populate the invoice dropdown in the Purchase Return
+        /// settlement dialog so the user sees an accurate outstanding balance.
+        /// </summary>
+        Task<List<PurchaseInvoice>> GetUnpaidInvoicesBySupplier(
+            int supplierId
+        );
+
+        /// <summary>
+        /// Applies a cash-refund credit to an invoice by inserting a
+        /// purchase_payment record with payment_method = 'Cash Refund Credit'.
+        /// Returns the new payment id.
+        /// </summary>
+        Task<int> ApplyCreditToInvoice(
+            int purchaseInvoiceId,
+            decimal creditAmount,
+            string invoiceNumber
+        );
     }
 
     public class PurchaseInvoiceRepo : IPurchaseInvoiceRepo
@@ -329,6 +360,276 @@ namespace trinova_erp_backend.Repositories.Pembelian
         return result > 0;
     }
 }
+
+        // GET ALL UNPAID INVOICES BY SUPPLIER
+        // Returns every invoice for the supplier that is not yet fully paid,
+        // with the outstanding_amount computed fresh (total - dp - payments).
+        // Used to populate the settlement-dialog dropdown so the user sees
+        // the correct current balance for every candidate invoice.
+        public async Task<List<PurchaseInvoice>> GetUnpaidInvoicesBySupplier(
+            int supplierId
+        )
+        {
+            const string query = @"
+                SELECT
+                    pi.purchase_invoice_id,
+                    pi.goods_receipt_id,
+                    pi.invoice_number,
+                    pi.invoice_date,
+                    pi.supplier_id,
+                    pi.total_amount,
+                    pi.status,
+                    pi.created_at,
+                    ms.supplier_name,
+
+                    ISNULL(
+                        (
+                            SELECT SUM(pdp.amount)
+                            FROM purchase_down_payment pdp
+                            WHERE pdp.purchase_order_id = gr.purchase_order_id
+                        ), 0
+                    ) AS dp_paid,
+
+                    pi.total_amount
+                    - ISNULL(
+                        (
+                            SELECT SUM(pdp.amount)
+                            FROM purchase_down_payment pdp
+                            WHERE pdp.purchase_order_id = gr.purchase_order_id
+                        ), 0)
+                    - ISNULL(
+                        (
+                            SELECT SUM(pp.amount)
+                            FROM purchase_payment pp
+                            WHERE pp.purchase_invoice_id = pi.purchase_invoice_id
+                        ), 0)
+                    AS outstanding_amount
+
+                FROM purchase_invoice pi
+                LEFT JOIN goods_receipt gr
+                    ON pi.goods_receipt_id = gr.goods_receipt_id
+                LEFT JOIN master_supplier ms
+                    ON pi.supplier_id = ms.supplier_id
+                WHERE pi.supplier_id = @supplier_id
+                  AND pi.status <> 'Paid'
+                ORDER BY pi.purchase_invoice_id ASC";
+
+            var results = new List<PurchaseInvoice>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                await connection.OpenAsync();
+                command.Parameters.AddWithValue("@supplier_id", supplierId);
+
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        results.Add(new PurchaseInvoice
+                        {
+                            purchase_invoice_id =
+                                Convert.ToInt32(reader["purchase_invoice_id"]),
+                            goods_receipt_id =
+                                Convert.ToInt32(reader["goods_receipt_id"]),
+                            invoice_number =
+                                reader["invoice_number"]?.ToString() ?? "",
+                            invoice_date =
+                                Convert.ToDateTime(reader["invoice_date"]),
+                            supplier_id =
+                                Convert.ToInt32(reader["supplier_id"]),
+                            total_amount =
+                                Convert.ToDecimal(reader["total_amount"]),
+                            status =
+                                reader["status"]?.ToString() ?? "",
+                            created_at =
+                                Convert.ToDateTime(reader["created_at"]),
+                            supplier_name =
+                                reader["supplier_name"]?.ToString() ?? "",
+                            dp_paid =
+                                reader["dp_paid"] == DBNull.Value
+                                    ? 0
+                                    : Convert.ToDecimal(reader["dp_paid"]),
+                            outstanding_amount =
+                                reader["outstanding_amount"] == DBNull.Value
+                                    ? 0
+                                    : Convert.ToDecimal(reader["outstanding_amount"])
+                        });
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        // GET UNFINISHED INVOICE BY SUPPLIER
+        // Returns the oldest invoice that is not yet fully paid for the
+        // given supplier.  Qualifies when status <> 'Paid' AND the computed
+        // outstanding_amount (total - dp_paid - payments) > 0.
+        public async Task<PurchaseInvoice?> GetUnfinishedInvoiceBySupplier(
+            int supplierId
+        )
+        {
+            const string query = @"
+                SELECT TOP 1
+                    pi.purchase_invoice_id,
+                    pi.goods_receipt_id,
+                    pi.invoice_number,
+                    pi.invoice_date,
+                    pi.supplier_id,
+                    pi.total_amount,
+                    pi.status,
+                    pi.created_at,
+
+                    ISNULL(
+                        (
+                            SELECT SUM(pdp.amount)
+                            FROM purchase_down_payment pdp
+                            WHERE pdp.purchase_order_id = gr.purchase_order_id
+                        ), 0
+                    ) AS dp_paid,
+
+                    pi.total_amount
+                    - ISNULL(
+                        (
+                            SELECT SUM(pdp.amount)
+                            FROM purchase_down_payment pdp
+                            WHERE pdp.purchase_order_id = gr.purchase_order_id
+                        ), 0)
+                    - ISNULL(
+                        (
+                            SELECT SUM(pp.amount)
+                            FROM purchase_payment pp
+                            WHERE pp.purchase_invoice_id = pi.purchase_invoice_id
+                        ), 0)
+                    AS outstanding_amount
+
+                FROM purchase_invoice pi
+                LEFT JOIN goods_receipt gr
+                    ON pi.goods_receipt_id = gr.goods_receipt_id
+                WHERE pi.supplier_id = @supplier_id
+                  AND pi.status <> 'Paid'
+                ORDER BY pi.purchase_invoice_id ASC";
+
+            using (SqlConnection connection =
+                new SqlConnection(_connectionString))
+            using (SqlCommand command =
+                new SqlCommand(query, connection))
+            {
+                await connection.OpenAsync();
+                command.Parameters.AddWithValue("@supplier_id", supplierId);
+
+                using (SqlDataReader reader =
+                    await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        return new PurchaseInvoice
+                        {
+                            purchase_invoice_id =
+                                Convert.ToInt32(reader["purchase_invoice_id"]),
+                            goods_receipt_id =
+                                Convert.ToInt32(reader["goods_receipt_id"]),
+                            invoice_number =
+                                reader["invoice_number"]?.ToString() ?? "",
+                            invoice_date =
+                                Convert.ToDateTime(reader["invoice_date"]),
+                            supplier_id =
+                                Convert.ToInt32(reader["supplier_id"]),
+                            total_amount =
+                                Convert.ToDecimal(reader["total_amount"]),
+                            status =
+                                reader["status"]?.ToString() ?? "",
+                            created_at =
+                                Convert.ToDateTime(reader["created_at"]),
+                            dp_paid =
+                                reader["dp_paid"] == DBNull.Value
+                                    ? 0
+                                    : Convert.ToDecimal(reader["dp_paid"]),
+                            outstanding_amount =
+                                reader["outstanding_amount"] == DBNull.Value
+                                    ? 0
+                                    : Convert.ToDecimal(reader["outstanding_amount"])
+                        };
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        // APPLY CREDIT TO INVOICE
+        // Inserts a purchase_payment row with payment_method = 'Cash Refund Credit'
+        // so that the outstanding_amount calculation for that invoice is reduced.
+        // Returns the new purchase_payment_id.
+        public async Task<int> ApplyCreditToInvoice(
+            int purchaseInvoiceId,
+            decimal creditAmount,
+            string invoiceNumber
+        )
+        {
+            // Generate a payment number in the same PAY-series
+            string paymentNumber;
+            const string numQuery = @"
+                SELECT TOP 1 payment_number
+                FROM purchase_payment
+                ORDER BY purchase_payment_id DESC";
+
+            using (SqlConnection cn = new SqlConnection(_connectionString))
+            using (SqlCommand cm = new SqlCommand(numQuery, cn))
+            {
+                await cn.OpenAsync();
+                object? r = await cm.ExecuteScalarAsync();
+                int next = 1;
+                if (r != null && r != DBNull.Value)
+                {
+                    string last = r.ToString() ?? "PAY000000";
+                    if (int.TryParse(last.Replace("PAY", ""), out int parsed))
+                        next = parsed + 1;
+                }
+                paymentNumber = $"PAY{next:D6}";
+            }
+
+            const string insertQuery = @"
+                INSERT INTO purchase_payment
+                (
+                    payment_number,
+                    purchase_invoice_id,
+                    payment_date,
+                    amount,
+                    payment_method,
+                    status,
+                    notes,
+                    created_at
+                )
+                VALUES
+                (
+                    @payment_number,
+                    @purchase_invoice_id,
+                    GETDATE(),
+                    @amount,
+                    'Cash Refund Credit',
+                    'Confirmed',
+                    @notes,
+                    GETDATE()
+                );
+                SELECT CAST(SCOPE_IDENTITY() AS INT);";
+
+            using (SqlConnection connection =
+                new SqlConnection(_connectionString))
+            using (SqlCommand command =
+                new SqlCommand(insertQuery, connection))
+            {
+                await connection.OpenAsync();
+                command.Parameters.AddWithValue("@payment_number",      paymentNumber);
+                command.Parameters.AddWithValue("@purchase_invoice_id", purchaseInvoiceId);
+                command.Parameters.AddWithValue("@amount",              creditAmount);
+                command.Parameters.AddWithValue("@notes",
+                    $"Cash refund credit from purchase return against invoice {invoiceNumber}");
+
+                return Convert.ToInt32(await command.ExecuteScalarAsync());
+            }
+        }
 
         // GET ALL
         public async Task<List<PurchaseInvoice>>

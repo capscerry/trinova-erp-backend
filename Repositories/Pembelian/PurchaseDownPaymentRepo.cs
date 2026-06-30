@@ -349,7 +349,30 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 int id
             )
         {
-            throw new NotImplementedException();
+            const string query = @"
+                DELETE FROM purchase_down_payment
+                WHERE purchase_down_payment_id = @id";
+
+            try
+            {
+                using SqlConnection connection =
+                    new SqlConnection(_connectionString);
+
+                await connection.OpenAsync();
+
+                using SqlCommand command =
+                    new SqlCommand(query, connection);
+
+                command.Parameters.AddWithValue("@id", id);
+
+                int rows = await command.ExecuteNonQueryAsync();
+
+                return rows > 0;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

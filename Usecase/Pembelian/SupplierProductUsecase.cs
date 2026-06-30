@@ -16,6 +16,12 @@ namespace trinova_erp_backend.Usecase.Pembelian
             int supplierId,
             List<SupplierProductImport> models
         );
+
+        Task<bool> RestoreStock(
+            int productId,
+            int supplierId,
+            int quantity
+        );
     }
 
     public class SupplierProductUsecase
@@ -93,6 +99,16 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 .BulkInsertSupplierProduct(
                     supplierProducts
                 );
+        }
+
+        public async Task<bool> RestoreStock(
+            int productId,
+            int supplierId,
+            int quantity
+        )
+        {
+            return await _supplierProductRepo
+                .RestoreStock(productId, supplierId, quantity);
         }
     }
 }

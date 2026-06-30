@@ -10,6 +10,13 @@ using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
 {
+    public class RestoreStockRequest
+    {
+        public int product_id  { get; set; }
+        public int supplier_id { get; set; }
+        public int quantity    { get; set; }
+    }
+
     [Route("api/[controller]")]
     [ApiController]
 
@@ -27,6 +34,45 @@ namespace trinova_erp_backend.Controllers.Pembelian
         {
             _supplierProductUsecase =
                 supplierProductUsecase;
+        }
+
+        // ─── RESTORE STOCK ─────────────────────
+
+        [HttpPost("/api/supplier-product/restore-stock")]
+        public async Task<IActionResult> RestoreStock(
+            [FromBody] RestoreStockRequest request
+        )
+        {
+            try
+            {
+                var result = await _supplierProductUsecase
+                    .RestoreStock(
+                        request.product_id,
+                        request.supplier_id,
+                        request.quantity
+                    );
+
+                if (!result)
+                    return BadRequest(new
+                    {
+                        status = false,
+                        message = $"Product ID {request.product_id} not found for supplier {request.supplier_id}"
+                    });
+
+                return Ok(new
+                {
+                    status = true,
+                    message = "Stock restored successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
         }
 
         // ─── GET ALL ────────────────────────────
