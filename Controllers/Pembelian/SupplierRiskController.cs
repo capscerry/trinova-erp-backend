@@ -49,6 +49,121 @@ namespace trinova_erp_backend.Controllers.Pembelian
             }
         }
 
+        // ── Batch predict (ML results only) ──────────────────────────────────────
+
+        /// <summary>
+        /// Aggregates live ERP data for ALL active suppliers and scores each one
+        /// through the XGBoost model. Returns raw ML results (risk_level +
+        /// delay_probability) with no ranking applied — display these first.
+        ///
+        /// Next step: pass the results array to POST /api/supplier-risk/rank/ahp-topsis.
+        /// </summary>
+        [HttpGet("/api/supplier-risk/predict/all")]
+        public async Task<IActionResult> PredictAllSuppliers()
+        {
+            try
+            {
+                var result = await _supplierRiskUsecase.PredictAllSuppliers();
+                return Ok(new { status = true, message = "Batch ML prediction successful", data = result });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { status = false, message = ex.Message });
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(502, new { status = false, message = $"XGBoost service error: {ex.Message}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = false, message = ex.Message });
+            }
+        }
+
+        // ── AHP-TOPSIS ranking ────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Ranks ML-scored suppliers using AHP-derived weights and TOPSIS.
+        /// Pass the results array from GET /api/supplier-risk/predict/all directly
+        /// in the request body.
+        ///
+        /// The ahp_matrix field is optional — omit it to use the server-side
+        /// defaults (delay_probability weighted highest).
+        ///
+        /// Response is sorted by topsis_rank ascending (rank 1 = best supplier).
+        /// </summary>
+        [HttpPost("/api/supplier-risk/rank/ahp-topsis")]
+        public async Task<IActionResult> RankWithAhpTopsis([FromBody] RankRequest request)
+        {
+            if (request?.suppliers == null || request.suppliers.Count == 0)
+                return BadRequest(new { status = false, message = "suppliers must not be empty." });
+
+            try
+            {
+                var result = await _supplierRiskUsecase.RankWithAhpTopsis(
+                    request.suppliers,
+                    request.ahp_matrix?.matrix);
+                return Ok(new { status = true, message = "AHP-TOPSIS ranking successful", data = result });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { status = false, message = ex.Message });
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(502, new { status = false, message = $"XGBoost service error: {ex.Message}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = false, message = ex.Message });
+            }
+        }
+
+        // ── Full end-to-end: train → predict → rank ───────────────────────────────
+
+        /// <summary>
+        /// One-shot endpoint that runs the complete supplier evaluation pipeline:
+        ///   1. Retrain XGBoost using the bundled historical CSV merged with
+        ///      live ERP data (append_erp_to_historical = true by default).
+        ///   2. Batch-predict all active ERP suppliers with the fresh model.
+        ///   3. Rank the ML results with AHP-TOPSIS.
+        ///
+        /// The response contains three sections:
+        ///   - train_result   : XGBoost training metrics
+        ///   - ml_results     : raw per-supplier ML scores (show these first in UI)
+        ///   - ranked_results : AHP-TOPSIS ranked list
+        ///
+        /// POST body is optional. Example to pass a custom AHP matrix:
+        /// {
+        ///   "append_erp_to_historical": true,
+        ///   "ahp_matrix": [[1,3,5,5,7],[0.33,1,3,3,5],[0.2,0.33,1,1,3],[0.2,0.33,1,1,3],[0.14,0.2,0.33,0.33,1]]
+        /// }
+        /// </summary>
+        [HttpPost("/api/supplier-risk/evaluate/all")]
+        public async Task<IActionResult> TrainAndEvaluateAll(
+            [FromBody] TrainAndEvaluateRequest? request)
+        {
+            try
+            {
+                bool append   = request?.append_erp_to_historical ?? true;
+                var  matrix   = request?.ahp_matrix;
+                var  result   = await _supplierRiskUsecase.TrainAndEvaluateAll(append, matrix);
+                return Ok(new { status = true, message = "Full supplier risk evaluation complete", data = result });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { status = false, message = ex.Message });
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(502, new { status = false, message = $"XGBoost service error: {ex.Message}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = false, message = ex.Message });
+            }
+        }
+
         // ── Train — bundled server CSV ────────────────────────────────────────
 
         /// <summary>
@@ -212,5 +327,26 @@ namespace trinova_erp_backend.Controllers.Pembelian
         /// historical dataset before retraining.
         /// </summary>
         public bool append_to_existing { get; set; } = true;
+    }
+
+    /// <summary>
+    /// Optional request body for POST /api/supplier-risk/evaluate/all.
+    /// All fields are optional — omit the body entirely to run with defaults.
+    /// </summary>
+    public class TrainAndEvaluateRequest
+    {
+        /// <summary>
+        /// When true (default), live ERP rows are merged with the bundled
+        /// historical CSV before retraining, preserving historical signal.
+        /// </summary>
+        public bool append_erp_to_historical { get; set; } = true;
+
+        /// <summary>
+        /// Optional custom 5×5 AHP pairwise comparison matrix (row-major).
+        /// Row/col order: delay_probability, on_time_rate, claim_rate,
+        ///                supplier_price, order_frequency.
+        /// Omit to use the server-side defaults.
+        /// </summary>
+        public List<List<double>>? ahp_matrix { get; set; }
     }
 }

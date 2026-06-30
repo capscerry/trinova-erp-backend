@@ -111,6 +111,121 @@ namespace trinova_erp_backend.Models.DTO
         public SupplierRiskSplitMetrics test_metrics    { get; set; } = new();
     }
 
+    // ─── Batch predict ───────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// One supplier entry sent inside POST /predict/all-suppliers.
+    /// ERP field mapping mirrors SupplierRiskPredictRequest:
+    ///   total_po_value    → supplier_price
+    ///   avg_delivery_days → lead_time_days
+    ///   total_orders      → order_frequency
+    /// </summary>
+    public class BatchSupplierInput
+    {
+        public int?   supplier_id      { get; set; }
+        public string? supplier_name   { get; set; }
+        public double supplier_price   { get; set; }
+        public int    lead_time_days   { get; set; }
+        public double claim_rate       { get; set; }
+        public double on_time_rate     { get; set; }
+        public int    order_frequency  { get; set; }
+    }
+
+    /// <summary>Sent to POST /predict/all-suppliers.</summary>
+    public class BatchPredictRequest
+    {
+        public List<BatchSupplierInput> suppliers { get; set; } = new();
+    }
+
+    /// <summary>
+    /// ML result for one supplier as returned by POST /predict/all-suppliers.
+    /// Carries both the original ERP features and the XGBoost output —
+    /// this is the payload you feed directly into POST /rank/ahp-topsis.
+    /// </summary>
+    public class SupplierPredictResult
+    {
+        public int?   supplier_id       { get; set; }
+        public string? supplier_name    { get; set; }
+        public double supplier_price    { get; set; }
+        public int    lead_time_days    { get; set; }
+        public double claim_rate        { get; set; }
+        public double on_time_rate      { get; set; }
+        public int    order_frequency   { get; set; }
+
+        // XGBoost output
+        public string risk_level        { get; set; } = string.Empty;
+        public double delay_probability { get; set; }
+        public int    late_probability  { get; set; }
+    }
+
+    /// <summary>
+    /// Response from POST /predict/all-suppliers — raw ML scores, no ranking.
+    /// </summary>
+    public class BatchPredictResponse
+    {
+        public int                          total   { get; set; }
+        public List<SupplierPredictResult>  results { get; set; } = new();
+    }
+
+    // ─── AHP-TOPSIS rank ─────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Optional custom 5×5 AHP pairwise comparison matrix.
+    /// Leave null to use the FastAPI default matrix.
+    /// Row/col order: delay_probability, on_time_rate, claim_rate,
+    ///                supplier_price, order_frequency.
+    /// </summary>
+    public class AhpMatrixRequest
+    {
+        public List<List<double>>? matrix { get; set; }
+    }
+
+    /// <summary>Sent to POST /rank/ahp-topsis.</summary>
+    public class RankRequest
+    {
+        /// <summary>
+        /// The supplier list from BatchPredictResponse.results —
+        /// pass it here unchanged.
+        /// </summary>
+        public List<SupplierPredictResult> suppliers  { get; set; } = new();
+
+        /// <summary>Optional custom AHP matrix. Omit to use server defaults.</summary>
+        public AhpMatrixRequest            ahp_matrix { get; set; } = new();
+    }
+
+    /// <summary>
+    /// One ranked supplier — all ML fields plus TOPSIS score and rank.
+    /// </summary>
+    public class RankedSupplierResult
+    {
+        public int?   supplier_id       { get; set; }
+        public string? supplier_name    { get; set; }
+        public double supplier_price    { get; set; }
+        public int    lead_time_days    { get; set; }
+        public double claim_rate        { get; set; }
+        public double on_time_rate      { get; set; }
+        public int    order_frequency   { get; set; }
+        public string risk_level        { get; set; } = string.Empty;
+        public double delay_probability { get; set; }
+        public int    late_probability  { get; set; }
+
+        // TOPSIS output
+        public double topsis_score      { get; set; }
+        public int    topsis_rank       { get; set; }
+    }
+
+    /// <summary>
+    /// Response from POST /rank/ahp-topsis.
+    /// Suppliers are sorted by topsis_rank ascending (rank 1 = best supplier).
+    /// </summary>
+    public class RankResponse
+    {
+        public int                              total             { get; set; }
+        public double                           consistency_ratio { get; set; }
+        public Dictionary<string, double>       ahp_weights       { get; set; } = new();
+        public List<RankedSupplierResult>       ranked_suppliers  { get; set; } = new();
+    }
+
     // ─── ERP aggregation (internal) ──────────────────────────────────────────────
 
     /// <summary>
@@ -119,19 +234,19 @@ namespace trinova_erp_backend.Models.DTO
     /// </summary>
     public class SupplierRiskAggregated
     {
-        public int    supplier_id      { get; set; }
-        public string supplier_name    { get; set; } = string.Empty;
+        public int    supplier_id       { get; set; }
+        public string supplier_name     { get; set; } = string.Empty;
 
         /// <summary>Maps to FastAPI's supplier_price (total PO value as proxy).</summary>
-        public double total_po_value   { get; set; }
+        public double total_po_value    { get; set; }
 
         /// <summary>Maps to FastAPI's lead_time_days (average delivery days).</summary>
         public double avg_delivery_days { get; set; }
 
-        public double claim_rate       { get; set; }
-        public double on_time_rate     { get; set; }
+        public double claim_rate        { get; set; }
+        public double on_time_rate      { get; set; }
 
         /// <summary>Maps to FastAPI's order_frequency.</summary>
-        public int    total_orders     { get; set; }
+        public int    total_orders      { get; set; }
     }
 }
