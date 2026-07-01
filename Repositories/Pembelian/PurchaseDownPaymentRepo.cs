@@ -48,9 +48,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
         public async Task<string> GenerateDPNumber()
         {
+            // Query only rows that already follow the canonical DP-NNNNNNNNNN
+            // format so that leftover legacy numbers can never corrupt the counter.
             const string query = @"
                 SELECT TOP 1 dp_number
                 FROM purchase_down_payment
+                WHERE dp_number LIKE 'DP-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
                 ORDER BY purchase_down_payment_id DESC";
 
             using SqlConnection connection =
@@ -69,16 +72,16 @@ namespace trinova_erp_backend.Repositories.Pembelian
             if (result != null && result != DBNull.Value)
             {
                 string lastDp =
-                    result.ToString() ?? "DP000000";
+                    result.ToString() ?? "DP-0000000000";
 
-                string numericPart =
-                    lastDp.Replace("DP", "");
+                // Strip the "DP-" prefix (always 3 chars) before parsing
+                string numericPart = lastDp.Substring(3);
 
                 if (int.TryParse(numericPart, out int parsed))
                     nextNumber = parsed + 1;
             }
 
-            return $"DP{nextNumber:D6}";
+            return $"DP-{nextNumber:D10}";
         }
 
         public async Task<int>

@@ -33,9 +33,13 @@ namespace trinova_erp_backend.Repositories.Pembelian
         // GENERATE PO NUMBER
         public async Task<string> GeneratePONumber()
         {
+            // Query only rows that already follow the canonical PO-NNNNNNNNNN
+            // format so that leftover legacy numbers can never corrupt the
+            // counter.
             const string query = @"
                 SELECT TOP 1 po_number
                 FROM purchase_order
+                WHERE po_number LIKE 'PO-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
                 ORDER BY purchase_order_id DESC";
 
             using SqlConnection connection =
@@ -56,8 +60,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 string lastPo =
                     result.ToString() ?? "PO-0000000000";
 
-                string numericPart =
-                    lastPo.Replace("PO-", "");
+                // Strip the "PO-" prefix (always 3 chars) before parsing
+                string numericPart = lastPo.Substring(3);
 
                 if (int.TryParse(numericPart, out int parsed))
                     nextNumber = parsed + 1;

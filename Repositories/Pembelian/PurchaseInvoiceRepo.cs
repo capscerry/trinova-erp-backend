@@ -82,9 +82,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
         // GENERATE INVOICE NUMBER
         public async Task<string> GenerateInvoiceNumber()
         {
+            // Query only rows that already follow the canonical INV-NNNNNNNNNN
+            // format so that leftover legacy numbers can never corrupt the counter.
             const string query = @"
                 SELECT TOP 1 invoice_number
                 FROM purchase_invoice
+                WHERE invoice_number LIKE 'INV-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
                 ORDER BY purchase_invoice_id DESC";
 
             using SqlConnection connection =
@@ -103,16 +106,16 @@ namespace trinova_erp_backend.Repositories.Pembelian
             if (result != null && result != DBNull.Value)
             {
                 string lastInv =
-                    result.ToString() ?? "INV000000";
+                    result.ToString() ?? "INV-0000000000";
 
-                string numericPart =
-                    lastInv.Replace("INV", "");
+                // Strip the "INV-" prefix (always 4 chars) before parsing
+                string numericPart = lastInv.Substring(4);
 
                 if (int.TryParse(numericPart, out int parsed))
                     nextNumber = parsed + 1;
             }
 
-            return $"INV{nextNumber:D6}";
+            return $"INV-{nextNumber:D10}";
         }
 
         // INSERT
@@ -573,6 +576,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
             const string numQuery = @"
                 SELECT TOP 1 payment_number
                 FROM purchase_payment
+                WHERE payment_number LIKE 'PAY-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
                 ORDER BY purchase_payment_id DESC";
 
             using (SqlConnection cn = new SqlConnection(_connectionString))
@@ -583,11 +587,11 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 int next = 1;
                 if (r != null && r != DBNull.Value)
                 {
-                    string last = r.ToString() ?? "PAY000000";
-                    if (int.TryParse(last.Replace("PAY", ""), out int parsed))
+                    string last = r.ToString() ?? "PAY-0000000000";
+                    if (int.TryParse(last.Substring(4), out int parsed))
                         next = parsed + 1;
                 }
-                paymentNumber = $"PAY{next:D6}";
+                paymentNumber = $"PAY-{next:D10}";
             }
 
             const string insertQuery = @"

@@ -40,9 +40,12 @@ public class PurchasePaymentRepo
     // GENERATE PAYMENT NUMBER
     public async Task<string> GeneratePaymentNumber()
     {
+        // Query only rows that already follow the canonical PAY-NNNNNNNNNN
+        // format so that leftover legacy numbers can never corrupt the counter.
         const string query = @"
             SELECT TOP 1 payment_number
             FROM purchase_payment
+            WHERE payment_number LIKE 'PAY-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
             ORDER BY purchase_payment_id DESC";
 
         using SqlConnection connection =
@@ -61,16 +64,16 @@ public class PurchasePaymentRepo
         if (result != null && result != DBNull.Value)
         {
             string lastPay =
-                result.ToString() ?? "PAY000000";
+                result.ToString() ?? "PAY-0000000000";
 
-            string numericPart =
-                lastPay.Replace("PAY", "");
+            // Strip the "PAY-" prefix (always 4 chars) before parsing
+            string numericPart = lastPay.Substring(4);
 
             if (int.TryParse(numericPart, out int parsed))
                 nextNumber = parsed + 1;
         }
 
-        return $"PAY{nextNumber:D6}";
+        return $"PAY-{nextNumber:D10}";
     }
 
     // INSERT

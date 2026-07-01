@@ -35,9 +35,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
         // GENERATE GR NUMBER
         public async Task<string> GenerateGRNumber()
         {
+            // Query only rows that already follow the canonical GR-NNNNNNNNNN
+            // format so that leftover legacy numbers can never corrupt the counter.
             const string query = @"
                 SELECT TOP 1 receipt_number
                 FROM goods_receipt
+                WHERE receipt_number LIKE 'GR-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
                 ORDER BY goods_receipt_id DESC";
 
             using SqlConnection connection =
@@ -58,8 +61,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 string lastGr =
                     result.ToString() ?? "GR-0000000000";
 
-                string numericPart =
-                    lastGr.Replace("GR-", "");
+                // Strip the "GR-" prefix (always 3 chars) before parsing
+                string numericPart = lastGr.Substring(3);
 
                 if (int.TryParse(numericPart, out int parsed))
                     nextNumber = parsed + 1;
@@ -197,7 +200,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 po.purchase_order_id
             INNER JOIN master_supplier s
                 ON po.supplier_id =
-                s.supplier_id";
+                s.supplier_id
+            ORDER BY gr.goods_receipt_id DESC";
 
             var response = new List<GoodsReceipt>();
 
@@ -368,7 +372,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
             LEFT JOIN purchase_invoice pi
                 ON gr.goods_receipt_id =
                 pi.goods_receipt_id
-            WHERE pi.goods_receipt_id IS NULL";
+            WHERE pi.goods_receipt_id IS NULL
+            ORDER BY gr.goods_receipt_id DESC";
 
             var response = new List<GoodsReceipt>();
 
