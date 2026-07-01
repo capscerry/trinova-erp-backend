@@ -11,6 +11,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
         Task<List<PurchaseOrder>> GetAllPurchaseOrder();
 
+        Task<PurchaseOrder?> GetPurchaseOrderById(int id);
+
         Task<bool> UpdatePurchaseOrder(PurchaseOrder model);
 
         Task<bool> DeletePurchaseOrder(int id);
@@ -66,6 +68,11 @@ namespace trinova_erp_backend.Usecase.Pembelian
         public async Task<List<PurchaseOrder>> GetAllPurchaseOrder()
         {
             return await _purchaseOrderRepo.GetAllPurchaseOrder();
+        }
+
+        public async Task<PurchaseOrder?> GetPurchaseOrderById(int id)
+        {
+            return await _purchaseOrderRepo.GetPurchaseOrderById(id);
         }
 
         public async Task<bool> UpdatePurchaseOrder(PurchaseOrder model)

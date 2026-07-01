@@ -135,10 +135,32 @@ namespace trinova_erp_backend.Controllers.Pembelian
             [FromBody] PODeductionRequest request
         )
         {
-            // Record the deduction as a note in the PO's status field or simply
-            // acknowledge it. The deduction amount is already stored on the
-            // purchase_return record; this endpoint exists so the frontend can
-            // confirm the PATCH without a 404.
+            // Validate: the PO must exist and its total_amount must be >= the
+            // deduction amount (Purchase Return value). This mirrors the same
+            // rule applied to Cash Refund — you cannot deduct more than the PO
+            // is worth.
+            var po = await _purchaseOrderUsecase.GetPurchaseOrderById(id);
+
+            if (po == null)
+                return NotFound(new
+                {
+                    status = false,
+                    message = "Purchase Order not found."
+                });
+
+            decimal poTotal = po.total_amount ?? 0m;
+
+            if (request.deduction_amount > poTotal)
+                return BadRequest(new
+                {
+                    status = false,
+                    message =
+                        $"PO Deduction cannot be applied: the return value " +
+                        $"(Rp {request.deduction_amount:N0}) exceeds the PO total " +
+                        $"(Rp {poTotal:N0}). Please select a PO whose total is at " +
+                        $"least equal to the return amount."
+                });
+
             return Ok(new
             {
                 status = true,
