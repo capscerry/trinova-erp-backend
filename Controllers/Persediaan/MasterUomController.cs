@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using trinova_erp_backend.Usecase.Persediaan;
 
@@ -5,6 +6,7 @@ namespace trinova_erp_backend.Controllers.Persediaan
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Inventory,inventory,Warehouse,warehouse,Persediaan,persediaan")]
     public class MasterUomController : ControllerBase
     {
         private readonly IMasterUomUsecase _masterUomUsecase;
@@ -17,6 +19,7 @@ namespace trinova_erp_backend.Controllers.Persediaan
         }
 
         [HttpGet("GetAllMasterUom")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllMasterUom()
         {
             var result = await _masterUomUsecase.GetAllMasterUom();

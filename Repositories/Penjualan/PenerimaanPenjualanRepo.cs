@@ -19,9 +19,14 @@ namespace trinova_erp_backend.Repositories.Penjualan
     public class PenerimaanPenjualanRepo : IPenerimaanPenjualanRepo
     {
         private readonly string _connectionString;
-        public PenerimaanPenjualanRepo(IOptions<DatabaseConnection> options)
+        private readonly IUangMukaRepositories _uangMukaRepo;
+
+        public PenerimaanPenjualanRepo(
+            IOptions<DatabaseConnection> options,
+            IUangMukaRepositories uangMukaRepo)
         {
             _connectionString = options.Value.SQLServer!;
+            _uangMukaRepo = uangMukaRepo;
         }
 
         public async Task<List<BankDTO>> GetBankDTO()
@@ -137,7 +142,18 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     },
                     transaction);
 
-                await ApplyPaymentToOutstandingInvoices(dto, connection, transaction);
+                var uangMukaId = dto.UangMukaId.GetValueOrDefault();
+                var salesInvoiceId = dto.SalesInvoiceId.GetValueOrDefault();
+
+                if (uangMukaId > 0)
+                {
+                    await _uangMukaRepo.MarkAsReceived(uangMukaId, connection, transaction);
+                }
+
+                if (uangMukaId <= 0 || salesInvoiceId > 0)
+                {
+                    await ApplyPaymentToOutstandingInvoices(dto, connection, transaction);
+                }
 
                 await transaction.CommitAsync();
 

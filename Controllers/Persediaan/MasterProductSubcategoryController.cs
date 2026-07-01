@@ -6,6 +6,7 @@ namespace trinova_erp_backend.Controllers.Persediaan
 {
     [ApiController]
     [Route("api/product-subcategories")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Inventory,inventory,Warehouse,warehouse,Persediaan,persediaan")]
     public class MasterProductSubcategoryController : ControllerBase
     {
         private readonly MasterProductSubcategoryUsecase _usecase;

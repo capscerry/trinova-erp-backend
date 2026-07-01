@@ -1373,6 +1373,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.SecurityActivityController",
+    "Method": "GetSecurityActivity",
+    "RelativePath": "api/security-activity",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "take",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.DeliveryOrderController",
     "Method": "GetShippingCategory",
     "RelativePath": "api/shipping-type",

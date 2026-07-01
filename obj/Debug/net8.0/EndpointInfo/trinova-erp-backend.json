@@ -2280,6 +2280,29 @@
         }
       }
     },
+    "/api/security-activity": {
+      "get": {
+        "tags": [
+          "SecurityActivity"
+        ],
+        "parameters": [
+          {
+            "name": "take",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 12
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/StockTransaction": {
       "get": {
         "tags": [

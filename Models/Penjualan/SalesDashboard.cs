@@ -13,6 +13,8 @@ namespace trinova_erp_backend.Models.Penjualan
         public int CustomerCount { get; set; }
         public List<SalesDashboardOrderItem> RecentSalesOrders { get; set; } = new();
         public List<SalesDashboardInvoiceItem> RecentInvoices { get; set; } = new();
+        public List<SalesDashboardActivityItem> RecentActivities { get; set; } = new();
+        public List<SalesDashboardUpcomingActivityItem> UpcomingActivities { get; set; } = new();
     }
 
     public class SalesDashboardOrderItem
@@ -34,5 +36,31 @@ namespace trinova_erp_backend.Models.Penjualan
         public decimal GrandTotal { get; set; }
         public decimal RemainingAmount { get; set; }
         public string Status { get; set; } = string.Empty;
+    }
+
+    public class SalesDashboardActivityItem
+    {
+        public long Id { get; set; }
+        public string Module { get; set; } = string.Empty;
+        public string ActivityType { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string? RefTable { get; set; }
+        public long? RefId { get; set; }
+        public string? RefNumber { get; set; }
+        public string UserName { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class SalesDashboardUpcomingActivityItem
+    {
+        public string ActivityType { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string? RefTable { get; set; }
+        public long? RefId { get; set; }
+        public string? RefNumber { get; set; }
+        public DateTime ActivityDate { get; set; }
+        public string Priority { get; set; } = "normal";
     }
 }

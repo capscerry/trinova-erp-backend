@@ -352,7 +352,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
             JOIN master_product mp 
                 ON mp.product_id = sod.product_id
             JOIN master_warehouse mw
-	            ON sod.warehouse_id  = mw.warehouse_id
+	            ON sod.warehouse_id  = mw.warehouse_id  
             JOIN master_uom mu 
                 ON sod.uom_id = mu.uom_id
             WHERE sod.order_id = @OrderId

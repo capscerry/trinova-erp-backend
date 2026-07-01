@@ -4,6 +4,7 @@ using trinova_erp_backend.Config;
 using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Models.Penjualan;
 using trinova_erp_backend.Repositories.Penjualan;
+using trinova_erp_backend.Services;
 
 namespace trinova_erp_backend.Usecase.Penjualan
 {
@@ -36,10 +37,15 @@ namespace trinova_erp_backend.Usecase.Penjualan
     {
         private readonly string _connectionString;
         private readonly ISalesQuotationRepo _salesQuotationRepo;
-        public SalesQuotationUsecase(IOptionsSnapshot<DatabaseConnection> options,ISalesQuotationRepo salesQuotationRepo)
+        private readonly IActivityLogService _activityLogService;
+        public SalesQuotationUsecase(
+            IOptionsSnapshot<DatabaseConnection> options,
+            ISalesQuotationRepo salesQuotationRepo,
+            IActivityLogService activityLogService)
         {
             _connectionString = options.Value.SQLServer;
             _salesQuotationRepo = salesQuotationRepo;
+            _activityLogService = activityLogService;
         }
         public async Task<List<QuotationHeaderDTO>> GetAllQuotations()
         {
@@ -113,6 +119,14 @@ namespace trinova_erp_backend.Usecase.Penjualan
                 }
                 await tx.CommitAsync();
 
+                await _activityLogService.LogSalesAsync(
+                    "sales_quotation_created",
+                    $"Sales Quotation {quotation.QuotationNumber} created",
+                    "Sales quotation created from sales module.",
+                    "sales_quotation",
+                    quotationId,
+                    quotation.QuotationNumber);
+
                 return "Insert Sales Quotation Success";
 
             }
@@ -168,13 +182,16 @@ namespace trinova_erp_backend.Usecase.Penjualan
     {
         private readonly ISalesOrderRepositories _salesOrderRepo;
         private readonly string _connectionString;
+        private readonly IActivityLogService _activityLogService;
         public SalesOrderUsecase(
             ISalesOrderRepositories salesOrderRepo,
-            IOptions<DatabaseConnection> options
+            IOptions<DatabaseConnection> options,
+            IActivityLogService activityLogService
         )
         {
             _salesOrderRepo = salesOrderRepo;
             _connectionString = options.Value.SQLServer;
+            _activityLogService = activityLogService;
 
         }
 
@@ -220,6 +237,14 @@ namespace trinova_erp_backend.Usecase.Penjualan
                 model.Detail = insertedDetails;
 
                 tx.Commit();
+
+                await _activityLogService.LogSalesAsync(
+                    "sales_order_created",
+                    $"Sales Order {insertedHeader.SoNumber} created",
+                    $"Created for {insertedHeader.CustomerName ?? "customer"}.",
+                    "sales_order",
+                    insertedHeader.OrderId,
+                    insertedHeader.SoNumber);
 
                 return model;
             }

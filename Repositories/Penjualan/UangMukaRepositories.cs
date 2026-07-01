@@ -11,6 +11,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
     {
         Task<bool> InsertUangMuka(UangMuka data);
         Task<UangMuka> GetUangMukaById(int id);
+        Task MarkAsReceived(int id, SqlConnection connection, SqlTransaction transaction);
 
         //Task<UangMuka> GetAllUangMuka();
         Task<IEnumerable<UangMuka>> GetAllUangMuka();
@@ -104,6 +105,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     NoSo,
                     Alamat,
                     Keterangan,
+                    Status,
                     CreatedBy
                 ) VALUES (
                     @NoFaktur,
@@ -119,6 +121,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @NoSo,
                     @Alamat,
                     @Keterangan,
+                    @Status,
                     @CreatedBy
                 )";
 
@@ -129,6 +132,18 @@ namespace trinova_erp_backend.Repositories.Penjualan
             var result = await connection.ExecuteAsync(query, data);
 
             return result > 0;
+        }
+
+        public async Task MarkAsReceived(int id, SqlConnection connection, SqlTransaction transaction)
+        {
+            const string query = @"
+                UPDATE uang_muka
+                SET
+                    Status = 'Received',
+                    UpdatedAt = GETDATE()
+                WHERE Id = @Id;";
+
+            await connection.ExecuteAsync(query, new { Id = id }, transaction);
         }
     }
 }

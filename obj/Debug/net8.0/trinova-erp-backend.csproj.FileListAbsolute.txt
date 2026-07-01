@@ -150,4 +150,5 @@ C:\Users\aisya\Documents\Codex\backend-build-output\trinova-erp-backend.deps.jso
 C:\Users\aisya\Documents\Codex\backend-build-output\trinova-erp-backend.runtimeconfig.json
 C:\Users\aisya\Documents\Codex\backend-build-output\trinova-erp-backend.dll
 C:\Users\aisya\Documents\Codex\backend-build-output\trinova-erp-backend.pdb
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

@@ -19,11 +19,16 @@ namespace trinova_erp_backend.Usecase.Penjualan
     {
         private readonly IPengirimanPenjualanRepo _pengirimanRepo;
         private readonly string _connectionString;
+        private readonly trinova_erp_backend.Services.IActivityLogService _activityLogService;
 
-        public PengirimanPenjualanUsecase(IPengirimanPenjualanRepo pengirimanRepo,IOptions<DatabaseConnection> options)
+        public PengirimanPenjualanUsecase(
+            IPengirimanPenjualanRepo pengirimanRepo,
+            IOptions<DatabaseConnection> options,
+            trinova_erp_backend.Services.IActivityLogService activityLogService)
         {
             _pengirimanRepo = pengirimanRepo;
             _connectionString = options.Value.SQLServer;
+            _activityLogService = activityLogService;
         }
 
         public async Task<List<ShippingDTO>> GetShippingCategory()
@@ -91,6 +96,14 @@ namespace trinova_erp_backend.Usecase.Penjualan
                 }
 
                 await transaction.CommitAsync();
+
+                await _activityLogService.LogSalesAsync(
+                    "delivery_order_created",
+                    $"Delivery Order {header.DoNumber} created",
+                    $"Delivery order created for {model.Header.CustomerName ?? "customer"}.",
+                    "delivery_order_header",
+                    doId,
+                    header.DoNumber);
             }
             catch
             {

@@ -9,6 +9,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
 {
     [Route("api/sales-status")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Sales,sales,Penjualan,penjualan")]
     public class SalesStatusController : ControllerBase
     {
         private readonly string _connectionString;

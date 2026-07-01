@@ -5,6 +5,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Sales,sales,Penjualan,penjualan")]
     public class SalesDashboardController : ControllerBase
     {
         private readonly ISalesDashboardUsecase _salesDashboardUsecase;
@@ -15,7 +16,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
         }
 
         [HttpGet("/api/sales-dashboard")]
-        public async Task<IActionResult> GetDashboard()
+        public async Task<IActionResult> GetDashboard() 
         {
             try
             {

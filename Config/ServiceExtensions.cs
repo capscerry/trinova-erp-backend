@@ -15,6 +15,10 @@ namespace trinova_erp_backend.Config
             this IServiceCollection services
         )
         {
+            services.AddHttpContextAccessor();
+            services.AddScoped<trinova_erp_backend.Repositories.IActivityLogRepo, trinova_erp_backend.Repositories.ActivityLogRepo>();
+            services.AddScoped<trinova_erp_backend.Services.IActivityLogService, trinova_erp_backend.Services.ActivityLogService>();
+
             // PENJUALAN REPOSITORY
             services.AddScoped<IMasterCustomerRepo, MasterCustomerRepo>();
             services.AddScoped<ICategoryCustomerRepo, CategoryCustomerRepo>();

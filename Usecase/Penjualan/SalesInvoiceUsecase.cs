@@ -23,13 +23,16 @@ namespace trinova_erp_backend.Usecase.Penjualan
     {
         private readonly ISalesInvoiceRepo _salesInvoiceRepo;
         private readonly string _connectionString;
+        private readonly trinova_erp_backend.Services.IActivityLogService _activityLogService;
 
         public SalesInvoiceUsecase(
             ISalesInvoiceRepo salesInvoiceRepo,
-            IOptions<DatabaseConnection> options)
+            IOptions<DatabaseConnection> options,
+            trinova_erp_backend.Services.IActivityLogService activityLogService)
         {
             _salesInvoiceRepo = salesInvoiceRepo;
             _connectionString = options.Value.SQLServer!;
+            _activityLogService = activityLogService;
         }
 
         public async Task<List<SalesInvoiceHeader>> GetAll()
@@ -90,6 +93,25 @@ namespace trinova_erp_backend.Usecase.Penjualan
                 await UpdateRelatedDocumentStatuses(model.Header, connection, transaction);
 
                 await transaction.CommitAsync();
+
+                await _activityLogService.LogSalesAsync(
+                    "sales_invoice_created",
+                    $"Sales Invoice {model.Header.InvoiceNumber} created",
+                    $"Invoice created for {model.Header.CustomerName ?? "customer"}.",
+                    "sales_invoice",
+                    invoiceId,
+                    model.Header.InvoiceNumber);
+
+                if (model.Header.Status == "Paid" || model.Header.Status == "Partially Paid")
+                {
+                    await _activityLogService.LogSalesAsync(
+                        model.Header.Status == "Paid" ? "sales_invoice_paid" : "sales_invoice_partially_paid",
+                        $"Sales Invoice {model.Header.InvoiceNumber} {model.Header.Status.ToLower()}",
+                        $"Paid amount Rp {model.Header.PaidAmount:N0}.",
+                        "sales_invoice",
+                        invoiceId,
+                        model.Header.InvoiceNumber);
+                }
 
                 var created = await GetById(invoiceId);
                 return created!;

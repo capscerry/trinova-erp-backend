@@ -59,14 +59,101 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 LEFT JOIN master_customer mc ON mc.customer_id = si.customer_id
                 ORDER BY si.id DESC;";
 
+            const string recentActivityQuery = @"
+                SELECT TOP 8
+                    Id,
+                    Module,
+                    ActivityType,
+                    Title,
+                    Description,
+                    RefTable,
+                    RefId,
+                    RefNumber,
+                    UserName,
+                    CreatedAt
+                FROM ActivityLogs
+                WHERE Module = 'sales'
+                ORDER BY CreatedAt DESC, Id DESC;";
+
+            const string upcomingActivityQuery = @"
+                SELECT TOP 8 *
+                FROM
+                (
+                    SELECT
+                        'invoice_due' AS ActivityType,
+                        CONCAT('Invoice ', si.invoice_number, ' due soon') AS Title,
+                        CONCAT('Remaining amount Rp ', FORMAT(ISNULL(si.remaining_amount, 0), 'N0', 'id-ID')) AS Description,
+                        'sales_invoice' AS RefTable,
+                        CAST(si.id AS BIGINT) AS RefId,
+                        si.invoice_number AS RefNumber,
+                        CAST(si.due_date AS DATETIME) AS ActivityDate,
+                        CASE
+                            WHEN DATEDIFF(DAY, CAST(GETDATE() AS DATE), CAST(si.due_date AS DATE)) <= 0 THEN 'danger'
+                            WHEN DATEDIFF(DAY, CAST(GETDATE() AS DATE), CAST(si.due_date AS DATE)) <= 3 THEN 'warning'
+                            ELSE 'normal'
+                        END AS Priority
+                    FROM sales_invoice si
+                    WHERE si.due_date IS NOT NULL
+                      AND ISNULL(si.remaining_amount, 0) > 0
+                      AND ISNULL(si.status, 'Issued') IN ('Issued', 'Partially Paid', 'Overdue', 'Terbit', 'Dibayar Sebagian')
+                      AND CAST(si.due_date AS DATE) >= CAST(GETDATE() AS DATE)
+
+                    UNION ALL
+
+                    SELECT
+                        'sales_order_delivery' AS ActivityType,
+                        CONCAT('Sales Order ', so.so_number, ' scheduled for delivery') AS Title,
+                        mc.customer_name AS Description,
+                        'sales_order' AS RefTable,
+                        CAST(so.order_id AS BIGINT) AS RefId,
+                        so.so_number AS RefNumber,
+                        CAST(so.tanggal_kirim AS DATETIME) AS ActivityDate,
+                        CASE
+                            WHEN DATEDIFF(DAY, CAST(GETDATE() AS DATE), CAST(so.tanggal_kirim AS DATE)) <= 0 THEN 'danger'
+                            WHEN DATEDIFF(DAY, CAST(GETDATE() AS DATE), CAST(so.tanggal_kirim AS DATE)) <= 3 THEN 'warning'
+                            ELSE 'normal'
+                        END AS Priority
+                    FROM sales_order so
+                    LEFT JOIN master_customer mc ON mc.customer_id = so.customer_id
+                    WHERE so.tanggal_kirim IS NOT NULL
+                      AND ISNULL(so.status, 'Draft') IN ('Draft', 'Approved', 'Confirmed', 'Processing')
+                      AND CAST(so.tanggal_kirim AS DATE) >= CAST(GETDATE() AS DATE)
+
+                    UNION ALL
+
+                    SELECT
+                        'delivery_order_follow_up' AS ActivityType,
+                        CONCAT('Delivery Order ', doh.do_number, ' needs follow up') AS Title,
+                        mc.customer_name AS Description,
+                        'delivery_order_header' AS RefTable,
+                        CAST(doh.id AS BIGINT) AS RefId,
+                        doh.do_number AS RefNumber,
+                        CAST(doh.do_date AS DATETIME) AS ActivityDate,
+                        CASE
+                            WHEN DATEDIFF(DAY, CAST(GETDATE() AS DATE), CAST(doh.do_date AS DATE)) <= 0 THEN 'danger'
+                            WHEN DATEDIFF(DAY, CAST(GETDATE() AS DATE), CAST(doh.do_date AS DATE)) <= 3 THEN 'warning'
+                            ELSE 'normal'
+                        END AS Priority
+                    FROM delivery_order_header doh
+                    LEFT JOIN master_customer mc ON mc.customer_id = doh.customer_id
+                    WHERE doh.do_date IS NOT NULL
+                      AND ISNULL(doh.status, 'Draft') IN ('Draft', 'Approved', 'Shipped', 'Received')
+                      AND CAST(doh.do_date AS DATE) >= CAST(GETDATE() AS DATE)
+                ) upcoming
+                ORDER BY ActivityDate ASC;";
+
             using var connection = new SqlConnection(_connectionString);
 
             var dashboard = await connection.QueryFirstAsync<SalesDashboard>(summaryQuery);
             var recentOrders = await connection.QueryAsync<SalesDashboardOrderItem>(recentSalesOrderQuery);
             var recentInvoices = await connection.QueryAsync<SalesDashboardInvoiceItem>(recentInvoiceQuery);
+            var recentActivities = await connection.QueryAsync<SalesDashboardActivityItem>(recentActivityQuery);
+            var upcomingActivities = await connection.QueryAsync<SalesDashboardUpcomingActivityItem>(upcomingActivityQuery);
 
             dashboard.RecentSalesOrders = recentOrders.ToList();
             dashboard.RecentInvoices = recentInvoices.ToList();
+            dashboard.RecentActivities = recentActivities.ToList();
+            dashboard.UpcomingActivities = upcomingActivities.ToList();
 
             return dashboard;
         }

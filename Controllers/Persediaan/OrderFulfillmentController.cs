@@ -8,6 +8,7 @@ namespace trinova_erp_backend.Controllers.Persediaan
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Inventory,inventory,Warehouse,warehouse,Persediaan,persediaan")]
     public class OrderFulfillmentController
         : ControllerBase
     {

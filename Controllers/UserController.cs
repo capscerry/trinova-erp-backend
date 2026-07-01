@@ -1,26 +1,45 @@
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using trinova_erp_backend.Models;
 using trinova_erp_backend.Models.DTO;
+using trinova_erp_backend.Services;
 using trinova_erp_backend.Usecase;
 
 namespace trinova_erp_backend.Controllers
 {
     [ApiController]
+    [Authorize(Roles = "Admin,admin")]
     public class MasterUserController : ControllerBase
     {
         private readonly IMasterUserUsecase _masterUser;
+        private readonly IActivityLogService _activityLogService;
 
-        public MasterUserController(IMasterUserUsecase masterUser)
+        public MasterUserController(
+            IMasterUserUsecase masterUser,
+            IActivityLogService activityLogService)
         {
             _masterUser = masterUser;
+            _activityLogService = activityLogService;
         }
 
         [HttpPost("/api/auth/login")]
+        [AllowAnonymous]
         public async Task<IActionResult> LoginUser([FromBody] LoginRequest payload)
         {
             try
             {
                 var result = await _masterUser.LoginUserAsync(payload);
+
+                await _activityLogService.LogAsync(new ActivityLogCreate
+                {
+                    Module = "security",
+                    ActivityType = "login_success",
+                    Title = $"Login success: {result.user.Email}",
+                    Description = $"{result.user.Username} logged in as {result.user.RoleName}.",
+                    RefTable = "master_user",
+                    RefId = result.user.Id,
+                    RefNumber = result.user.Email
+                });
 
                 return Ok(new
                 {
@@ -31,6 +50,16 @@ namespace trinova_erp_backend.Controllers
             }
             catch (UnauthorizedAccessException ex)
             {
+                await _activityLogService.LogAsync(new ActivityLogCreate
+                {
+                    Module = "security",
+                    ActivityType = "login_failed",
+                    Title = $"Login failed: {payload.email}",
+                    Description = ex.Message,
+                    RefTable = "auth_login",
+                    RefNumber = payload.email
+                });
+
                 return Unauthorized(new
                 {
                     success = false,

@@ -6,6 +6,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace trinova_erp_backend.Controllers.Penjualan
 {
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Sales,sales,Penjualan,penjualan")]
     public class CustomerController : Controller
     {
 

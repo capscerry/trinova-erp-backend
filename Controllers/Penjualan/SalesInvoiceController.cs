@@ -6,6 +6,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Sales,sales,Penjualan,penjualan")]
     public class SalesInvoiceController : ControllerBase
     {
         private readonly ISalesInvoiceUsecase _salesInvoiceUsecase;

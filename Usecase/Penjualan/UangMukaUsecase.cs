@@ -13,10 +13,14 @@ namespace trinova_erp_backend.Usecase.Penjualan
     public class UangMukaUsecase : IUangMukaUsecase
     {
         private readonly IUangMukaRepositories _uangMuka;
+        private readonly trinova_erp_backend.Services.IActivityLogService _activityLogService;
 
-        public UangMukaUsecase(IUangMukaRepositories uangMuka)
+        public UangMukaUsecase(
+            IUangMukaRepositories uangMuka,
+            trinova_erp_backend.Services.IActivityLogService activityLogService)
         {
             _uangMuka = uangMuka;
+            _activityLogService = activityLogService;
         }
 
         public async Task<bool> InsertUangMuka(UangMuka model)
@@ -36,7 +40,23 @@ namespace trinova_erp_backend.Usecase.Penjualan
             if (string.IsNullOrWhiteSpace(model.CreatedBy))
                 model.CreatedBy = "SYSTEM";
 
-            return await _uangMuka.InsertUangMuka(model);
+            if (string.IsNullOrWhiteSpace(model.Status) || model.Status == "Received")
+                model.Status = "Issued";
+
+            var result = await _uangMuka.InsertUangMuka(model);
+
+            if (result)
+            {
+                await _activityLogService.LogSalesAsync(
+                    "down_payment_created",
+                    $"Sales Down Payment {model.NoFaktur} created",
+                    $"Down payment recorded for {model.CustomerName ?? "customer"}.",
+                    "uang_muka",
+                    null,
+                    model.NoFaktur);
+            }
+
+            return result;
         }
 
         public async Task<IEnumerable<UangMuka>> GetAllUangMuka()
