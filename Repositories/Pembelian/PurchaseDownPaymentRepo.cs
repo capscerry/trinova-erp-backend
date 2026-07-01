@@ -48,38 +48,23 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
         public async Task<string> GenerateDPNumber()
         {
-            // Query only rows that already follow the canonical DP-NNNNNNNNNN
-            // format so that leftover legacy numbers can never corrupt the counter.
+            // Use MAX on the numeric portion so the generated number is always
+            // strictly greater than every existing dp_number, preventing
+            // duplicate key errors from ghost rows.
             const string query = @"
-                SELECT TOP 1 dp_number
+                SELECT MAX(CAST(SUBSTRING(dp_number, 4, 10) AS BIGINT))
                 FROM purchase_down_payment
-                WHERE dp_number LIKE 'DP-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
-                ORDER BY purchase_down_payment_id DESC";
+                WHERE dp_number LIKE 'DP-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'";
 
-            using SqlConnection connection =
-                new SqlConnection(_connectionString);
-
+            using SqlConnection connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
+            using SqlCommand command = new SqlCommand(query, connection);
 
-            using SqlCommand command =
-                new SqlCommand(query, connection);
+            object? result = await command.ExecuteScalarAsync();
 
-            object? result =
-                await command.ExecuteScalarAsync();
-
-            int nextNumber = 1;
-
+            long nextNumber = 1;
             if (result != null && result != DBNull.Value)
-            {
-                string lastDp =
-                    result.ToString() ?? "DP-0000000000";
-
-                // Strip the "DP-" prefix (always 3 chars) before parsing
-                string numericPart = lastDp.Substring(3);
-
-                if (int.TryParse(numericPart, out int parsed))
-                    nextNumber = parsed + 1;
-            }
+                nextNumber = Convert.ToInt64(result) + 1;
 
             return $"DP-{nextNumber:D10}";
         }

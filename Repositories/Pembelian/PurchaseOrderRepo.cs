@@ -33,39 +33,23 @@ namespace trinova_erp_backend.Repositories.Pembelian
         // GENERATE PO NUMBER
         public async Task<string> GeneratePONumber()
         {
-            // Query only rows that already follow the canonical PO-NNNNNNNNNN
-            // format so that leftover legacy numbers can never corrupt the
-            // counter.
+            // Use MAX on the numeric portion so the generated number is always
+            // strictly greater than every existing po_number, regardless of the
+            // order rows were inserted or whether any gaps exist.
             const string query = @"
-                SELECT TOP 1 po_number
+                SELECT MAX(CAST(SUBSTRING(po_number, 4, 10) AS BIGINT))
                 FROM purchase_order
-                WHERE po_number LIKE 'PO-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
-                ORDER BY purchase_order_id DESC";
+                WHERE po_number LIKE 'PO-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'";
 
-            using SqlConnection connection =
-                new SqlConnection(_connectionString);
-
+            using SqlConnection connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
+            using SqlCommand command = new SqlCommand(query, connection);
 
-            using SqlCommand command =
-                new SqlCommand(query, connection);
+            object? result = await command.ExecuteScalarAsync();
 
-            object? result =
-                await command.ExecuteScalarAsync();
-
-            int nextNumber = 1;
-
+            long nextNumber = 1;
             if (result != null && result != DBNull.Value)
-            {
-                string lastPo =
-                    result.ToString() ?? "PO-0000000000";
-
-                // Strip the "PO-" prefix (always 3 chars) before parsing
-                string numericPart = lastPo.Substring(3);
-
-                if (int.TryParse(numericPart, out int parsed))
-                    nextNumber = parsed + 1;
-            }
+                nextNumber = Convert.ToInt64(result) + 1;
 
             return $"PO-{nextNumber:D10}";
         }
@@ -117,7 +101,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     command.Parameters.AddWithValue("@status", model.status);
                     command.Parameters.AddWithValue("@tax_percentage", (object?)model.tax_percentage ?? DBNull.Value);
                     command.Parameters.AddWithValue("@tax_amount", (object?)model.tax_amount ?? DBNull.Value);
-                    command.Parameters.AddWithValue("@total_amount", model.total_amount);
+                    command.Parameters.AddWithValue("@total_amount", (object?)model.total_amount ?? (object)0m);
                     command.Parameters.AddWithValue("@transaction_name", (object?)model.transaction_name ?? DBNull.Value);
                     command.Parameters.AddWithValue("@transaction_detail", (object?)model.transaction_detail ?? DBNull.Value);
                     command.Parameters.AddWithValue("@expected_date", (object?)model.expected_date ?? DBNull.Value);
@@ -130,8 +114,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     return insertedId;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"[InsertPurchaseOrder] Exception: {ex.Message}\n{ex.StackTrace}");
                 return 0;
             }
         }
@@ -168,7 +153,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     command.Parameters.AddWithValue("@status", model.status);
                     command.Parameters.AddWithValue("@tax_percentage", (object?)model.tax_percentage ?? DBNull.Value);
                     command.Parameters.AddWithValue("@tax_amount", (object?)model.tax_amount ?? DBNull.Value);
-                    command.Parameters.AddWithValue("@total_amount", model.total_amount);
+                    command.Parameters.AddWithValue("@total_amount", (object?)model.total_amount ?? (object)0m);
                     command.Parameters.AddWithValue("@transaction_name", (object?)model.transaction_name ?? DBNull.Value);
                     command.Parameters.AddWithValue("@transaction_detail", (object?)model.transaction_detail ?? DBNull.Value);
                     command.Parameters.AddWithValue("@expected_date", (object?)model.expected_date ?? DBNull.Value);
