@@ -5,6 +5,10 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface ISupplierUsecase
     {
+        Task MigrateSupplierCodes();
+
+        Task<string> GenerateSupplierCode();
+
         Task<Supplier?> InsertSupplier(
             Supplier model
         );
@@ -35,6 +39,23 @@ namespace trinova_erp_backend.Usecase.Pembelian
         {
             _supplierRepo =
                 supplierRepo;
+        }
+
+        // ─── MIGRATE EXISTING CODES ─────────────
+
+        public async Task MigrateSupplierCodes()
+        {
+            await _supplierRepo
+                .MigrateSupplierCodes();
+        }
+
+        // ─── GENERATE SUPPLIER CODE ─────────────
+
+        public async Task<string>
+            GenerateSupplierCode()
+        {
+            return await _supplierRepo
+                .GenerateSupplierCode();
         }
 
         // ─── INSERT ─────────────────────────────
