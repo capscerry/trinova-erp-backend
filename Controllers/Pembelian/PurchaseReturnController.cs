@@ -83,6 +83,37 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        /// <summary>
+        /// Returns all unpaid / partially-paid invoices for the supplier linked
+        /// to this purchase return. The supplier is resolved internally via the
+        /// return's goods_receipt_id -> purchase_order -> supplier_id chain,
+        /// so the frontend only needs the purchase_return_id.
+        /// Each invoice carries a real-time outstanding_amount.
+        /// </summary>
+        [HttpGet("/api/purchase-return/{id}/invoices")]
+        public async Task<IActionResult> GetUnpaidInvoicesForReturn(int id)
+        {
+            try
+            {
+                var result = await _purchaseReturnUsecase
+                    .GetUnpaidInvoicesForReturn(id);
+
+                return Ok(new
+                {
+                    status = true,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
+        }
+
         [HttpPut("/api/purchase-return/{id}")]
         public async Task<IActionResult> UpdatePurchaseReturn(
             int id,

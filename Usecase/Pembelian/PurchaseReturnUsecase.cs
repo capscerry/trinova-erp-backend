@@ -11,7 +11,22 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
         Task<List<PurchaseReturn>> GetAllPurchaseReturn();
 
-        Task<bool> UpdatePurchaseReturn(int id, string status, string notes, string closingCondition, int? targetInvoiceId = null);
+        /// <summary>
+        /// Resolves the supplier for the given purchase return by walking
+        /// purchase_return -> goods_receipt -> purchase_order -> supplier_id,
+        /// then returns all unpaid/partially-paid invoices for that supplier
+        /// with real-time outstanding amounts.
+        /// The frontend only needs the purchase_return_id — no supplier_id required.
+        /// </summary>
+        Task<List<PurchaseInvoice>> GetUnpaidInvoicesForReturn(int purchaseReturnId);
+
+        Task<bool> UpdatePurchaseReturn(
+            int id,
+            string status,
+            string notes,
+            string closingCondition,
+            int? targetInvoiceId = null
+        );
 
         Task<bool> DeletePurchaseReturn(int id);
     }
@@ -46,8 +61,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
         // When a Purchase Return is created the goods are going back to the
         // supplier, so inventory_stock is reduced for every product line that
-        // was on the originating Goods Receipt, and supplier_products is
-        // re-synced accordingly.
+        // was on the originating Goods Receipt.
         public async Task<int> InsertPurchaseReturn(PurchaseReturn model)
         {
             model.purchase_return_number =
@@ -75,7 +89,29 @@ namespace trinova_erp_backend.Usecase.Pembelian
             return await _purchaseReturnRepo.GetAllPurchaseReturn();
         }
 
-        public async Task<bool> UpdatePurchaseReturn(int id, string status, string notes, string closingCondition, int? targetInvoiceId = null)
+        // Walks purchase_return -> goods_receipt -> purchase_order -> supplier_id
+        // and returns all unpaid invoices for that supplier with live outstanding amounts.
+        public async Task<List<PurchaseInvoice>> GetUnpaidInvoicesForReturn(
+            int purchaseReturnId
+        )
+        {
+            var allReturns = await _purchaseReturnRepo.GetAllPurchaseReturn();
+            var pr = allReturns.FirstOrDefault(r => r.purchase_return_id == purchaseReturnId)
+                ?? throw new Exception("Purchase return record not found.");
+
+            var gr = await _goodsReceiptRepo.GetGoodsReceiptById(pr.goods_receipt_id)
+                ?? throw new Exception("Goods receipt linked to this return was not found.");
+
+            return await _purchaseInvoiceRepo.GetUnpaidInvoicesBySupplier(gr.supplier_id);
+        }
+
+        public async Task<bool> UpdatePurchaseReturn(
+            int id,
+            string status,
+            string notes,
+            string closingCondition,
+            int? targetInvoiceId = null
+        )
         {
             // Fetch the return record so we can read settlement_option + supplier
             var allReturns = await _purchaseReturnRepo.GetAllPurchaseReturn();
@@ -96,8 +132,10 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
                 if (targetInvoiceId.HasValue)
                 {
-                    // User explicitly selected an invoice in the settlement dialog —
-                    // verify it belongs to this supplier and is still unpaid.
+                    // The frontend already inserted the Return Credit payment
+                    // before calling this endpoint. We only need to validate the
+                    // invoice is real and belongs to this supplier, then record
+                    // the audit trail — do NOT call ApplyCreditToInvoice again.
                     var candidates =
                         await _purchaseInvoiceRepo.GetUnpaidInvoicesBySupplier(supplierId);
 
@@ -109,11 +147,21 @@ namespace trinova_erp_backend.Usecase.Pembelian
                             "The selected invoice was not found, does not belong to this supplier, " +
                             "or has already been fully paid."
                         );
+
+                    string condFe =
+                        $"Cash refund confirmed. " +
+                        $"Rp {pr.total_amount:N0} credited against invoice {targetInvoice.invoice_number}.";
+
+                    string notesFe =
+                        string.IsNullOrWhiteSpace(notes) ? condFe : notes;
+
+                    return await _purchaseReturnRepo.UpdatePurchaseReturn(
+                        id, status, notesFe, condFe
+                    );
                 }
                 else
                 {
-                    // No invoice specified — fall back to the oldest eligible invoice
-                    // (legacy behaviour preserved for backwards compatibility).
+                    // No invoice specified — fall back to the oldest eligible invoice.
                     targetInvoice =
                         await _purchaseInvoiceRepo.GetUnfinishedInvoiceBySupplier(supplierId);
 
@@ -132,7 +180,6 @@ namespace trinova_erp_backend.Usecase.Pembelian
                     targetInvoice.invoice_number
                 );
 
-                // Build the audit trail stored on the return record itself
                 string generatedCondition =
                     $"Cash refund confirmed. " +
                     $"Rp {pr.total_amount:N0} credited against invoice {targetInvoice.invoice_number}.";
@@ -143,16 +190,11 @@ namespace trinova_erp_backend.Usecase.Pembelian
                         : notes;
 
                 return await _purchaseReturnRepo.UpdatePurchaseReturn(
-                    id,
-                    status,
-                    generatedNotes,
-                    generatedCondition
+                    id, status, generatedNotes, generatedCondition
                 );
             }
 
-            // Accept Loss: the supplier ships back the exact same goods that were returned.
-            // Stock was deducted when the return was created (InsertPurchaseReturn),
-            // so on settlement we restore it for every product line on the originating GR.
+            // Accept Loss: restore stock for every product line on the originating GR.
             if (status == "Closed" &&
                 pr.settlement_option.Equals("Accept Loss", StringComparison.OrdinalIgnoreCase))
             {
@@ -178,19 +220,13 @@ namespace trinova_erp_backend.Usecase.Pembelian
                         : notes;
 
                 return await _purchaseReturnRepo.UpdatePurchaseReturn(
-                    id,
-                    status,
-                    generatedNotes,
-                    generatedCondition
+                    id, status, generatedNotes, generatedCondition
                 );
             }
 
             // All other status / settlement combinations — plain update
             return await _purchaseReturnRepo.UpdatePurchaseReturn(
-                id,
-                status,
-                notes,
-                closingCondition
+                id, status, notes, closingCondition
             );
         }
 

@@ -864,3 +864,8 @@ C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend
 C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.dll
 C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\refint\trinova-erp-backend.dll
 C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.pdb
+C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.deps.json
+C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.runtimeconfig.json
+C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.pdb
+C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.genruntimeconfig.cache
+C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\ref\trinova-erp-backend.dll
