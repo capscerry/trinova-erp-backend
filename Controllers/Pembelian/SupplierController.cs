@@ -25,6 +25,40 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 supplierUsecase;
         }
 
+        // ─── MIGRATE EXISTING CODES ─────────────
+
+        [HttpPost("/api/supplier/migrate-codes")]
+
+        public async Task<IActionResult>
+            MigrateSupplierCodes()
+        {
+            await _supplierUsecase
+                .MigrateSupplierCodes();
+
+            return Ok(new
+            {
+                status  = true,
+                message = "Supplier codes migrated"
+            });
+        }
+
+        // ─── GET NEXT SUPPLIER CODE ─────────────
+
+        [HttpGet("/api/supplier/next-code")]
+
+        public async Task<IActionResult>
+            GetNextSupplierCode()
+        {
+            var code =
+                await _supplierUsecase
+                    .GenerateSupplierCode();
+
+            return Ok(new
+            {
+                supplier_code = code
+            });
+        }
+
         // ─── INSERT ─────────────────────────────
 
         [HttpPost("/api/supplier")]

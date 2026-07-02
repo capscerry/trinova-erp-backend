@@ -5,12 +5,23 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface IPurchaseInvoiceUsecase
     {
+        Task<string> GetNextInvoiceNumber();
+
         Task<int> InsertPurchaseInvoice(
             PurchaseInvoice model
         );
 
         Task<List<PurchaseInvoice>>
             GetAllPurchaseInvoice();
+
+        /// <summary>
+        /// Returns all unpaid / partially-paid invoices for the given supplier
+        /// with real-time outstanding amounts. Used to populate the invoice
+        /// dropdown in the Purchase Return settlement dialog.
+        /// </summary>
+        Task<List<PurchaseInvoice>> GetUnpaidInvoicesBySupplier(
+            int supplierId
+        );
 
         Task<bool> UpdatePurchaseInvoice(
             PurchaseInvoice model
@@ -35,6 +46,12 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 purchaseInvoiceRepo;
         }
 
+        public async Task<string> GetNextInvoiceNumber()
+        {
+            return await _purchaseInvoiceRepo
+                .GenerateInvoiceNumber();
+        }
+
         public async Task<int>
             InsertPurchaseInvoice(
                 PurchaseInvoice model
@@ -49,13 +66,9 @@ namespace trinova_erp_backend.Usecase.Pembelian
             model.status =
                 "Unpaid";
 
-            string today =
-                DateTime.Now.ToString(
-                    "yyyyMMdd"
-                );
-
             model.invoice_number =
-                $"INV-{today}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
+                await _purchaseInvoiceRepo
+                    .GenerateInvoiceNumber();
 
             
             bool isExist =
@@ -85,6 +98,14 @@ namespace trinova_erp_backend.Usecase.Pembelian
         {
             return await _purchaseInvoiceRepo
                 .GetAllPurchaseInvoice();
+        }
+
+        public async Task<List<PurchaseInvoice>> GetUnpaidInvoicesBySupplier(
+            int supplierId
+        )
+        {
+            return await _purchaseInvoiceRepo
+                .GetUnpaidInvoicesBySupplier(supplierId);
         }
 
 public async Task<bool>

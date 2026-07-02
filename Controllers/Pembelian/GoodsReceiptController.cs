@@ -43,6 +43,19 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        [HttpGet("/api/goods-receipt/next-number")]
+        public async Task<IActionResult> GetNextGRNumber()
+        {
+            var number = await _goodsReceiptUsecase.GetNextGRNumber();
+
+            return Ok(new
+            {
+                status = true,
+                receipt_number = number,
+                next_number = number
+            });
+        }
+
         [HttpGet("/api/goods-receipt")]
         public async Task<IActionResult> GetAllGoodsReceipt()
         {
@@ -58,6 +71,19 @@ namespace trinova_erp_backend.Controllers.Pembelian
                     message = "No Goods Receipt Found"
                 });
             }
+
+            return Ok(new
+            {
+                status = true,
+                data = result
+            });
+        }
+
+        [HttpGet("/api/goods-receipt/without-invoice")]
+        public async Task<IActionResult> GetAllWithoutInvoice()
+        {
+            var result = await _goodsReceiptUsecase
+                .GetAllWithoutInvoice();
 
             return Ok(new
             {

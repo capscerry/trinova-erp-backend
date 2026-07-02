@@ -336,5 +336,73 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 qty_available = Convert.ToDecimal(reader["qty_available"])
             };
         }
+
+        // =========================
+        // SYNC → SUPPLIER PRODUCTS
+        // =========================
+        // After any inventory_stock change, sum qty_available across all
+        // warehouses for the given product and push the total into every
+        // matching supplier_products row.  The PO form reads available_stock
+        // from supplier_products, so this keeps it in sync automatically.
+        public async Task SyncToSupplierProductsAsync(int productId)
+        {
+            const string query = @"
+                UPDATE supplier_products
+                SET
+                    available_stock = (
+                        SELECT ISNULL(SUM(qty_available), 0)
+                        FROM inventory_stock
+                        WHERE product_id = @product_id
+                    ),
+                    updated_at = GETDATE()
+                WHERE product_id = @product_id";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            command.Parameters.AddWithValue("@product_id", productId);
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
+        // =========================
+        // UPSERT (used by GR flow)
+        // =========================
+        // If a row exists for (product_id, warehouse_id) update it;
+        // otherwise insert a new row.  Returns the final stock record.
+        public async Task<InventoryStock> UpsertAsync(
+            int productId,
+            int warehouseId,
+            decimal qtyToAdd)
+        {
+            // Try to find an existing row first
+            var existing = await GetByProductWarehouseAsync(productId, warehouseId);
+
+            if (existing != null)
+            {
+                existing.qty_on_hand  += qtyToAdd;
+                existing.qty_available = existing.qty_on_hand - existing.qty_reserved;
+                await UpdateAsync(existing);
+                return existing;
+            }
+
+            // No row yet — create one
+            var newStock = new InventoryStock
+            {
+                product_id   = productId,
+                warehouse_id = warehouseId,
+                qty_on_hand  = qtyToAdd,
+                qty_reserved = 0,
+                qty_available = qtyToAdd,
+                created_at   = DateTime.Now,
+                updated_at   = DateTime.Now
+            };
+
+            return await CreateAsync(newStock);
+        }
     }
 }

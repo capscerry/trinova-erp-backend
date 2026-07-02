@@ -43,6 +43,19 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        [HttpGet("/api/purchase-order/next-number")]
+        public async Task<IActionResult> GetNextPONumber()
+        {
+            var number = await _purchaseOrderUsecase.GetNextPONumber();
+            
+            return Ok(new
+            {
+                status = true,
+                po_number = number,
+                next_number = number
+            });
+        }
+
         [HttpGet("/api/purchase-order")]
         public async Task<IActionResult> GetAllPurchaseOrder()
         {
@@ -93,9 +106,74 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
-        [HttpDelete("/api/purchase-order/{id}")]
-        public async Task<IActionResult> DeletePurchaseOrder(int id)
+        [HttpPatch("/api/purchase-order/{id}/approve")]
+        public async Task<IActionResult> ApprovePurchaseOrder(int id)
         {
+            var (success, message) = await _purchaseOrderUsecase
+                .ApprovePurchaseOrder(id);
+
+            if (success)
+                return Ok(new { status = true, message });
+
+            return BadRequest(new { status = false, message });
+        }
+
+        [HttpPatch("/api/purchase-order/{id}/unapprove")]
+        public async Task<IActionResult> UnapprovePurchaseOrder(int id)
+        {
+            var result = await _purchaseOrderUsecase
+                .UnapprovePurchaseOrder(id);
+
+            if (result)
+                return Ok(new { status = true, message = "Purchase Order unapproved and stock restored" });
+
+            return BadRequest(new { status = false, message = "Unapprove failed — PO not found or not in Approved state" });
+        }
+
+        [HttpPatch("/api/purchase-order/{id}/deduction")]
+        public async Task<IActionResult> ApplyDeduction(
+            int id,
+            [FromBody] PODeductionRequest request
+        )
+        {
+            // Validate: the PO must exist and its total_amount must be >= the
+            // deduction amount (Purchase Return value). This mirrors the same
+            // rule applied to Cash Refund — you cannot deduct more than the PO
+            // is worth.
+            var po = await _purchaseOrderUsecase.GetPurchaseOrderById(id);
+
+            if (po == null)
+                return NotFound(new
+                {
+                    status = false,
+                    message = "Purchase Order not found."
+                });
+
+            decimal poTotal = po.total_amount ?? 0m;
+
+            if (request.deduction_amount > poTotal)
+                return BadRequest(new
+                {
+                    status = false,
+                    message =
+                        $"PO Deduction cannot be applied: the return value " +
+                        $"(Rp {request.deduction_amount:N0}) exceeds the PO total " +
+                        $"(Rp {poTotal:N0}). Please select a PO whose total is at " +
+                        $"least equal to the return amount."
+                });
+
+            return Ok(new
+            {
+                status = true,
+                message = $"Deduction of {request.deduction_amount} noted against PO {id}",
+                purchase_order_id = id,
+                deduction_amount = request.deduction_amount,
+                purchase_return_id = request.purchase_return_id
+            });
+        }
+
+        [HttpDelete("/api/purchase-order/{id}")]
+        public async Task<IActionResult> DeletePurchaseOrder(int id)        {
             var result = await _purchaseOrderUsecase
                 .DeletePurchaseOrder(id);
 
@@ -114,5 +192,14 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 message = "Failed Delete Data"
             });
         }
+    }
+}
+
+namespace trinova_erp_backend.Controllers.Pembelian
+{
+    public class PODeductionRequest
+    {
+        public decimal deduction_amount  { get; set; }
+        public int     purchase_return_id { get; set; }
     }
 }

@@ -6,6 +6,21 @@ using trinova_erp_backend.Models.Persediaan;
 
 namespace trinova_erp_backend.Repositories.Persediaan
 {
+    // Flat projection used only inside GetByIdAsync to avoid column-name collision
+    internal class PrDetailFlat
+    {
+        public int pr_detail_id { get; set; }
+        public int pr_id { get; set; }
+        public int product_id { get; set; }
+        public decimal qty_requested { get; set; }
+        public decimal qty_processed { get; set; }
+        public string? remarks { get; set; }
+        // product columns (prefixed to avoid collision)
+        public string? product_name { get; set; }
+        public string? product_code { get; set; }
+        public int uom_id { get; set; }
+    }
+
     public class PurchaseRequisitionRepo
     {
         private readonly string _connectionString;
@@ -34,15 +49,54 @@ namespace trinova_erp_backend.Repositories.Persediaan
         {
             using var connection = new SqlConnection(_connectionString);
 
-            string query = @"
-                SELECT *
-                FROM purchase_requisition
-                WHERE pr_id = @Id";
-
-            return await connection.QueryFirstOrDefaultAsync<PurchaseRequisition>(
-                query,
+            // Load header
+            var pr = await connection.QueryFirstOrDefaultAsync<PurchaseRequisition>(
+                @"SELECT * FROM purchase_requisition WHERE pr_id = @Id",
                 new { Id = id }
             );
+
+            if (pr == null) return null;
+
+            // Load details as a flat projection — avoids Dapper splitOn ambiguity
+            // when both prd and mp share a product_id column name.
+            string detailQuery = @"
+                SELECT
+                    prd.pr_detail_id,
+                    prd.pr_id,
+                    prd.product_id,
+                    prd.qty_requested,
+                    prd.qty_processed,
+                    prd.remarks,
+                    mp.product_name,
+                    mp.product_code,
+                    mp.uom_id
+                FROM purchase_requisition_detail prd
+                INNER JOIN master_product mp ON mp.product_id = prd.product_id
+                WHERE prd.pr_id = @Id";
+
+            var flats = await connection.QueryAsync<PrDetailFlat>(
+                detailQuery,
+                new { Id = id }
+            );
+
+            pr.Details = flats.Select(f => new PurchaseRequisitionDetail
+            {
+                pr_detail_id  = f.pr_detail_id,
+                pr_id         = f.pr_id,
+                product_id    = f.product_id,
+                qty_requested = f.qty_requested,
+                qty_processed = f.qty_processed,
+                remarks       = f.remarks,
+                Product = new MasterProduct
+                {
+                    product_id   = f.product_id,
+                    product_name = f.product_name,
+                    product_code = f.product_code,
+                    uom_id       = f.uom_id,
+                },
+            }).ToList();
+
+            return pr;
         }
 
         public async Task<PurchaseRequisition> CreateAsync(PurchaseRequisition requisition)
@@ -109,16 +163,31 @@ namespace trinova_erp_backend.Repositories.Persediaan
         {
             using var connection = new SqlConnection(_connectionString);
 
-            string today = DateTime.Now.ToString("yyyyMMdd");
-
-            string query = @"
-                SELECT COUNT(*)
+            const string query = @"
+                SELECT TOP 1 pr_number
                 FROM purchase_requisition
-                WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)";
+                ORDER BY pr_id DESC";
 
-            int countToday = await connection.ExecuteScalarAsync<int>(query);
+            await connection.OpenAsync();
 
-            return $"PR-{today}-{(countToday + 1):D4}";
+            object? result = await connection
+                .ExecuteScalarAsync<string>(query);
+
+            int nextNumber = 1;
+
+            if (result != null)
+            {
+                string lastPr =
+                    result.ToString() ?? "PR000000";
+
+                string numericPart =
+                    lastPr.Replace("PR", "");
+
+                if (int.TryParse(numericPart, out int parsed))
+                    nextNumber = parsed + 1;
+            }
+
+            return $"PR{nextNumber:D6}";
         }
     }
 }

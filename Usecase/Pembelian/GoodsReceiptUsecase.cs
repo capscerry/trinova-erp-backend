@@ -5,9 +5,13 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface IGoodsReceiptUsecase
     {
+        Task<string> GetNextGRNumber();
+
         Task<int> InsertGoodsReceipt(GoodsReceipt model);
 
         Task<List<GoodsReceipt>> GetAllGoodsReceipt();
+
+        Task<List<GoodsReceipt>> GetAllWithoutInvoice();
 
         Task<bool> UpdateGoodsReceipt(GoodsReceipt model);
 
@@ -28,21 +32,18 @@ namespace trinova_erp_backend.Usecase.Pembelian
             _purchaseOrderRepo = purchaseOrderRepo;
         }
 
+        public async Task<string> GetNextGRNumber()
+        {
+            return await _goodsReceiptRepo.GenerateGRNumber();
+        }
+
         public async Task<int> InsertGoodsReceipt(GoodsReceipt model)
         {
-            // AUTO CREATED DATE
             model.created_at = DateTime.Now;
-
-            // DEFAULT STATUS
             model.status = "Received";
-
-            // AUTO GENERATE RECEIPT NUMBER
-            string today = DateTime.Now.ToString("yyyyMMdd");
-
             model.receipt_number =
-                $"GR-{today}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
+                await _goodsReceiptRepo.GenerateGRNumber();
 
-            // AUTO COMPLETE PURCHASE ORDER
             var purchaseOrder =
                 await _purchaseOrderRepo.GetPurchaseOrderById(
                     model.purchase_order_id
@@ -67,6 +68,11 @@ namespace trinova_erp_backend.Usecase.Pembelian
             var result = await _goodsReceiptRepo.GetAllGoodsReceipt();
 
             return result;
+        }
+
+        public async Task<List<GoodsReceipt>> GetAllWithoutInvoice()
+        {
+            return await _goodsReceiptRepo.GetAllWithoutInvoice();
         }
 
         public async Task<bool> UpdateGoodsReceipt(GoodsReceipt model)

@@ -27,5 +27,9 @@ namespace trinova_erp_backend.Models
 
         public decimal outstanding_amount { get; set; }
 
+        public string? transaction_name { get; set; }
+
+        public string? transaction_detail { get; set; }
+
     }
 }

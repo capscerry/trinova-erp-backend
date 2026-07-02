@@ -23,9 +23,17 @@ namespace trinova_erp_backend.Models
 
         public int supplier_id { get; set; }
 
-        public string supplier_name { get; set; } = "";
+        public string? supplier_name { get; set; }
 
-        public decimal total_amount { get; set; }
+        public string? po_number { get; set; }
+
+        public decimal? total_amount { get; set; }
+
+        [NotMapped]
+        public string? transaction_name { get; set; }
+
+        [NotMapped]
+        public string? transaction_detail { get; set; }
 
         [ForeignKey("purchase_order_id")]
         public PurchaseOrder? PurchaseOrder { get; set; }

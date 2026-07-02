@@ -7,6 +7,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
 {
     public interface IPurchaseOrderRepo
     {
+        Task<string> GeneratePONumber();
+
         Task<int> InsertPurchaseOrder(PurchaseOrder model);
 
         Task<List<PurchaseOrder>> GetAllPurchaseOrder();
@@ -28,6 +30,30 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 ?? throw new InvalidOperationException("Database connection string is not configured.");
         }
 
+        // GENERATE PO NUMBER
+        public async Task<string> GeneratePONumber()
+        {
+            // Use MAX on the numeric portion so the generated number is always
+            // strictly greater than every existing po_number, regardless of the
+            // order rows were inserted or whether any gaps exist.
+            const string query = @"
+                SELECT MAX(CAST(SUBSTRING(po_number, 4, 10) AS BIGINT))
+                FROM purchase_order
+                WHERE po_number LIKE 'PO-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'";
+
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            using SqlCommand command = new SqlCommand(query, connection);
+
+            object? result = await command.ExecuteScalarAsync();
+
+            long nextNumber = 1;
+            if (result != null && result != DBNull.Value)
+                nextNumber = Convert.ToInt64(result) + 1;
+
+            return $"PO-{nextNumber:D10}";
+        }
+
         // INSERT
         public async Task<int> InsertPurchaseOrder(PurchaseOrder model)
         {
@@ -38,7 +64,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     supplier_id,
                     order_date,
                     status,
+                    tax_percentage,
+                    tax_amount,
                     total_amount,
+                    transaction_name,
+                    transaction_detail,
+                    expected_date,
                     created_at
                 )
                 OUTPUT INSERTED.purchase_order_id
@@ -48,7 +79,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     @supplier_id,
                     @order_date,
                     @status,
+                    @tax_percentage,
+                    @tax_amount,
                     @total_amount,
+                    @transaction_name,
+                    @transaction_detail,
+                    @expected_date,
                     GETDATE()
                 )";
 
@@ -63,7 +99,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     command.Parameters.AddWithValue("@supplier_id", model.supplier_id);
                     command.Parameters.AddWithValue("@order_date", model.order_date);
                     command.Parameters.AddWithValue("@status", model.status);
-                    command.Parameters.AddWithValue("@total_amount", model.total_amount);
+                    command.Parameters.AddWithValue("@tax_percentage", (object?)model.tax_percentage ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@tax_amount", (object?)model.tax_amount ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@total_amount", (object?)model.total_amount ?? (object)0m);
+                    command.Parameters.AddWithValue("@transaction_name", (object?)model.transaction_name ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@transaction_detail", (object?)model.transaction_detail ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@expected_date", (object?)model.expected_date ?? DBNull.Value);
 
                     int insertedId =
                         Convert.ToInt32(
@@ -73,8 +114,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     return insertedId;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"[InsertPurchaseOrder] Exception: {ex.Message}\n{ex.StackTrace}");
                 return 0;
             }
         }
@@ -89,7 +131,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     supplier_id = @supplier_id,
                     order_date = @order_date,
                     status = @status,
-                    total_amount = @total_amount
+                    tax_percentage = @tax_percentage,
+                    tax_amount = @tax_amount,
+                    total_amount = @total_amount,
+                    transaction_name = @transaction_name,
+                    transaction_detail = @transaction_detail,
+                    expected_date = @expected_date
                 WHERE purchase_order_id = @purchase_order_id";
 
             try
@@ -104,7 +151,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     command.Parameters.AddWithValue("@supplier_id", model.supplier_id);
                     command.Parameters.AddWithValue("@order_date", model.order_date);
                     command.Parameters.AddWithValue("@status", model.status);
-                    command.Parameters.AddWithValue("@total_amount", model.total_amount);
+                    command.Parameters.AddWithValue("@tax_percentage", (object?)model.tax_percentage ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@tax_amount", (object?)model.tax_amount ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@total_amount", (object?)model.total_amount ?? (object)0m);
+                    command.Parameters.AddWithValue("@transaction_name", (object?)model.transaction_name ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@transaction_detail", (object?)model.transaction_detail ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@expected_date", (object?)model.expected_date ?? DBNull.Value);
 
                     int result = await command.ExecuteNonQueryAsync();
 
@@ -181,7 +233,22 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 supplier_id = reader.GetInt32(reader.GetOrdinal("supplier_id")),
                                 order_date = reader.GetDateTime(reader.GetOrdinal("order_date")),
                                 status = reader["status"].ToString(),
-                                total_amount = reader.GetDecimal(reader.GetOrdinal("total_amount"))
+                                tax_percentage = reader["tax_percentage"] != DBNull.Value
+                                    ? Convert.ToDecimal(reader["tax_percentage"])
+                                    : null,
+                                tax_amount = reader["tax_amount"] != DBNull.Value
+                                    ? Convert.ToDecimal(reader["tax_amount"])
+                                    : null,
+                                total_amount = reader.GetDecimal(reader.GetOrdinal("total_amount")),
+                                transaction_name = reader["transaction_name"] != DBNull.Value
+                                    ? reader["transaction_name"].ToString()
+                                    : null,
+                                transaction_detail = reader["transaction_detail"] != DBNull.Value
+                                    ? reader["transaction_detail"].ToString()
+                                    : null,
+                                expected_date = reader["expected_date"] != DBNull.Value
+                                    ? Convert.ToDateTime(reader["expected_date"])
+                                    : null
                             };
 
                             purchaseOrder.Supplier = new Supplier
@@ -231,7 +298,22 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 supplier_id = reader.GetInt32(reader.GetOrdinal("supplier_id")),
                                 order_date = reader.GetDateTime(reader.GetOrdinal("order_date")),
                                 status = reader["status"].ToString(),
-                                total_amount = reader.GetDecimal(reader.GetOrdinal("total_amount"))
+                                tax_percentage = reader["tax_percentage"] != DBNull.Value
+                                    ? Convert.ToDecimal(reader["tax_percentage"])
+                                    : null,
+                                tax_amount = reader["tax_amount"] != DBNull.Value
+                                    ? Convert.ToDecimal(reader["tax_amount"])
+                                    : null,
+                                total_amount = reader.GetDecimal(reader.GetOrdinal("total_amount")),
+                                transaction_name = reader["transaction_name"] != DBNull.Value
+                                    ? reader["transaction_name"].ToString()
+                                    : null,
+                                transaction_detail = reader["transaction_detail"] != DBNull.Value
+                                    ? reader["transaction_detail"].ToString()
+                                    : null,
+                                expected_date = reader["expected_date"] != DBNull.Value
+                                    ? Convert.ToDateTime(reader["expected_date"])
+                                    : null
                             };
                         }
                     }

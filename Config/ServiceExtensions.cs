@@ -6,7 +6,6 @@ using trinova_erp_backend.Usecase;
 using trinova_erp_backend.Usecase.Pembelian;
 using trinova_erp_backend.Usecase.Penjualan;
 using trinova_erp_backend.Usecase.Persediaan;
-
 namespace trinova_erp_backend.Config
 {
     public static class ServiceExtensions
@@ -53,6 +52,7 @@ namespace trinova_erp_backend.Config
             services.AddScoped<IPurchaseInvoiceRepo, PurchaseInvoiceRepo>();
             services.AddScoped<IPurchaseDownPaymentRepo, PurchaseDownPaymentRepo>();
             services.AddScoped<IPurchasePaymentRepo, PurchasePaymentRepo>();
+            services.AddScoped<IPurchaseReturnRepo, PurchaseReturnRepo>();
 
             // PEMBELIAN USECASE
             services.AddScoped<ISupplierUsecase, SupplierUsecase>();
@@ -66,6 +66,7 @@ namespace trinova_erp_backend.Config
             services.AddScoped<IPurchaseInvoiceUsecase, PurchaseInvoiceUsecase>();
             services.AddScoped<IPurchaseDownPaymentUsecase, PurchaseDownPaymentUsecase>();
             services.AddScoped<IPurchasePaymentUsecase, PurchasePaymentUsecase>();
+            services.AddScoped<IPurchaseReturnUsecase, PurchaseReturnUsecase>();
 
             // PERSEDIAAN REPOSITORY
             services.AddScoped<MasterProductRepo>();
@@ -90,6 +91,9 @@ namespace trinova_erp_backend.Config
             // USER 
             services.AddScoped<IMasterUserRepositories, MasterUserRepositories>();
             services.AddScoped<IMasterUserUsecase, MasterUserUsecase>();
+
+            // XGBOOST / SUPPLIER RISK
+            services.AddScoped<ISupplierRiskUsecase, SupplierRiskUsecase>();
 
 
 

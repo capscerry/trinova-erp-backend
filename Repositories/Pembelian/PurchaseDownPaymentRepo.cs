@@ -7,6 +7,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
 {
     public interface IPurchaseDownPaymentRepo
     {
+        Task<string> GenerateDPNumber();
+
         Task<int> InsertPurchaseDownPayment(
             PurchaseDownPayment model
         );
@@ -42,6 +44,29 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 ?? throw new InvalidOperationException(
                     "Database connection string is not configured."
                 );
+        }
+
+        public async Task<string> GenerateDPNumber()
+        {
+            // Use MAX on the numeric portion so the generated number is always
+            // strictly greater than every existing dp_number, preventing
+            // duplicate key errors from ghost rows.
+            const string query = @"
+                SELECT MAX(CAST(SUBSTRING(dp_number, 4, 10) AS BIGINT))
+                FROM purchase_down_payment
+                WHERE dp_number LIKE 'DP-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'";
+
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            using SqlCommand command = new SqlCommand(query, connection);
+
+            object? result = await command.ExecuteScalarAsync();
+
+            long nextNumber = 1;
+            if (result != null && result != DBNull.Value)
+                nextNumber = Convert.ToInt64(result) + 1;
+
+            return $"DP-{nextNumber:D10}";
         }
 
         public async Task<int>
@@ -148,6 +173,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 pdp.*,
                 po.po_number,
                 po.total_amount AS po_total,
+                po.transaction_name,
+                po.transaction_detail,
                 s.supplier_name
             FROM purchase_down_payment pdp
             LEFT JOIN purchase_order po
@@ -261,7 +288,17 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                                 reader.GetOrdinal(
                                                     "po_total"
                                                 )
-                                            )
+                                            ),
+
+                                    transaction_name =
+                                        reader["transaction_name"] == DBNull.Value
+                                            ? null
+                                            : reader["transaction_name"]?.ToString(),
+
+                                    transaction_detail =
+                                        reader["transaction_detail"] == DBNull.Value
+                                            ? null
+                                            : reader["transaction_detail"]?.ToString()
                                 };
 
                             response.Add(pdp);
@@ -300,7 +337,30 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 int id
             )
         {
-            throw new NotImplementedException();
+            const string query = @"
+                DELETE FROM purchase_down_payment
+                WHERE purchase_down_payment_id = @id";
+
+            try
+            {
+                using SqlConnection connection =
+                    new SqlConnection(_connectionString);
+
+                await connection.OpenAsync();
+
+                using SqlCommand command =
+                    new SqlCommand(query, connection);
+
+                command.Parameters.AddWithValue("@id", id);
+
+                int rows = await command.ExecuteNonQueryAsync();
+
+                return rows > 0;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

@@ -5,12 +5,16 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface IPurchaseDownPaymentUsecase
     {
+        Task<string> GetNextDPNumber();
+
         Task<int> InsertPurchaseDownPayment(
             PurchaseDownPayment model
         );
 
         Task<List<PurchaseDownPayment>>
             GetAllPurchaseDownPayment();
+
+        Task<bool> DeletePurchaseDownPayment(int id);
     }
 
     public class PurchaseDownPaymentUsecase
@@ -39,6 +43,12 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 supplierRepo;
         }
 
+        public async Task<string> GetNextDPNumber()
+        {
+            return await _purchaseDownPaymentRepo
+                .GenerateDPNumber();
+        }
+
         public async Task<int>
             InsertPurchaseDownPayment(
                 PurchaseDownPayment model
@@ -65,12 +75,9 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
             model.status = "Paid";
 
-            string today =
-                DateTime.Now
-                    .ToString("yyyyMMdd");
-
             model.dp_number =
-                $"PDP-{today}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
+                await _purchaseDownPaymentRepo
+                    .GenerateDPNumber();
 
             var result =
                 await _purchaseDownPaymentRepo
@@ -87,6 +94,13 @@ namespace trinova_erp_backend.Usecase.Pembelian
             return await
                 _purchaseDownPaymentRepo
                     .GetAllPurchaseDownPayment();
+        }
+
+        public async Task<bool> DeletePurchaseDownPayment(int id)
+        {
+            return await
+                _purchaseDownPaymentRepo
+                    .DeletePurchaseDownPayment(id);
         }
     }
 }

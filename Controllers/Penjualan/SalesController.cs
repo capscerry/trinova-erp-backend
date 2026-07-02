@@ -337,6 +337,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
             });
         }
 
+<<<<<<< HEAD
         [HttpGet("/api/sales-order/by-customer/{customerId}")]
         public async Task<IActionResult> GetSalesOrderByCustId(int customerId)
         {
@@ -373,6 +374,31 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 success = true,
                 message = "Data Sales Order Berhasil diambil",
                 data
+=======
+        [HttpGet("/api/sales-order/next-number")]
+        public async Task<IActionResult> GetNextSONumber()
+        {
+            var number = await _salesOrderUsecase.GetNextSONumber();
+
+            return Ok(new
+            {
+                status = true,
+                so_number = number,
+                next_number = number
+            });
+        }
+
+        [HttpGet("/api/SalesQuotation/next-number")]
+        public async Task<IActionResult> GetNextSQNumber()
+        {
+            var number = await _salesQuotationUsecase.GetNextSQNumber();
+
+            return Ok(new
+            {
+                status = true,
+                quotation_number = number,
+                next_number = number
+>>>>>>> origin/feature/purchasing-update
             });
         }
 

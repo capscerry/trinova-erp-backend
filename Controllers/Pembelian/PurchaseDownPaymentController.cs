@@ -61,6 +61,20 @@ namespace trinova_erp_backend.Controllers.Pembelian
             );
         }
 
+        [HttpGet("/api/purchase-down-payment/next-number")]
+        public async Task<IActionResult> GetNextDPNumber()
+        {
+            var number = await _purchaseDownPaymentUsecase
+                .GetNextDPNumber();
+
+            return Ok(new
+            {
+                status = true,
+                dp_number = number,
+                next_number = number
+            });
+        }
+
         [HttpGet("/api/purchase-down-payment")]
         public async Task<IActionResult>
             GetAllPurchaseDownPayment()
@@ -74,6 +88,34 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 {
                     status = true,
                     data = result
+                }
+            );
+        }
+
+        [HttpDelete("/api/purchase-down-payment/{id}")]
+        public async Task<IActionResult>
+            DeletePurchaseDownPayment(int id)
+        {
+            var result =
+                await _purchaseDownPaymentUsecase
+                    .DeletePurchaseDownPayment(id);
+
+            if (result)
+            {
+                return Ok(
+                    new
+                    {
+                        status = true,
+                        message = "Delete Successfully"
+                    }
+                );
+            }
+
+            return NotFound(
+                new
+                {
+                    status = false,
+                    message = "Down Payment not found"
                 }
             );
         }

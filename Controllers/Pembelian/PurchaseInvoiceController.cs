@@ -52,6 +52,20 @@ namespace trinova_erp_backend.Controllers.Pembelian
             }
         }
 
+        [HttpGet("/api/purchase-invoice/next-number")]
+        public async Task<IActionResult> GetNextInvoiceNumber()
+        {
+            var number = await _purchaseInvoiceUsecase
+                .GetNextInvoiceNumber();
+
+            return Ok(new
+            {
+                status = true,
+                invoice_number = number,
+                next_number = number
+            });
+        }
+
         [HttpGet("/api/purchase-invoice")]
         public async Task<IActionResult>
             GetAllPurchaseInvoice()
@@ -65,6 +79,38 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 status = true,
                 data = result
             });
+        }
+
+        /// <summary>
+        /// Returns all unpaid / partially-paid invoices for a specific supplier
+        /// with their real-time outstanding_amount. Call this when opening the
+        /// Purchase Return settlement dialog so the dropdown always reflects
+        /// the current balance rather than a cached value.
+        /// </summary>
+        [HttpGet("/api/purchase-invoice/unpaid/{supplierId}")]
+        public async Task<IActionResult>
+            GetUnpaidInvoicesBySupplier(int supplierId)
+        {
+            try
+            {
+                var result =
+                    await _purchaseInvoiceUsecase
+                        .GetUnpaidInvoicesBySupplier(supplierId);
+
+                return Ok(new
+                {
+                    status = true,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
         }
 
         [HttpPut("/api/purchase-invoice/{id}")]

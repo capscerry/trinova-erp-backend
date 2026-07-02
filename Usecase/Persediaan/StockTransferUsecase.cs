@@ -17,6 +17,11 @@ namespace trinova_erp_backend.Usecase.Persediaan
             _movementRepo = movementRepo;
         }
 
+        public async Task<string> GetNextTRFNumber()
+        {
+            return await _movementRepo.GenerateTRFNumber();
+        }
+
         public async Task Transfer(
             StockTransferRequest request)
         {

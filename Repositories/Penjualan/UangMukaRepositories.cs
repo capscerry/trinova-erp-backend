@@ -9,6 +9,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
 {
     public interface IUangMukaRepositories
     {
+        Task<string> GenerateNoFaktur();
+
         Task<bool> InsertUangMuka(UangMuka data);
         Task<UangMuka> GetUangMukaById(int id);
         Task MarkAsReceived(int id, SqlConnection connection, SqlTransaction transaction);
@@ -23,6 +25,36 @@ namespace trinova_erp_backend.Repositories.Penjualan
         public UangMukaRepositories(IOptions<DatabaseConnection> options)
         {
             _connectionString = options.Value.SQLServer!;
+        }
+
+        public async Task<string> GenerateNoFaktur()
+        {
+            const string query = @"
+                SELECT TOP 1 NoFaktur
+                FROM uang_muka
+                ORDER BY Id DESC";
+
+            using var connection =
+                new SqlConnection(_connectionString);
+
+            await connection.OpenAsync();
+
+            string? lastFaktur =
+                await connection
+                    .ExecuteScalarAsync<string>(query);
+
+            int nextNumber = 1;
+
+            if (!string.IsNullOrEmpty(lastFaktur))
+            {
+                string numericPart =
+                    lastFaktur.Replace("UM", "");
+
+                if (int.TryParse(numericPart, out int parsed))
+                    nextNumber = parsed + 1;
+            }
+
+            return $"UM{nextNumber:D6}";
         }
 
         public async Task<IEnumerable<UangMuka>> GetAllUangMuka()

@@ -11,7 +11,16 @@ namespace trinova_erp_backend.Repositories.Penjualan
 {
     public interface ISalesOrderRepositories
     {
+<<<<<<< HEAD
         Task<SalesOrderHeader> UpsertSalesOrderHeader(
+=======
+        Task<string> GenerateSONumber(
+            IDbConnection connection,
+            IDbTransaction tx
+        );
+
+        Task<SalesOrderHeader> InsertSalesOrderHeader(
+>>>>>>> origin/feature/purchasing-update
             SalesOrderHeader header,
             IDbConnection connection,
             IDbTransaction tx
@@ -39,11 +48,46 @@ namespace trinova_erp_backend.Repositories.Penjualan
             _connectionString = options.Value.SQLServer;
         }
 
+<<<<<<< HEAD
         public async Task<SalesOrderHeader> UpsertSalesOrderHeader(
     SalesOrderHeader header,
     IDbConnection connection,
     IDbTransaction tx
 )
+=======
+        public async Task<string> GenerateSONumber(
+            IDbConnection connection,
+            IDbTransaction tx
+        )
+        {
+            string query = @"
+                SELECT TOP 1 so_number
+                FROM sales_order
+                ORDER BY order_id DESC";
+
+            string? lastSo = await connection
+                .ExecuteScalarAsync<string>(query, transaction: tx);
+
+            int nextNumber = 1;
+
+            if (!string.IsNullOrEmpty(lastSo))
+            {
+                string numericPart =
+                    lastSo.Replace("SO", "");
+
+                if (int.TryParse(numericPart, out int parsed))
+                    nextNumber = parsed + 1;
+            }
+
+            return $"SO{nextNumber:D6}";
+        }
+
+        public async Task<SalesOrderHeader> InsertSalesOrderHeader(
+            SalesOrderHeader header,
+            IDbConnection connection,
+            IDbTransaction tx
+        )
+>>>>>>> origin/feature/purchasing-update
         {
             try
             {

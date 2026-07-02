@@ -17,7 +17,17 @@ namespace trinova_erp_backend.Models
 
         public string? status { get; set; }
 
+        public decimal? tax_percentage { get; set; }
+
+        public decimal? tax_amount { get; set; }
+
         public decimal? total_amount { get; set; }
+
+        public string? transaction_name { get; set; }
+
+        public string? transaction_detail { get; set; }
+
+        public DateTime? expected_date { get; set; }
 
         public DateTime? created_at { get; set; }
 

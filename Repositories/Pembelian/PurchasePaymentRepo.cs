@@ -7,9 +7,11 @@ namespace trinova_erp_backend.Repositories.Pembelian
 {
 public interface IPurchasePaymentRepo
 {
-Task<int> InsertPurchasePayment(
-PurchasePayment model
-);
+    Task<string> GeneratePaymentNumber();
+
+    Task<int> InsertPurchasePayment(
+    PurchasePayment model
+    );
 
     Task<List<PurchasePayment>>
         GetAllPurchasePayment();
@@ -33,6 +35,45 @@ public class PurchasePaymentRepo
             ?? throw new InvalidOperationException(
                 "Database connection string is not configured."
             );
+    }
+
+    // GENERATE PAYMENT NUMBER
+    public async Task<string> GeneratePaymentNumber()
+    {
+        // Query only rows that already follow the canonical PAY-NNNNNNNNNN
+        // format so that leftover legacy numbers can never corrupt the counter.
+        const string query = @"
+            SELECT TOP 1 payment_number
+            FROM purchase_payment
+            WHERE payment_number LIKE 'PAY-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+            ORDER BY purchase_payment_id DESC";
+
+        using SqlConnection connection =
+            new SqlConnection(_connectionString);
+
+        await connection.OpenAsync();
+
+        using SqlCommand command =
+            new SqlCommand(query, connection);
+
+        object? result =
+            await command.ExecuteScalarAsync();
+
+        int nextNumber = 1;
+
+        if (result != null && result != DBNull.Value)
+        {
+            string lastPay =
+                result.ToString() ?? "PAY-0000000000";
+
+            // Strip the "PAY-" prefix (always 4 chars) before parsing
+            string numericPart = lastPay.Substring(4);
+
+            if (int.TryParse(numericPart, out int parsed))
+                nextNumber = parsed + 1;
+        }
+
+        return $"PAY-{nextNumber:D10}";
     }
 
     // INSERT
@@ -133,13 +174,23 @@ public class PurchasePaymentRepo
         SELECT
             pp.*,
             pi.invoice_number,
-            ms.supplier_name
+            ms.supplier_name,
+            po.transaction_name,
+            po.transaction_detail
 
         FROM purchase_payment pp
 
         LEFT JOIN purchase_invoice pi
             ON pp.purchase_invoice_id =
             pi.purchase_invoice_id
+
+        LEFT JOIN goods_receipt gr
+            ON pi.goods_receipt_id =
+            gr.goods_receipt_id
+
+        LEFT JOIN purchase_order po
+            ON gr.purchase_order_id =
+            po.purchase_order_id
 
         LEFT JOIN master_supplier ms
             ON pi.supplier_id =
@@ -209,7 +260,17 @@ public class PurchasePaymentRepo
 
                             supplier_name =
                                 reader["supplier_name"]
-                                    ?.ToString()
+                                    ?.ToString(),
+
+                            transaction_name =
+                                reader["transaction_name"] == DBNull.Value
+                                    ? null
+                                    : reader["transaction_name"]?.ToString(),
+
+                            transaction_detail =
+                                reader["transaction_detail"] == DBNull.Value
+                                    ? null
+                                    : reader["transaction_detail"]?.ToString()
                         }
                     );
                 }

@@ -20,6 +20,10 @@ namespace trinova_erp_backend.Models
 
         public decimal? price { get; set; }
 
+        public decimal? tax_percentage { get; set; }
+
+        public decimal? tax_amount { get; set; }
+
         public decimal? subtotal { get; set; }
 
         [ForeignKey("purchase_order_id")]

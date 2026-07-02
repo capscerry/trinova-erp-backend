@@ -50,6 +50,20 @@ namespace trinova_erp_backend.Controllers.Persediaan
             return Ok(result);
         }
 
+        [HttpGet("next-number")]
+        public async Task<IActionResult> GetNextPRNumber()
+        {
+            var number = await _purchaseRequisitionUsecase
+                .GetNextPRNumber();
+
+            return Ok(new
+            {
+                status = true,
+                pr_number = number,
+                next_number = number
+            });
+        }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(
             int id,

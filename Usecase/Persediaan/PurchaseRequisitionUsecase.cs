@@ -14,6 +14,12 @@ namespace trinova_erp_backend.Usecase.Persediaan
             _purchaseRequisitionRepo = purchaseRequisitionRepo;
         }
 
+        public async Task<string> GetNextPRNumber()
+        {
+            return await _purchaseRequisitionRepo
+                .GeneratePrNumber();
+        }
+
         public async Task<List<PurchaseRequisition>> GetAllAsync()
         {
             return await _purchaseRequisitionRepo.GetAllAsync();
