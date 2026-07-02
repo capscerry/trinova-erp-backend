@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using trinova_erp_backend.Models.Persediaan;
 using trinova_erp_backend.Usecase.Persediaan;
@@ -19,6 +20,7 @@ namespace trinova_erp_backend.Controllers.Persediaan
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
             var result =
@@ -28,6 +30,7 @@ namespace trinova_erp_backend.Controllers.Persediaan
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetById(int id)
         {
             var result =

@@ -239,27 +239,6 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         PaymentApplied = paymentApplied
                     },
                     transaction);
-                const string updateSalesOrderStatusQuery = @"
-                    UPDATE so
-                    SET so.status = CASE
-                        WHEN EXISTS (
-                            SELECT 1
-                            FROM sales_invoice si2
-                            WHERE si2.sales_order_id = so.order_id
-                              AND ISNULL(si2.remaining_amount, 0) > 0
-                              AND ISNULL(si2.status, 'Issued') NOT IN ('Cancelled', 'Dibatalkan')
-                        ) THEN 'Partially Paid'
-                        ELSE 'Completed'
-                    END
-                    FROM sales_order so
-                    INNER JOIN sales_invoice si ON si.sales_order_id = so.order_id
-                    WHERE si.id = @InvoiceId
-                      AND si.sales_order_id IS NOT NULL;";
-
-                await connection.ExecuteAsync(
-                    updateSalesOrderStatusQuery,
-                    new { InvoiceId = invoice.Id },
-                    transaction);
             }
         }
 
@@ -270,7 +249,3 @@ namespace trinova_erp_backend.Repositories.Penjualan
         }
     }
 }
-
-
-
-

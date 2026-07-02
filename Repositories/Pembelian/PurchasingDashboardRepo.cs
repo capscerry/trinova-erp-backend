@@ -208,10 +208,10 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 reader["completed_po"]
                             );
 
-                            int score =
-                                (totalPo * 10)
-                                + ((int)totalAmount / 1000000)
-                                + (completedPo * 20);
+                            decimal score =
+                                (totalPo * 10m)
+                                + (totalAmount / 1000000m)
+                                + (completedPo * 20m);
 
                             supplierScoring.Add(
                                 new
@@ -219,10 +219,10 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                     supplier_name = reader["supplier_name"]
                                         .ToString(),
 
-                                    score = score,
+                                    score = Math.Round(score, 2),
 
                                     recommendation =
-                                        score >= 80
+                                        score >= 80m
                                         ? "Recommended Supplier"
                                         : "Average Supplier"
                                 }

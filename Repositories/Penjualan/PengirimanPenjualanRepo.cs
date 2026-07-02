@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
@@ -184,4 +184,3 @@ namespace trinova_erp_backend.Repositories.Penjualan
  
     }
 }
-

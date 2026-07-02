@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using trinova_erp_backend.Models.Persediaan;
 using trinova_erp_backend.Usecase.Persediaan;
@@ -34,6 +35,7 @@ namespace trinova_erp_backend.Controllers.Persediaan
         }
 
         [HttpGet("/api/master-warehouse")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllMasterWarehouse()
         {
             var result = await _masterWarehouseUsecase

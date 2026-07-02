@@ -94,18 +94,5 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 });
             }
         }
-
-        [HttpGet("/api/uang-muka/next-number")]
-        public async Task<IActionResult> GetNextNoFaktur()
-        {
-            var number = await _uangMukaUsecase.GetNextNoFaktur();
-
-            return Ok(new
-            {
-                status = true,
-                no_faktur = number,
-                next_number = number
-            });
-        }
     }
 }

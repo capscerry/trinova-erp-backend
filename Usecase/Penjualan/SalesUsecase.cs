@@ -18,7 +18,6 @@ namespace trinova_erp_backend.Usecase.Penjualan
     }
     
     public interface ISalesQuotationUsecase {
-        Task<string> GetNextSQNumber();
         Task<string> InsertSalesQuotation(SalesQuotation quotation);
         Task<List<QuotationHeaderDTO>> GetAllQuotations();
         Task<List<QuotationHeaderDTO>> GetAllQuotationById(int customerId);
@@ -28,7 +27,6 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
     public interface ISalesOrderUsecase
     {
-        Task<string> GetNextSONumber();
         Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model);
         Task<List<SalesOrderHeader>> GetAllSalesOrder();
         Task<List<SalesOrderHeader>> GetSalesOrderByCustomerId(int customerId);
@@ -49,14 +47,6 @@ namespace trinova_erp_backend.Usecase.Penjualan
             _salesQuotationRepo = salesQuotationRepo;
             _activityLogService = activityLogService;
         }
-        public async Task<string> GetNextSQNumber()
-        {
-            using var conn = new SqlConnection(_connectionString);
-            await conn.OpenAsync();
-            using var tx = conn.BeginTransaction();
-            return await _salesQuotationRepo.GenerateSQNumber(conn, tx);
-        }
-
         public async Task<List<QuotationHeaderDTO>> GetAllQuotations()
         {
             var result = await _salesQuotationRepo.GetQuotationHeaders();
@@ -76,7 +66,6 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
             return await _salesQuotationRepo.GetQuotationHeaderDetailById(quotationId);
         }
-
         public async Task<List<QuotationDetailDTO>> GetAllQuotationDetailById(int quotationId)
         {
             var result = await _salesQuotationRepo.GetQuotationDetailById(quotationId);
@@ -91,16 +80,12 @@ namespace trinova_erp_backend.Usecase.Penjualan
          
             try
             {
-                // AUTO GENERATE QUOTATION NUMBER
-                string sqNumber =
-                    await _salesQuotationRepo
-                        .GenerateSQNumber(conn, tx);
 
                 var header = new QuotationHeader
                 {
                     QuotationId = quotation?.Id ?? 0,
                     CustomerId = quotation.CustomerId,
-                    QuotationNumber = sqNumber,
+                    QuotationNumber = quotation.QuotationNumber,
                     QuotationDate = quotation.QuotationDate,
                     Address = quotation.Address,
                     Notes = quotation.Notes,
@@ -210,14 +195,6 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
         }
 
-        public async Task<string> GetNextSONumber()
-        {
-            using var connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync();
-            using var tx = connection.BeginTransaction();
-            return await _salesOrderRepo.GenerateSONumber(connection, tx);
-        }
-
         public async Task<List<SalesOrderHeader>> GetSalesOrderByCustomerId(int customerId)
         {
             var result = await _salesOrderRepo.GetSalesOrderByCustomerId(customerId);
@@ -233,13 +210,6 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
             try
             {
-                // AUTO GENERATE SO NUMBER
-                model.Header.SoNumber =
-                    await _salesOrderRepo.GenerateSONumber(
-                        connection,
-                        tx
-                    );
-
                 // Insert header dan ambil hasil header yang sudah ada Id
                 var insertedHeader = await _salesOrderRepo.UpsertSalesOrderHeader(
                     model.Header,
