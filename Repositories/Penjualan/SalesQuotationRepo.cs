@@ -10,7 +10,11 @@ namespace trinova_erp_backend.Repositories.Penjualan
 {
     public interface ISalesQuotationRepo
     {
-<<<<<<< HEAD
+        Task<string> GenerateSQNumber(
+            SqlConnection conn,
+            SqlTransaction transaction
+        );
+
         Task<List<QuotationHeaderDTO>> GetQuotationHeaders();
         Task<List<QuotationHeaderDTO>> GetQuotationHeaderById(int customerId);
         Task<List<QuotationDetailDTO>> GetQuotationDetailById(int quotationId);
@@ -18,14 +22,6 @@ namespace trinova_erp_backend.Repositories.Penjualan
         Task<QuotationHeaderDetailDTO?> GetQuotationHeaderDetailById(int quotationId);
 
         Task<int> UpsertQuotationHeader(
-=======
-        Task<string> GenerateSQNumber(
-            SqlConnection conn,
-            SqlTransaction transaction
-        );
-
-        Task<int> InsertQuotationHeader(
->>>>>>> origin/feature/purchasing-update
             QuotationHeader header,
             SqlConnection conn,
             SqlTransaction transaction
@@ -48,9 +44,6 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 ?? throw new InvalidOperationException("Database connection string is not configured.");
         }
 
-<<<<<<< HEAD
-        public async Task<List<QuotationHeaderDTO>> GetQuotationHeaders()
-=======
         public async Task<string> GenerateSQNumber(
             SqlConnection conn,
             SqlTransaction transaction
@@ -59,7 +52,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
             string query = @"
                 SELECT TOP 1 quotation_number
                 FROM sales_quotation
-                ORDER BY id DESC";
+                ORDER BY quotation_id DESC";
 
             string? lastSq = await conn
                 .ExecuteScalarAsync<string>(
@@ -81,12 +74,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
             return $"SQ{nextNumber:D6}";
         }
 
-        public async Task<int> InsertQuotationHeader(
-            QuotationHeader header,
-            SqlConnection conn,
-            SqlTransaction transaction
-        )
->>>>>>> origin/feature/purchasing-update
+        public async Task<List<QuotationHeaderDTO>> GetQuotationHeaders()
         {
             string query = @"SELECT 
                             sq.quotation_id    AS Id,

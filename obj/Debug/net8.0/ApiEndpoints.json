@@ -183,6 +183,26 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.DataFixController",
+    "Method": "DeleteDuplicateCredits",
+    "RelativePath": "api/DataFix/duplicate-credits",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.DataFixController",
+    "Method": "PreviewDuplicateCredits",
+    "RelativePath": "api/DataFix/preview-duplicate-credits",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.DeliveryOrderController",
     "Method": "InsertDeliveryOrder",
     "RelativePath": "api/delivery-order",
@@ -293,6 +313,26 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.GoodsReceiptController",
+    "Method": "GetNextGRNumber",
+    "RelativePath": "api/goods-receipt/next-number",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.GoodsReceiptController",
+    "Method": "GetAllWithoutInvoice",
+    "RelativePath": "api/goods-receipt/without-invoice",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesController",
     "Method": "GetQuotationHeaderDetailById",
     "RelativePath": "api/header-detail/{quotationId}",
@@ -329,6 +369,59 @@
       {
         "Name": "stock",
         "Type": "trinova_erp_backend.Models.Persediaan.InventoryStock",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.InventoryStockController",
+    "Method": "GetById",
+    "RelativePath": "api/InventoryStock/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.InventoryStockController",
+    "Method": "Update",
+    "RelativePath": "api/InventoryStock/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "stock",
+        "Type": "trinova_erp_backend.Models.Persediaan.InventoryStock",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.InventoryStockController",
+    "Method": "Delete",
+    "RelativePath": "api/InventoryStock/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
         "IsRequired": true
       }
     ],
@@ -676,6 +769,32 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseDownPaymentController",
+    "Method": "DeletePurchaseDownPayment",
+    "RelativePath": "api/purchase-down-payment/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseDownPaymentController",
+    "Method": "GetNextDPNumber",
+    "RelativePath": "api/purchase-down-payment/next-number",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseInvoiceController",
     "Method": "InsertPurchaseInvoice",
     "RelativePath": "api/purchase-invoice",
@@ -732,6 +851,32 @@
     "Parameters": [
       {
         "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseInvoiceController",
+    "Method": "GetNextInvoiceNumber",
+    "RelativePath": "api/purchase-invoice/next-number",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseInvoiceController",
+    "Method": "GetUnpaidInvoicesBySupplier",
+    "RelativePath": "api/purchase-invoice/unpaid/{supplierId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "supplierId",
         "Type": "System.Int32",
         "IsRequired": true
       }
@@ -865,6 +1010,69 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseOrderController",
+    "Method": "ApprovePurchaseOrder",
+    "RelativePath": "api/purchase-order/{id}/approve",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseOrderController",
+    "Method": "ApplyDeduction",
+    "RelativePath": "api/purchase-order/{id}/deduction",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "trinova_erp_backend.Controllers.Pembelian.PODeductionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseOrderController",
+    "Method": "UnapprovePurchaseOrder",
+    "RelativePath": "api/purchase-order/{id}/unapprove",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseOrderController",
+    "Method": "GetNextPONumber",
+    "RelativePath": "api/purchase-order/next-number",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchasePaymentController",
     "Method": "InsertPurchasePayment",
     "RelativePath": "api/purchase-payment",
@@ -904,6 +1112,105 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchasePaymentController",
+    "Method": "GetNextPaymentNumber",
+    "RelativePath": "api/purchase-payment/next-number",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseReturnController",
+    "Method": "InsertPurchaseReturn",
+    "RelativePath": "api/purchase-return",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "purchaseReturn",
+        "Type": "trinova_erp_backend.Models.PurchaseReturn",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseReturnController",
+    "Method": "GetAllPurchaseReturn",
+    "RelativePath": "api/purchase-return",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseReturnController",
+    "Method": "UpdatePurchaseReturn",
+    "RelativePath": "api/purchase-return/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "trinova_erp_backend.Controllers.Pembelian.PurchaseReturnUpdateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseReturnController",
+    "Method": "DeletePurchaseReturn",
+    "RelativePath": "api/purchase-return/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseReturnController",
+    "Method": "GetUnpaidInvoicesForReturn",
+    "RelativePath": "api/purchase-return/{id}/invoices",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.PurchaseReturnController",
+    "Method": "GetNextReturnNumber",
+    "RelativePath": "api/purchase-return/next-number",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {
@@ -983,6 +1290,16 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.PurchaseRequisitionController",
+    "Method": "GetNextPRNumber",
+    "RelativePath": "api/PurchaseRequisition/next-number",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {
@@ -1279,6 +1596,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesController",
+    "Method": "GetNextSONumber",
+    "RelativePath": "api/sales-order/next-number",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Penjualan.PenerimaanPenjualanController",
     "Method": "GetAllSalesReceipt",
     "RelativePath": "api/sales-receipt",
@@ -1373,6 +1700,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.SalesController",
+    "Method": "GetNextSQNumber",
+    "RelativePath": "api/SalesQuotation/next-number",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.SecurityActivityController",
     "Method": "GetSecurityActivity",
     "RelativePath": "api/security-activity",
@@ -1444,6 +1781,16 @@
     "ContainingType": "trinova_erp_backend.Controllers.Persediaan.StockTransferController",
     "Method": "GetAll",
     "RelativePath": "api/StockTransfer",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Persediaan.StockTransferController",
+    "Method": "GetNextTRFNumber",
+    "RelativePath": "api/StockTransfer/next-number",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -1571,6 +1918,144 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierProductController",
+    "Method": "RestoreStock",
+    "RelativePath": "api/supplier-product/restore-stock",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "trinova_erp_backend.Controllers.Pembelian.RestoreStockRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierRiskController",
+    "Method": "TrainAndEvaluateAll",
+    "RelativePath": "api/supplier-risk/evaluate/all",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "trinova_erp_backend.Controllers.Pembelian.TrainAndEvaluateRequest",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierRiskController",
+    "Method": "PredictSupplierRisk",
+    "RelativePath": "api/supplier-risk/predict/{supplierId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "supplierId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierRiskController",
+    "Method": "PredictAllSuppliers",
+    "RelativePath": "api/supplier-risk/predict/all",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierRiskController",
+    "Method": "RankWithAhpTopsis",
+    "RelativePath": "api/supplier-risk/rank/ahp-topsis",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "trinova_erp_backend.Models.DTO.RankRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierRiskController",
+    "Method": "TrainFromServerCsv",
+    "RelativePath": "api/supplier-risk/train",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "trinova_erp_backend.Controllers.Pembelian.TrainFromCsvPathRequest",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierRiskController",
+    "Method": "TrainFromCsvUpload",
+    "RelativePath": "api/supplier-risk/train/from-csv-upload",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "file",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierRiskController",
+    "Method": "TrainFromErpData",
+    "RelativePath": "api/supplier-risk/train/from-erp",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "trinova_erp_backend.Controllers.Pembelian.TrainFromErpRequest",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierRiskController",
+    "Method": "TrainFromRows",
+    "RelativePath": "api/supplier-risk/train/from-rows",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "trinova_erp_backend.Models.DTO.SupplierRiskTrainFromRowsRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierController",
     "Method": "UpdateSupplier",
     "RelativePath": "api/supplier/{id}",
@@ -1605,6 +2090,26 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierController",
+    "Method": "MigrateSupplierCodes",
+    "RelativePath": "api/supplier/migrate-codes",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Pembelian.SupplierController",
+    "Method": "GetNextSupplierCode",
+    "RelativePath": "api/supplier/next-code",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {
@@ -1663,6 +2168,16 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "trinova_erp_backend.Controllers.Penjualan.UangMukaController",
+    "Method": "GetNextNoFaktur",
+    "RelativePath": "api/uang-muka/next-number",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {

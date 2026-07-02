@@ -11,16 +11,12 @@ namespace trinova_erp_backend.Repositories.Penjualan
 {
     public interface ISalesOrderRepositories
     {
-<<<<<<< HEAD
-        Task<SalesOrderHeader> UpsertSalesOrderHeader(
-=======
         Task<string> GenerateSONumber(
             IDbConnection connection,
             IDbTransaction tx
         );
 
-        Task<SalesOrderHeader> InsertSalesOrderHeader(
->>>>>>> origin/feature/purchasing-update
+        Task<SalesOrderHeader> UpsertSalesOrderHeader(
             SalesOrderHeader header,
             IDbConnection connection,
             IDbTransaction tx
@@ -48,13 +44,6 @@ namespace trinova_erp_backend.Repositories.Penjualan
             _connectionString = options.Value.SQLServer;
         }
 
-<<<<<<< HEAD
-        public async Task<SalesOrderHeader> UpsertSalesOrderHeader(
-    SalesOrderHeader header,
-    IDbConnection connection,
-    IDbTransaction tx
-)
-=======
         public async Task<string> GenerateSONumber(
             IDbConnection connection,
             IDbTransaction tx
@@ -82,12 +71,11 @@ namespace trinova_erp_backend.Repositories.Penjualan
             return $"SO{nextNumber:D6}";
         }
 
-        public async Task<SalesOrderHeader> InsertSalesOrderHeader(
+        public async Task<SalesOrderHeader> UpsertSalesOrderHeader(
             SalesOrderHeader header,
             IDbConnection connection,
             IDbTransaction tx
         )
->>>>>>> origin/feature/purchasing-update
         {
             try
             {
@@ -182,7 +170,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 {
                     const string updateQuotationStatusQuery = @"
                         UPDATE sales_quotation
-                        SET status = 'Approved'
+                        SET status = 'Processed'
                         WHERE quotation_id = @QuotationId;";
 
                     await connection.ExecuteAsync(
@@ -303,7 +291,18 @@ namespace trinova_erp_backend.Repositories.Penjualan
                      so.is_tax_included AS IsTaxIncluded,
                      so.address         AS Address,
                      so.notes           AS Notes,
-                     ISNULL(so.status, 'Draft') AS Status
+                     CASE
+                         WHEN CAST(so.tanggal_kirim AS date) < CAST(GETDATE() AS date)
+                              AND ISNULL(so.status, 'Draft') IN ('Draft', 'Approved', 'Confirmed', 'Processing')
+                              AND NOT EXISTS (
+                                  SELECT 1
+                                  FROM delivery_order_header doh
+                                  WHERE doh.so_id = so.order_id
+                                    AND ISNULL(doh.status, 'Draft') <> 'Cancelled'
+                              )
+                         THEN 'Delivery Overdue'
+                         ELSE ISNULL(so.status, 'Draft')
+                     END AS Status
                  FROM sales_order so JOIN master_customer mc  ON so.customer_id  = mc.customer_id 
                  ORDER BY order_id DESC;
             ";
@@ -331,7 +330,18 @@ namespace trinova_erp_backend.Repositories.Penjualan
                      so.is_tax_included AS IsTaxIncluded,
                      so.address         AS Address,
                      so.notes           AS Notes,
-                     ISNULL(so.status, 'Draft') AS Status
+                     CASE
+                         WHEN CAST(so.tanggal_kirim AS date) < CAST(GETDATE() AS date)
+                              AND ISNULL(so.status, 'Draft') IN ('Draft', 'Approved', 'Confirmed', 'Processing')
+                              AND NOT EXISTS (
+                                  SELECT 1
+                                  FROM delivery_order_header doh
+                                  WHERE doh.so_id = so.order_id
+                                    AND ISNULL(doh.status, 'Draft') <> 'Cancelled'
+                              )
+                         THEN 'Delivery Overdue'
+                         ELSE ISNULL(so.status, 'Draft')
+                     END AS Status
                  FROM sales_order so JOIN master_customer mc  ON so.customer_id  = mc.customer_id 
                  WHERE mc.customer_id = @CustomerId
                  ORDER BY order_id DESC";
@@ -369,7 +379,18 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 so.tax_total AS TaxTotal,
                 so.is_taxable AS IsTaxAble,
                 so.notes AS Keterangan,
-                ISNULL(so.status, 'Draft') AS Status,
+                CASE
+                         WHEN CAST(so.tanggal_kirim AS date) < CAST(GETDATE() AS date)
+                              AND ISNULL(so.status, 'Draft') IN ('Draft', 'Approved', 'Confirmed', 'Processing')
+                              AND NOT EXISTS (
+                                  SELECT 1
+                                  FROM delivery_order_header doh
+                                  WHERE doh.so_id = so.order_id
+                                    AND ISNULL(doh.status, 'Draft') <> 'Cancelled'
+                              )
+                         THEN 'Delivery Overdue'
+                         ELSE ISNULL(so.status, 'Draft')
+                     END AS Status,
                 so.quotation_id AS QuotationId,
                 sq.quotation_number AS QuotationNumber
             FROM sales_order so
@@ -429,3 +450,4 @@ namespace trinova_erp_backend.Repositories.Penjualan
         }
     }
 }
+

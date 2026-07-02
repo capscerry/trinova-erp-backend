@@ -33,9 +33,7 @@ builder.Services.Configure<JwtSettings>(options =>
 
 
 builder.Services.AddApplicationServices();
-<<<<<<< HEAD
 builder.Services.AddMemoryCache();
-=======
 
 // Named HttpClient for the XGBoost FastAPI service.
 // Base URL is read from appsettings.json → ExternalServices:XGBoostApiUrl
@@ -47,7 +45,6 @@ builder.Services.AddHttpClient("XGBoost", (serviceProvider, client) =>
     client.Timeout     = TimeSpan.FromSeconds(60);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
->>>>>>> origin/feature/purchasing-update
 builder.Services.AddControllers();
 
 var jwtSecret = Env.GetString("JWT_SECRET_KEY");

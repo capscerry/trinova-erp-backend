@@ -8847,43 +8847,31 @@
     ]
   },
   "packageFolders": {
-<<<<<<< HEAD
     "C:\\Users\\aisya\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
-=======
-    "C:\\Users\\Davina\\.nuget\\packages\\": {}
->>>>>>> origin/feature/purchasing-update
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-<<<<<<< HEAD
       "projectUniqueName": "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\trinova-erp-backend.csproj",
       "projectName": "trinova-erp-backend",
       "projectPath": "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\trinova-erp-backend.csproj",
       "packagesPath": "C:\\Users\\aisya\\.nuget\\packages\\",
       "outputPath": "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\obj\\",
-=======
-      "projectUniqueName": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
-      "projectName": "trinova-erp-backend",
-      "projectPath": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
-      "packagesPath": "C:\\Users\\Davina\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\obj\\",
->>>>>>> origin/feature/purchasing-update
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-<<<<<<< HEAD
         "C:\\Users\\aisya\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
-=======
-        "C:\\Users\\Davina\\AppData\\Roaming\\NuGet\\NuGet.Config"
->>>>>>> origin/feature/purchasing-update
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -8896,7 +8884,6 @@
         "warnAsError": [
           "NU1605"
         ]
-<<<<<<< HEAD
       },
       "restoreAuditProperties": {
         "enableAudit": "true",
@@ -8904,9 +8891,6 @@
         "auditMode": "direct"
       },
       "SdkAnalysisLevel": "9.0.300"
-=======
-      }
->>>>>>> origin/feature/purchasing-update
     },
     "frameworks": {
       "net8.0": {
@@ -8974,11 +8958,7 @@
             "privateAssets": "all"
           }
         },
-<<<<<<< HEAD
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
-=======
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.128/PortableRuntimeIdentifierGraph.json"
->>>>>>> origin/feature/purchasing-update
       }
     }
   }

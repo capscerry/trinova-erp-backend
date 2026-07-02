@@ -1,4 +1,4 @@
-using Dapper;
+﻿using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
@@ -303,7 +303,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
             {
                 const string updateSalesOrderQuery = @"
                     UPDATE sales_order
-                    SET status = 'Completed'
+                    SET status = 'Invoiced'
                     WHERE order_id = @SalesOrderId;";
 
                 await connection.ExecuteAsync(
@@ -314,3 +314,4 @@ namespace trinova_erp_backend.Usecase.Penjualan
         }
     }
 }
+

@@ -248,6 +248,30 @@
         }
       }
     },
+    "/api/DataFix/preview-duplicate-credits": {
+      "get": {
+        "tags": [
+          "DataFix"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/DataFix/duplicate-credits": {
+      "delete": {
+        "tags": [
+          "DataFix"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/shipping-type": {
       "get": {
         "tags": [
@@ -379,6 +403,30 @@
         }
       }
     },
+    "/api/goods-receipt/next-number": {
+      "get": {
+        "tags": [
+          "GoodsReceipt"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/goods-receipt/without-invoice": {
+      "get": {
+        "tags": [
+          "GoodsReceipt"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/goods-receipt/{id}": {
       "delete": {
         "tags": [
@@ -467,6 +515,90 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/InventoryStock/{id}": {
+      "get": {
+        "tags": [
+          "InventoryStock"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "InventoryStock"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryStock"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryStock"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryStock"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "InventoryStock"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1200,6 +1332,41 @@
         }
       }
     },
+    "/api/purchase-down-payment/next-number": {
+      "get": {
+        "tags": [
+          "PurchaseDownPayment"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-down-payment/{id}": {
+      "delete": {
+        "tags": [
+          "PurchaseDownPayment"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/purchase-invoice": {
       "post": {
         "tags": [
@@ -1233,6 +1400,41 @@
       "get": {
         "tags": [
           "PurchaseInvoice"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-invoice/next-number": {
+      "get": {
+        "tags": [
+          "PurchaseInvoice"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-invoice/unpaid/{supplierId}": {
+      "get": {
+        "tags": [
+          "PurchaseInvoice"
+        ],
+        "parameters": [
+          {
+            "name": "supplierId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -1345,6 +1547,18 @@
         }
       }
     },
+    "/api/purchase-order/next-number": {
+      "get": {
+        "tags": [
+          "PurchaseOrder"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/purchase-order/{id}": {
       "put": {
         "tags": [
@@ -1401,6 +1615,94 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-order/{id}/approve": {
+      "patch": {
+        "tags": [
+          "PurchaseOrder"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-order/{id}/unapprove": {
+      "patch": {
+        "tags": [
+          "PurchaseOrder"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-order/{id}/deduction": {
+      "patch": {
+        "tags": [
+          "PurchaseOrder"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PODeductionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PODeductionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PODeductionRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1553,6 +1855,18 @@
         }
       }
     },
+    "/api/purchase-payment/next-number": {
+      "get": {
+        "tags": [
+          "PurchasePayment"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/purchase-payment/{id}": {
       "delete": {
         "tags": [
@@ -1682,6 +1996,157 @@
       "delete": {
         "tags": [
           "PurchaseRequisition"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/PurchaseRequisition/next-number": {
+      "get": {
+        "tags": [
+          "PurchaseRequisition"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-return/next-number": {
+      "get": {
+        "tags": [
+          "PurchaseReturn"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-return": {
+      "post": {
+        "tags": [
+          "PurchaseReturn"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseReturn"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseReturn"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseReturn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "PurchaseReturn"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-return/{id}/invoices": {
+      "get": {
+        "tags": [
+          "PurchaseReturn"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-return/{id}": {
+      "put": {
+        "tags": [
+          "PurchaseReturn"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseReturnUpdateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseReturnUpdateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseReturnUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "PurchaseReturn"
         ],
         "parameters": [
           {
@@ -2027,6 +2492,30 @@
               "format": "int32"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sales-order/next-number": {
+      "get": {
+        "tags": [
+          "Sales"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/SalesQuotation/next-number": {
+      "get": {
+        "tags": [
+          "Sales"
         ],
         "responses": {
           "200": {
@@ -2385,6 +2874,42 @@
         }
       }
     },
+    "/api/StockTransfer/next-number": {
+      "get": {
+        "tags": [
+          "StockTransfer"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier/migrate-codes": {
+      "post": {
+        "tags": [
+          "Supplier"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier/next-code": {
+      "get": {
+        "tags": [
+          "Supplier"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/supplier": {
       "post": {
         "tags": [
@@ -2593,6 +3118,37 @@
         }
       }
     },
+    "/api/supplier-product/restore-stock": {
+      "post": {
+        "tags": [
+          "SupplierProduct"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreStockRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreStockRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreStockRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/supplier-product": {
       "get": {
         "tags": [
@@ -2620,6 +3176,228 @@
               "format": "int32"
             }
           }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-risk/predict/{supplierId}": {
+      "get": {
+        "tags": [
+          "SupplierRisk"
+        ],
+        "parameters": [
+          {
+            "name": "supplierId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-risk/predict/all": {
+      "get": {
+        "tags": [
+          "SupplierRisk"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-risk/rank/ahp-topsis": {
+      "post": {
+        "tags": [
+          "SupplierRisk"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RankRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RankRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RankRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-risk/evaluate/all": {
+      "post": {
+        "tags": [
+          "SupplierRisk"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainAndEvaluateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainAndEvaluateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainAndEvaluateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-risk/train": {
+      "post": {
+        "tags": [
+          "SupplierRisk"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainFromCsvPathRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainFromCsvPathRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainFromCsvPathRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-risk/train/from-erp": {
+      "post": {
+        "tags": [
+          "SupplierRisk"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainFromErpRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainFromErpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainFromErpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-risk/train/from-rows": {
+      "post": {
+        "tags": [
+          "SupplierRisk"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierRiskTrainFromRowsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierRiskTrainFromRowsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierRiskTrainFromRowsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-risk/train/from-csv-upload": {
+      "post": {
+        "tags": [
+          "SupplierRisk"
         ],
         "requestBody": {
           "content": {
@@ -2711,10 +3489,39 @@
           }
         }
       }
+    },
+    "/api/uang-muka/next-number": {
+      "get": {
+        "tags": [
+          "UangMuka"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AhpMatrixRequest": {
+        "type": "object",
+        "properties": {
+          "matrix": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "double"
+              }
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CategoryCustomer": {
         "type": "object",
         "properties": {
@@ -2939,9 +3746,22 @@
             "type": "string",
             "nullable": true
           },
+          "po_number": {
+            "type": "string",
+            "nullable": true
+          },
           "total_amount": {
             "type": "number",
-            "format": "double"
+            "format": "double",
+            "nullable": true
+          },
+          "transaction_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "transaction_detail": {
+            "type": "string",
+            "nullable": true
           },
           "purchaseOrder": {
             "$ref": "#/components/schemas/PurchaseOrder"
@@ -3276,6 +4096,20 @@
         },
         "additionalProperties": false
       },
+      "PODeductionRequest": {
+        "type": "object",
+        "properties": {
+          "deduction_amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "purchase_return_id": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "PenerimaanPenjualan": {
         "type": "object",
         "properties": {
@@ -3456,6 +4290,14 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          },
+          "transaction_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "transaction_detail": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -3506,6 +4348,14 @@
           "outstanding_amount": {
             "type": "number",
             "format": "double"
+          },
+          "transaction_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "transaction_detail": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -3534,9 +4384,32 @@
             "type": "string",
             "nullable": true
           },
+          "tax_percentage": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "tax_amount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
           "total_amount": {
             "type": "number",
             "format": "double",
+            "nullable": true
+          },
+          "transaction_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "transaction_detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "expected_date": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           },
           "created_at": {
@@ -3574,6 +4447,16 @@
             "format": "int32"
           },
           "price": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "tax_percentage": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "tax_amount": {
             "type": "number",
             "format": "double",
             "nullable": true
@@ -3634,6 +4517,14 @@
             "nullable": true
           },
           "supplier_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "transaction_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "transaction_detail": {
             "type": "string",
             "nullable": true
           }
@@ -3728,6 +4619,126 @@
           },
           "product": {
             "$ref": "#/components/schemas/MasterProduct"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseReturn": {
+        "type": "object",
+        "properties": {
+          "purchase_return_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "goods_receipt_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "purchase_return_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "return_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "supplier_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "purchase_order_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "total_amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "settlement_option": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "closing_condition": {
+            "type": "string",
+            "nullable": true
+          },
+          "transaction_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "transaction_detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PurchaseReturnUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "closing_condition": {
+            "type": "string",
+            "nullable": true
+          },
+          "target_invoice_id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RankRequest": {
+        "type": "object",
+        "properties": {
+          "suppliers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierPredictResult"
+            },
+            "nullable": true
+          },
+          "ahp_matrix": {
+            "$ref": "#/components/schemas/AhpMatrixRequest"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RestoreStockRequest": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "supplier_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -4436,6 +5447,143 @@
           "update_by": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierPredictResult": {
+        "type": "object",
+        "properties": {
+          "supplier_id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "supplier_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplier_price": {
+            "type": "number",
+            "format": "double"
+          },
+          "lead_time_days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "claim_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "on_time_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "order_frequency": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "risk_level": {
+            "type": "string",
+            "nullable": true
+          },
+          "delay_probability": {
+            "type": "number",
+            "format": "double"
+          },
+          "late_probability": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierRiskTrainFromRowsRequest": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierRiskTrainingRow"
+            },
+            "nullable": true
+          },
+          "append_to_existing": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupplierRiskTrainingRow": {
+        "type": "object",
+        "properties": {
+          "supplier_id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "supplier_price": {
+            "type": "number",
+            "format": "double"
+          },
+          "lead_time_days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "claim_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "on_time_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "order_frequency": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "late_delivery": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TrainAndEvaluateRequest": {
+        "type": "object",
+        "properties": {
+          "append_erp_to_historical": {
+            "type": "boolean"
+          },
+          "ahp_matrix": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "double"
+              }
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TrainFromCsvPathRequest": {
+        "type": "object",
+        "properties": {
+          "csv_path": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TrainFromErpRequest": {
+        "type": "object",
+        "properties": {
+          "append_to_existing": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false

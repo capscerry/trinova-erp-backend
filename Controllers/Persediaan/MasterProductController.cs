@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using trinova_erp_backend.Models.Persediaan;
 using trinova_erp_backend.Usecase.Persediaan;
@@ -139,6 +140,7 @@ namespace trinova_erp_backend.Controllers.Persediaan
         }
 
         [HttpGet("/api/product-data")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetProductData()
         {
             try

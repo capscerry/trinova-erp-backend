@@ -143,7 +143,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
             {
                 const string updateSalesOrderStatusQuery = @"
                     UPDATE sales_order
-                    SET status = 'Approved'
+                    SET status = 'In Delivery'
                     WHERE order_id = @SalesOrderId;";
 
                 await connection.ExecuteAsync(
@@ -184,3 +184,4 @@ namespace trinova_erp_backend.Repositories.Penjualan
  
     }
 }
+
