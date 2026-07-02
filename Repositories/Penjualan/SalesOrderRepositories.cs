@@ -61,9 +61,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
 
             if (!string.IsNullOrEmpty(lastSo))
             {
-                string numericPart =
-                    lastSo.Replace("SO", "");
-
+                string numericPart = lastSo.Replace("SO", "");
                 if (int.TryParse(numericPart, out int parsed))
                     nextNumber = parsed + 1;
             }

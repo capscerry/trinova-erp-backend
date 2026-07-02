@@ -6,6 +6,21 @@ using trinova_erp_backend.Models;
 
 namespace trinova_erp_backend.Repositories.Pembelian
 {
+    /// <summary>
+    /// Result of a DeductStock call.
+    /// <list type="bullet">
+    ///   <item><term>Deducted</term><description>Row found and stock successfully decremented.</description></item>
+    ///   <item><term>InsufficientStock</term><description>Row found but available_stock &lt; requested quantity.</description></item>
+    ///   <item><term>RowNotFound</term><description>No supplier_products row exists for this (product_id, supplier_id) pair — skip silently.</description></item>
+    /// </list>
+    /// </summary>
+    public enum DeductStockResult
+    {
+        Deducted,
+        InsufficientStock,
+        RowNotFound,
+    }
+
     public interface ISupplierProductRepo
     {
         Task<bool> InsertSupplierProduct(
@@ -19,7 +34,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
             List<SupplierProduct> models
         );
 
-        Task<bool> DeductStock(int productId, int supplierId, int quantity);
+        Task<DeductStockResult> DeductStock(int productId, int supplierId, int quantity);
 
         Task<bool> RestoreStock(int productId, int supplierId, int quantity);
     }
@@ -380,27 +395,45 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
         // ─── DEDUCT STOCK (hard reserve on PO approval) ──────────────────
 
-        public async Task<bool> DeductStock(int productId, int supplierId, int quantity)
+        public async Task<DeductStockResult> DeductStock(int productId, int supplierId, int quantity)
         {
-            // Only deduct if enough stock exists; fail if it would go negative.
-            const string query = @"
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // First check whether a row even exists for this (product, supplier) pair.
+            const string existsQuery = @"
+                SELECT COUNT(1)
+                FROM supplier_products
+                WHERE product_id  = @product_id
+                  AND supplier_id = @supplier_id";
+
+            using (SqlCommand existsCmd = new SqlCommand(existsQuery, connection))
+            {
+                existsCmd.Parameters.AddWithValue("@product_id",  productId);
+                existsCmd.Parameters.AddWithValue("@supplier_id", supplierId);
+
+                var count = Convert.ToInt32(await existsCmd.ExecuteScalarAsync());
+                if (count == 0)
+                    return DeductStockResult.RowNotFound;
+            }
+
+            // Row exists — attempt the conditional deduction.
+            // The WHERE clause only matches when available_stock >= quantity,
+            // so 0 rows affected means insufficient stock (not a missing row).
+            const string deductQuery = @"
                 UPDATE supplier_products
                 SET available_stock = available_stock - @quantity
                 WHERE product_id  = @product_id
                   AND supplier_id = @supplier_id
                   AND available_stock >= @quantity";
 
-            using SqlConnection connection = new SqlConnection(_connectionString);
-            using SqlCommand command = new SqlCommand(query, connection);
+            using SqlCommand deductCmd = new SqlCommand(deductQuery, connection);
+            deductCmd.Parameters.AddWithValue("@product_id",  productId);
+            deductCmd.Parameters.AddWithValue("@supplier_id", supplierId);
+            deductCmd.Parameters.AddWithValue("@quantity",    quantity);
 
-            await connection.OpenAsync();
-
-            command.Parameters.AddWithValue("@product_id",  productId);
-            command.Parameters.AddWithValue("@supplier_id", supplierId);
-            command.Parameters.AddWithValue("@quantity",    quantity);
-
-            int rows = await command.ExecuteNonQueryAsync();
-            return rows > 0;
+            int rows = await deductCmd.ExecuteNonQueryAsync();
+            return rows > 0 ? DeductStockResult.Deducted : DeductStockResult.InsufficientStock;
         }
 
         // ─── RESTORE STOCK (undo reservation on return / unapprove) ──────

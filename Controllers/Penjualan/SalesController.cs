@@ -337,7 +337,6 @@ namespace trinova_erp_backend.Controllers.Penjualan
             });
         }
 
-
         [HttpGet("/api/sales-order/by-customer/{customerId}")]
         public async Task<IActionResult> GetSalesOrderByCustId(int customerId)
         {
@@ -375,7 +374,6 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 message = "Data Sales Order Berhasil diambil",
                 data = data
             });
-
         }
 
         [HttpGet("/api/sales-order/next-number")]

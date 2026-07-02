@@ -76,6 +76,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
             return await _salesQuotationRepo.GetQuotationHeaderDetailById(quotationId);
         }
+
         public async Task<List<QuotationDetailDTO>> GetAllQuotationDetailById(int quotationId)
         {
             var result = await _salesQuotationRepo.GetQuotationDetailById(quotationId);

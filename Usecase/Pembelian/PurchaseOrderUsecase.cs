@@ -99,7 +99,14 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
         // ─── APPROVE ──────────────────────────────────────────────────────
         // Transitions Draft → Approved and hard-reserves supplier stock for
-        // every detail line. Rolls back all deductions if any line fails.
+        // every detail line that has a matching supplier_products row.
+        //
+        // Three outcomes per line (DeductStockResult):
+        //   Deducted        — row found, stock sufficient, decremented.
+        //   InsufficientStock — row found but available_stock < quantity → block & rollback.
+        //   RowNotFound     — no supplier_products row for (product_id, supplier_id)
+        //                     → skip silently (product may belong to a different
+        //                       supplier catalogue entry; stock guard doesn't apply).
 
         public async Task<(bool success, string message)> ApprovePurchaseOrder(int id)
         {
@@ -120,30 +127,40 @@ namespace trinova_erp_backend.Usecase.Pembelian
             if (details.Count == 0)
                 return (false, "Purchase Order has no detail lines");
 
-            // Hard-reserve stock for each line. Track what was deducted so we
-            // can roll back if a later line has insufficient stock.
+            // Hard-reserve stock for each line. Track what was actually deducted
+            // so we can roll back if a later line has insufficient stock.
             var deducted = new List<(int productId, int quantity)>();
 
             foreach (var line in details)
             {
-                bool ok = await _supplierProductRepo
+                var result = await _supplierProductRepo
                     .DeductStock(line.product_id, po.supplier_id, line.quantity);
 
-                if (!ok)
+                switch (result)
                 {
-                    // Restore every deduction made so far
-                    foreach (var (pid, qty) in deducted)
-                        await _supplierProductRepo
-                            .RestoreStock(pid, po.supplier_id, qty);
+                    case DeductStockResult.Deducted:
+                        // Stock decremented — track for potential rollback.
+                        deducted.Add((line.product_id, line.quantity));
+                        break;
 
-                    return (false,
-                        $"Insufficient stock for product_id {line.product_id}. Approval cancelled.");
+                    case DeductStockResult.RowNotFound:
+                        // No supplier_products row for this (product, supplier) pair.
+                        // This is not an error — the product may be catalogued under a
+                        // different supplier or added manually. Skip stock guard.
+                        break;
+
+                    case DeductStockResult.InsufficientStock:
+                        // Row exists but stock is too low — roll back and reject.
+                        foreach (var (pid, qty) in deducted)
+                            await _supplierProductRepo
+                                .RestoreStock(pid, po.supplier_id, qty);
+
+                        return (false,
+                            $"Insufficient stock for product_id {line.product_id}. Approval cancelled.");
                 }
-
-                deducted.Add((line.product_id, line.quantity));
             }
 
-            // All lines deducted successfully — flip status to Approved
+            // All lines processed — flip status to Approved.
             po.status = "Approved";
             await _purchaseOrderRepo.UpdatePurchaseOrder(po);
 

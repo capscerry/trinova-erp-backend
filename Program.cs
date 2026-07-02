@@ -45,6 +45,7 @@ builder.Services.AddHttpClient("XGBoost", (serviceProvider, client) =>
     client.Timeout     = TimeSpan.FromSeconds(60);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
+
 builder.Services.AddControllers();
 
 var jwtSecret = Env.GetString("JWT_SECRET_KEY");

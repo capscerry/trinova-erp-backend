@@ -18,9 +18,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
         Task<List<QuotationHeaderDTO>> GetQuotationHeaders();
         Task<List<QuotationHeaderDTO>> GetQuotationHeaderById(int customerId);
         Task<List<QuotationDetailDTO>> GetQuotationDetailById(int quotationId);
-
         Task<QuotationHeaderDetailDTO?> GetQuotationHeaderDetailById(int quotationId);
-
         Task<int> UpsertQuotationHeader(
             QuotationHeader header,
             SqlConnection conn,
@@ -64,9 +62,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
 
             if (!string.IsNullOrEmpty(lastSq))
             {
-                string numericPart =
-                    lastSq.Replace("SQ", "");
-
+                string numericPart = lastSq.Replace("SQ", "");
                 if (int.TryParse(numericPart, out int parsed))
                     nextNumber = parsed + 1;
             }
