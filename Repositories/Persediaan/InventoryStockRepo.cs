@@ -35,7 +35,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     p.product_id AS p_product_id,
                     p.product_name,
                     p.product_code,
-                    p.product_type,
 
                     w.warehouse_id AS w_warehouse_id,
                     w.warehouse_name
@@ -89,7 +88,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                             product_id = Convert.ToInt32(reader["p_product_id"]),
                             product_name = reader["product_name"]?.ToString(),
                             product_code = reader["product_code"]?.ToString(),
-                            product_type = reader["product_type"]?.ToString()
                         },
 
                         Warehouse = new MasterWarehouse
@@ -116,7 +114,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     p.product_id AS p_product_id,
                     p.product_name,
                     p.product_code,
-                    p.product_type,
 
                     w.warehouse_id AS w_warehouse_id,
                     w.warehouse_name
@@ -172,7 +169,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     product_id = Convert.ToInt32(reader["p_product_id"]),
                     product_name = reader["product_name"]?.ToString(),
                     product_code = reader["product_code"]?.ToString(),
-                    product_type = reader["product_type"]?.ToString()
                 },
 
                 Warehouse = new MasterWarehouse

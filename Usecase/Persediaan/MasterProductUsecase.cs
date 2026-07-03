@@ -32,6 +32,15 @@ namespace trinova_erp_backend.Usecase.Persediaan
             model.created_at = DateTime.Now;
             model.updated_at = DateTime.Now;
 
+            model.product_code =
+            await _masterProductRepo.GenerateProductCode(
+                model.category_id,
+                model.subcategory_id
+            );
+
+            //Testing purpose, remove this line in production
+            Console.WriteLine($"Generated Product Code: {model.product_code}");
+            
             var result = await _masterProductRepo.InsertMasterProduct(model);
 
             return result ? "Insert Successfully" : "Insert Failed";

@@ -32,7 +32,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     mp.product_id      AS ProductId,
                     mp.product_code    AS ProductCode,
                     mp.product_name    AS ProductName,
-                    mp.product_type    AS ProductType,
                     mpc.category_id    AS CategoryId,
                     mpc.category_name  AS CategoryName,
                     mu.uom_code        AS Uom,
@@ -50,83 +49,59 @@ namespace trinova_erp_backend.Repositories.Persediaan
             return result.ToList();
         }
 
-        // =========================================================
-        // GET ALL MASTER PRODUCT
-        // =========================================================
-        //public async Task<List<MasterProduct>> GetAllMasterProduct()
-        //{
-        //    var response = new List<MasterProduct>();
+        public async Task<string> GenerateProductCode(
+            int categoryId,
+            int subcategoryId
+        )
+        {
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
 
-        //    const string query = @"
-        //        SELECT *
-        //        FROM master_product
-        //        ORDER BY product_name";
+            await connection.OpenAsync();
 
-        //    using SqlConnection connection = new SqlConnection(_connectionString);
-        //    using SqlCommand command = new SqlCommand(query, connection);
+            const string query = @"
+                SELECT subcategory_code
+                FROM master_product_subcategory
+                WHERE subcategory_id = @subcategory_id";
 
-        //    await connection.OpenAsync();
+            using SqlCommand command =
+                new SqlCommand(query, connection);
 
-        //    using SqlDataReader reader = await command.ExecuteReaderAsync();
+            command.Parameters.AddWithValue(
+                "@subcategory_id",
+                subcategoryId
+            );
 
-        //    while (await reader.ReadAsync())
-        //    {
-        //        response.Add(new MasterProduct
-        //        {
-        //            product_id = Convert.ToInt32(reader["product_id"]),
-        //            product_name = reader["product_name"]?.ToString(),
-        //            product_code = reader["product_code"]?.ToString(),
-        //            product_type = reader["product_type"]?.ToString(),
-        //            //barcode = reader["barcode"]?.ToString(),
-        //            uom_id = Convert.ToInt32(reader["uom_id"]),
-        //            category_id = Convert.ToInt32(reader["category_id"]),
-        //            created_at = Convert.ToDateTime(reader["created_at"]),
-        //            updated_at = Convert.ToDateTime(reader["updated_at"])
-        //        });
-        //    }
+            var subcategoryCode =
+                (await command.ExecuteScalarAsync())?.ToString()
+                ?? "00";
 
-        //    return response;
-        //}
+            var categoryCode =
+                categoryId.ToString("D2");
 
-        // =========================================================
-        // GET BY ID
-        // =========================================================
-        //public async Task<MasterProduct?> GetMasterProductById(int productId)
-        //{
-        //    MasterProduct? response = null;
+            string prefix =
+                $"ITM-{categoryCode}{subcategoryCode}";
 
-        //    const string query = @"
-        //        SELECT *
-        //        FROM master_product
-        //        WHERE product_id = @product_id";
+            const string runningQuery = @"
+                SELECT COUNT(*)
+                FROM master_product
+                WHERE product_code LIKE @prefix + '%'";
 
-        //    using SqlConnection connection = new SqlConnection(_connectionString);
-        //    using SqlCommand command = new SqlCommand(query, connection);
+            using SqlCommand runningCommand =
+                new SqlCommand(runningQuery, connection);
 
-        //    command.Parameters.AddWithValue("@product_id", productId);
+            runningCommand.Parameters.AddWithValue(
+                "@prefix",
+                prefix
+            );
 
-        //    await connection.OpenAsync();
+            int total =
+                Convert.ToInt32(
+                    await runningCommand.ExecuteScalarAsync()
+                );
 
-        //    using SqlDataReader reader = await command.ExecuteReaderAsync();
-
-        //    if (await reader.ReadAsync())
-        //    {
-        //        response = new MasterProduct
-        //        {
-        //            product_id = Convert.ToInt32(reader["product_id"]),
-        //            product_name = reader["product_name"]?.ToString(),
-        //            product_code = reader["product_code"]?.ToString(),
-        //            product_type = reader["product_type"]?.ToString(),
-        //            //barcode = reader["barcode"]?.ToString(),
-        //            uom_id = Convert.ToInt32(reader["uom_id"]),
-        //            category_id = Convert.ToInt32(reader["category_id"]),
-        //            created_at = Convert.ToDateTime(reader["created_at"]),
-        //            updated_at = Convert.ToDateTime(reader["updated_at"])
-        //        };
-        //    }
-
-        //    return response;
-        //}
+            return $"{prefix}{(total + 1):D6}";
+        }
 
         // =========================================================
         // INSERT
@@ -139,7 +114,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 (
                     product_name,
                     product_code,
-                    product_type,
                     uom_id,
                     category_id,
                     subcategory_id,
@@ -150,7 +124,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 (
                     @product_name,
                     @product_code,
-                    @product_type,
                     @uom_id,
                     @category_id,
                     @subcategory_id,
@@ -176,11 +149,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 command.Parameters.AddWithValue(
                     "@product_code",
                     model.product_code ?? (object)DBNull.Value
-                );
-
-                command.Parameters.AddWithValue(
-                    "@product_type",
-                    model.product_type ?? (object)DBNull.Value
                 );
 
                 command.Parameters.AddWithValue(
@@ -303,10 +271,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
                             product_code =
                                 reader["product_code"]
-                                    ?.ToString(),
-
-                            product_type =
-                                reader["product_type"]
                                     ?.ToString(),
 
                             uom_id =
@@ -475,10 +439,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                                 reader["product_code"]
                                     ?.ToString(),
 
-                            product_type =
-                                reader["product_type"]
-                                    ?.ToString(),
-
                             uom_id =
                                 reader.GetInt32(
                                     reader.GetOrdinal(
@@ -537,7 +497,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 SET
                     product_name = @product_name,
                     product_code = @product_code,
-                    product_type = @product_type,
                     uom_id = @uom_id,
                     category_id = @category_id,
                     subcategory_id = @subcategory_id,
@@ -569,10 +528,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     model.product_code ?? (object)DBNull.Value
                 );
 
-                command.Parameters.AddWithValue(
-                    "@product_type",
-                    model.product_type ?? (object)DBNull.Value
-                );
 
                 command.Parameters.AddWithValue(
                     "@uom_id",
