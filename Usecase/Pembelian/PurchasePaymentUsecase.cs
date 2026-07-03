@@ -14,6 +14,11 @@ namespace trinova_erp_backend.Usecase.Pembelian
         Task<List<PurchasePayment>>
             GetAllPurchasePayment();
 
+        Task<bool> UpdatePurchasePayment(
+            int id,
+            PurchasePayment model
+        );
+
         Task<bool> DeletePurchasePayment(
             int id
         );
@@ -74,6 +79,20 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 _purchasePaymentRepo
                     .DeletePurchasePayment(
                         id
+                    );
+        }
+
+        public async Task<bool>
+            UpdatePurchasePayment(
+                int id,
+                PurchasePayment model
+            )
+        {
+            return await
+                _purchasePaymentRepo
+                    .UpdatePurchasePayment(
+                        id,
+                        model
                     );
         }
     }

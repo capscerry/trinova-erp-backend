@@ -338,6 +338,38 @@ namespace trinova_erp_backend.Repositories.Persediaan
         }
 
         // =========================
+        // HAS CONFIRMED STOCK
+        // =========================
+        // Returns true when at least one inventory_stock row exists for the
+        // given product across any warehouse — meaning the product has been
+        // physically received and its stock is confirmed in inventory.
+        // Used by the purchasing module to block PO detail lines for products
+        // that have never been stocked.
+        public async Task<bool> HasConfirmedStockAsync(int productId)
+        {
+            const string query = @"
+                SELECT COUNT(1)
+                FROM inventory_stock
+                WHERE product_id = @product_id";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            command.Parameters.AddWithValue("@product_id", productId);
+
+            await connection.OpenAsync();
+
+            var count = Convert.ToInt32(
+                await command.ExecuteScalarAsync()
+            );
+
+            return count > 0;
+        }
+
+        // =========================
         // SYNC → SUPPLIER PRODUCTS
         // =========================
         // After any inventory_stock change, sum qty_available across all

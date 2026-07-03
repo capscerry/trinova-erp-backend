@@ -7,7 +7,7 @@ namespace trinova_erp_backend.Controllers.Persediaan
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Inventory,inventory,Warehouse,warehouse")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Inventory,inventory,Warehouse,warehouse,Purchasing,purchasing,Pembelian,pembelian,Penjualan,penjualan,Sales,sales")]
     public class MasterProductController : ControllerBase
     {
         private readonly IMasterProductUsecase _masterProductUsecase;

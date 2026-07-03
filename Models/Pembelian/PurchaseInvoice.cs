@@ -25,6 +25,8 @@ namespace trinova_erp_backend.Models
 
         public decimal dp_paid { get; set; }
 
+        public decimal payment_paid { get; set; }
+
         public decimal outstanding_amount { get; set; }
 
         public string? transaction_name { get; set; }

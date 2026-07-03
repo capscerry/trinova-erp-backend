@@ -26,9 +26,18 @@ namespace trinova_erp_backend.Controllers.Pembelian
             var result = await _purchaseOrderDetailUsecase
                 .InsertPurchaseOrderDetail(detail);
 
-            return Ok(new
+            if (result == "Insert Successfully")
             {
-                status = true,
+                return Ok(new
+                {
+                    status = true,
+                    message = result
+                });
+            }
+
+            return BadRequest(new
+            {
+                status = false,
                 message = result
             });
         }

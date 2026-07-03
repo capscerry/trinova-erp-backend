@@ -657,6 +657,16 @@ namespace trinova_erp_backend.Repositories.Pembelian
             ) AS dp_paid,
 
             ISNULL(
+                (
+                    SELECT SUM(pp.amount)
+                    FROM purchase_payment pp
+                    WHERE pp.purchase_invoice_id =
+                        pi.purchase_invoice_id
+                ),
+                0
+            ) AS payment_paid,
+
+            ISNULL(
                 pi.total_amount
                 -
                 (
@@ -765,6 +775,13 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                             ? 0
                                             : Convert.ToDecimal(
                                                 reader["dp_paid"]
+                                            ),
+
+                                     payment_paid =
+                                        reader["payment_paid"] == DBNull.Value
+                                            ? 0
+                                            : Convert.ToDecimal(
+                                                reader["payment_paid"]
                                             ),
 
                                     outstanding_amount =

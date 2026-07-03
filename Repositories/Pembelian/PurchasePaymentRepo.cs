@@ -16,6 +16,11 @@ public interface IPurchasePaymentRepo
     Task<List<PurchasePayment>>
         GetAllPurchasePayment();
 
+    Task<bool> UpdatePurchasePayment(
+        int id,
+        PurchasePayment model
+    );
+
     Task<bool> DeletePurchasePayment(
         int id
     );
@@ -278,6 +283,41 @@ public class PurchasePaymentRepo
         }
 
         return response;
+    }
+
+    // UPDATE
+    public async Task<bool> UpdatePurchasePayment(
+        int id,
+        PurchasePayment model
+    )
+    {
+        const string query = @"
+            UPDATE purchase_payment
+            SET
+                payment_date   = @payment_date,
+                amount         = @amount,
+                payment_method = @payment_method,
+                status         = @status,
+                notes          = @notes
+            WHERE purchase_payment_id = @id";
+
+        using SqlConnection connection =
+            new SqlConnection(_connectionString);
+
+        using SqlCommand command =
+            new SqlCommand(query, connection);
+
+        await connection.OpenAsync();
+
+        command.Parameters.AddWithValue("@id",             id);
+        command.Parameters.AddWithValue("@payment_date",   model.payment_date);
+        command.Parameters.AddWithValue("@amount",         model.amount);
+        command.Parameters.AddWithValue("@payment_method", model.payment_method ?? "");
+        command.Parameters.AddWithValue("@status",         model.status ?? "");
+        command.Parameters.AddWithValue("@notes",          model.notes ?? "");
+
+        int result = await command.ExecuteNonQueryAsync();
+        return result > 0;
     }
 
     // DELETE
