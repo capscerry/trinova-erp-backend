@@ -116,18 +116,22 @@ namespace trinova_erp_backend.Repositories.Persediaan
             }
         }
 
-        public async Task<List<StockMovement>>
-            GetByMovementTypeAsync(
-                string movementType)
+        public async Task<List<StockMovement>> GetByMovementTypeAsync(string movementType)
         {
             const string query = @"
-                SELECT *
-                FROM stock_movement
-                WHERE movement_type = @movement_type
-                ORDER BY movement_id DESC";
+            SELECT
+                sm.*,
+                mp.product_name,
+                mw.warehouse_name
+            FROM stock_movement sm
+            LEFT JOIN master_product mp
+                ON sm.product_id = mp.product_id
+            LEFT JOIN master_warehouse mw
+                ON sm.source_warehouse_id = mw.warehouse_id
+            WHERE sm.movement_type = @movement_type
+            ORDER BY sm.movement_id DESC";
 
-            var response =
-                new List<StockMovement>();
+            var response = new List<StockMovement>();
 
             using SqlConnection connection =
                 new SqlConnection(_connectionString);
@@ -150,49 +154,43 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     new StockMovement
                     {
                         movement_id =
-                            Convert.ToInt32(
-                                reader["movement_id"]),
+                            Convert.ToInt32(reader["movement_id"]),
 
                         product_id =
-                            Convert.ToInt32(
-                                reader["product_id"]),
+                            Convert.ToInt32(reader["product_id"]),
+
+                        product_name =
+                            reader["product_name"]?.ToString(),
 
                         movement_type =
-                            reader["movement_type"]
-                                ?.ToString(),
+                            reader["movement_type"]?.ToString(),
 
                         quantity =
-                            Convert.ToDecimal(
-                                reader["quantity"]),
+                            Convert.ToDecimal(reader["quantity"]),
 
                         reference_number =
-                            reader["reference_number"]
-                                ?.ToString(),
+                            reader["reference_number"]?.ToString(),
 
                         notes =
-                            reader["notes"]
-                                ?.ToString(),
+                            reader["notes"]?.ToString(),
 
                         source_warehouse_id =
-                            reader["source_warehouse_id"]
-                            == DBNull.Value
-                            ? null
-                            : Convert.ToInt32(
-                                reader["source_warehouse_id"]),
+                            reader["source_warehouse_id"] == DBNull.Value
+                                ? null
+                                : Convert.ToInt32(reader["source_warehouse_id"]),
+
+                        warehouse_name =
+                            reader["warehouse_name"]?.ToString(),
 
                         destination_warehouse_id =
-                            reader["destination_warehouse_id"]
-                            == DBNull.Value
-                            ? null
-                            : Convert.ToInt32(
-                                reader["destination_warehouse_id"]),
+                            reader["destination_warehouse_id"] == DBNull.Value
+                                ? null
+                                : Convert.ToInt32(reader["destination_warehouse_id"]),
 
                         movement_date =
-                            reader["movement_date"]
-                            == DBNull.Value
-                            ? null
-                            : Convert.ToDateTime(
-                                reader["movement_date"])
+                            reader["movement_date"] == DBNull.Value
+                                ? null
+                                : Convert.ToDateTime(reader["movement_date"])
                     });
             }
 
@@ -202,10 +200,17 @@ namespace trinova_erp_backend.Repositories.Persediaan
         public async Task<List<StockMovement>> GetAllAsync()
         {
             const string query = @"
-                SELECT *
-                FROM stock_movement
-                WHERE movement_type = 'TRANSFER'
-                ORDER BY movement_id DESC";
+            SELECT
+                sm.*,
+                mp.product_name,
+                mw.warehouse_name
+            FROM stock_movement sm
+            LEFT JOIN master_product mp
+                ON sm.product_id = mp.product_id
+            LEFT JOIN master_warehouse mw
+                ON sm.source_warehouse_id = mw.warehouse_id
+            WHERE sm.movement_type = 'TRANSFER'
+            ORDER BY sm.movement_id DESC";
 
             var response = new List<StockMovement>();
 
@@ -220,57 +225,52 @@ namespace trinova_erp_backend.Repositories.Persediaan
             using SqlDataReader reader =
                 await command.ExecuteReaderAsync();
 
-            while(await reader.ReadAsync())
+            while (await reader.ReadAsync())
             {
                 response.Add(
                     new StockMovement
                     {
                         movement_id =
-                            Convert.ToInt32(
-                                reader["movement_id"]),
+                            Convert.ToInt32(reader["movement_id"]),
 
                         product_id =
-                            Convert.ToInt32(
-                                reader["product_id"]),
+                            Convert.ToInt32(reader["product_id"]),
+
+                        product_name =
+                            reader["product_name"]?.ToString(),
 
                         movement_type =
-                            reader["movement_type"]
-                                ?.ToString(),
+                            reader["movement_type"]?.ToString(),
 
                         quantity =
-                            Convert.ToDecimal(
-                                reader["quantity"]),
+                            Convert.ToDecimal(reader["quantity"]),
 
                         reference_number =
-                            reader["reference_number"]
-                                ?.ToString(),
+                            reader["reference_number"]?.ToString(),
 
                         notes =
-                            reader["notes"]
-                                ?.ToString(),
+                            reader["notes"]?.ToString(),
 
                         source_warehouse_id =
-                            reader["source_warehouse_id"]
-                            == DBNull.Value
-                            ? null
-                            : Convert.ToInt32(
-                                reader["source_warehouse_id"]),
+                            reader["source_warehouse_id"] == DBNull.Value
+                                ? null
+                                : Convert.ToInt32(reader["source_warehouse_id"]),
+
+                        warehouse_name =
+                            reader["warehouse_name"]?.ToString(),
 
                         destination_warehouse_id =
-                            reader["destination_warehouse_id"]
-                            == DBNull.Value
-                            ? null
-                            : Convert.ToInt32(
-                                reader["destination_warehouse_id"]),
+                            reader["destination_warehouse_id"] == DBNull.Value
+                                ? null
+                                : Convert.ToInt32(reader["destination_warehouse_id"]),
 
                         movement_date =
-                            reader["movement_date"]
-                            == DBNull.Value
-                            ? null
-                            : Convert.ToDateTime(
-                                reader["movement_date"])
+                            reader["movement_date"] == DBNull.Value
+                                ? null
+                                : Convert.ToDateTime(reader["movement_date"])
                     });
             }
+
             return response;
         }
     }
