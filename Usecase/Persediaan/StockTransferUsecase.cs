@@ -9,12 +9,16 @@ namespace trinova_erp_backend.Usecase.Persediaan
         private readonly InventoryStockRepo _stockRepo;
         private readonly StockMovementRepo _movementRepo;
 
+        private readonly StockTransactionRepo _transactionRepo;
+
         public StockTransferUsecase(
             InventoryStockRepo stockRepo,
-            StockMovementRepo movementRepo)
+            StockMovementRepo movementRepo,
+            StockTransactionRepo transactionRepo)
         {
             _stockRepo = stockRepo;
             _movementRepo = movementRepo;
+            _transactionRepo = transactionRepo;
         }
 
         public async Task<string> GetNextTRFNumber()
@@ -112,6 +116,20 @@ namespace trinova_erp_backend.Usecase.Persediaan
             await _stockRepo.SyncToSupplierProductsAsync(
                 movement.product_id);
 
+            await _transactionRepo.CreateAsync(
+                new StockTransaction
+                {
+                    product_id = movement.product_id,
+                    warehouse_id = movement.source_warehouse_id!.Value,
+                    transaction_type = "TRANSFER_OUT",
+                    quantity = movement.quantity,
+                    reference_no = movement.reference_number,
+                    reference_module = "Stock Transfer",
+                    reference_id = movement.movement_id,
+                    remarks = "Stock transferred to destination warehouse",
+                    created_at = DateTime.Now
+                }
+            );
             await _movementRepo.UpdateStatusAsync(
                 movementId,
                 "PROCESSED");
@@ -153,6 +171,21 @@ namespace trinova_erp_backend.Usecase.Persediaan
 
                 await _stockRepo.UpdateAsync(destination);
             }
+
+            await _transactionRepo.CreateAsync(
+                new StockTransaction
+                {
+                    product_id = movement.product_id,
+                    warehouse_id = movement.destination_warehouse_id!.Value,
+                    transaction_type = "TRANSFER_IN",
+                    quantity = movement.quantity,
+                    reference_no = movement.reference_number,
+                    reference_module = "Stock Transfer",
+                    reference_id = movement.movement_id,
+                    remarks = "Stock received from source warehouse",
+                    created_at = DateTime.Now
+                }
+            );
 
             await _stockRepo.SyncToSupplierProductsAsync(
                 movement.product_id);

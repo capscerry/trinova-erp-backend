@@ -419,7 +419,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
             };
         }
 
-        public async Task UpdateStatusAsync(int movementId,string status)
+        public async Task UpdateStatusAsync(int movementId, string status)
         {
             status = status.ToUpper();
 
@@ -431,7 +431,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 UPDATE stock_movement
                 SET
                     status = @status,
-                    processed_at = GETDATE()
+                    processed_at = @current_time
                 WHERE movement_id = @movement_id";
             }
             else if (status == "COMPLETED")
@@ -440,7 +440,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 UPDATE stock_movement
                 SET
                     status = @status,
-                    completed_at = GETDATE()
+                    completed_at = @current_time
                 WHERE movement_id = @movement_id";
             }
             else if (status == "CANCELED")
@@ -449,13 +449,8 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 UPDATE stock_movement
                 SET
                     status = @status,
-                    canceled_at = GETDATE()
+                    canceled_at = @current_time
                 WHERE movement_id = @movement_id";
-            }
-
-            if (string.IsNullOrWhiteSpace(query))
-            {
-                throw new Exception("Invalid status.");
             }
 
             using SqlConnection connection =
@@ -466,6 +461,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
             command.Parameters.AddWithValue("@movement_id", movementId);
             command.Parameters.AddWithValue("@status", status);
+            command.Parameters.AddWithValue("@current_time", DateTime.Now);
 
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();

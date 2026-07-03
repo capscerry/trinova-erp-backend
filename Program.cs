@@ -124,6 +124,8 @@ builder.Services.AddScoped<OrderFulfillmentUsecase>();
 builder.Services.AddHttpClient<ForecastClient>(client =>{client.BaseAddress = new Uri("http://127.0.0.1:8000");});
 builder.Services.AddScoped<DemandForecastUsecase>();
 builder.Services.AddScoped<PurchaseRequisitionDetailRepo>();
+builder.Services.AddScoped<StockTransactionRepo>();
+builder.Services.AddScoped<StockTransferUsecase>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowCors", policy =>
