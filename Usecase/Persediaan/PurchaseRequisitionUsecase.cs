@@ -5,13 +5,17 @@ namespace trinova_erp_backend.Usecase.Persediaan
 {
     public class PurchaseRequisitionUsecase
     {
+
+        private readonly PurchaseRequisitionDetailRepo _purchaseRequisitionDetailRepo;
         private readonly PurchaseRequisitionRepo _purchaseRequisitionRepo;
 
         public PurchaseRequisitionUsecase(
-            PurchaseRequisitionRepo purchaseRequisitionRepo
+            PurchaseRequisitionRepo purchaseRequisitionRepo,
+            PurchaseRequisitionDetailRepo purchaseRequisitionDetailRepo
         )
         {
             _purchaseRequisitionRepo = purchaseRequisitionRepo;
+            _purchaseRequisitionDetailRepo = purchaseRequisitionDetailRepo;
         }
 
         public async Task<string> GetNextPRNumber()
@@ -30,6 +34,11 @@ namespace trinova_erp_backend.Usecase.Persediaan
             return await _purchaseRequisitionRepo.GetByIdAsync(id);
         }
 
+        public async Task<PurchaseRequisition?> GetDetailAsync(int id)
+        {
+            return await _purchaseRequisitionRepo.GetDetailAsync(id);
+        }
+
         public async Task<PurchaseRequisition> CreateAsync(
             PurchaseRequisition model
         )
@@ -46,7 +55,26 @@ namespace trinova_erp_backend.Usecase.Persediaan
                 detail.qty_processed = 0;
             }
 
-            return await _purchaseRequisitionRepo.CreateAsync(model);
+            var createdPr =
+                await _purchaseRequisitionRepo.CreateAsync(model);
+
+            Console.WriteLine($"HEADER ID = {createdPr.pr_id}");
+
+            foreach (var detail in model.Details)
+            {
+                Console.WriteLine(
+                    $"Saving Product={detail.product_id}, Qty={detail.qty_requested}"
+                );
+
+                detail.pr_id = createdPr.pr_id;
+                detail.qty_processed = 0;
+
+                await _purchaseRequisitionDetailRepo.CreateAsync(detail);
+
+                Console.WriteLine("DETAIL SAVED");
+            }
+
+            return createdPr;
         }
 
         public async Task<bool> UpdateAsync(
