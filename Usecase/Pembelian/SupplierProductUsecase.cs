@@ -12,6 +12,9 @@ namespace trinova_erp_backend.Usecase.Pembelian
         Task<List<SupplierProduct>>
             GetAllSupplierProduct();
 
+        Task<List<SupplierProduct>>
+            GetProductsBySupplier(int supplierId);
+
         Task<bool> BulkInsertSupplierProduct(
             int supplierId,
             List<SupplierProductImport> models
@@ -55,6 +58,13 @@ namespace trinova_erp_backend.Usecase.Pembelian
         {
             return await _supplierProductRepo
                 .GetAllSupplierProduct();
+        }
+
+        public async Task<List<SupplierProduct>>
+            GetProductsBySupplier(int supplierId)
+        {
+            return await _supplierProductRepo
+                .GetProductsBySupplier(supplierId);
         }
 
         public async Task<bool>
