@@ -349,8 +349,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                         SELECT ISNULL(SUM(qty_available), 0)
                         FROM inventory_stock
                         WHERE product_id = @product_id
-                    ),
-                    updated_at = GETDATE()
+                    )
                 WHERE product_id = @product_id";
 
             using SqlConnection connection =

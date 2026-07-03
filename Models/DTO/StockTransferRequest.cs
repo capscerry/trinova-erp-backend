@@ -13,5 +13,7 @@ namespace trinova_erp_backend.Models.Persediaan.DTO
         public string? notes { get; set; }
 
         public string? created_by { get; set; }
+        
+        public string status { get; set; } = "CREATED";
     }
 }
