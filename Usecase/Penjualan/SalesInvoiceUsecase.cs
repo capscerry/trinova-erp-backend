@@ -303,7 +303,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
             {
                 const string updateSalesOrderQuery = @"
                     UPDATE sales_order
-                    SET status = 'Completed'
+                    SET status = 'Invoiced'
                     WHERE order_id = @SalesOrderId;";
 
                 await connection.ExecuteAsync(

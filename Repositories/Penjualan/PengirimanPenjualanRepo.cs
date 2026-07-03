@@ -21,6 +21,14 @@ namespace trinova_erp_backend.Repositories.Penjualan
     DeliveryOrderDetailDTO dto,
     SqlConnection connection,
     SqlTransaction transaction);
+        Task UpdateDeliveryOrderHeader(
+            DeliveryOrderHeaderDTO dto,
+            SqlConnection connection,
+            SqlTransaction transaction);
+        Task DeleteDeliveryOrderDetail(
+            int deliveryOrderId,
+            SqlConnection connection,
+            SqlTransaction transaction);
 
 
     }
@@ -179,6 +187,42 @@ namespace trinova_erp_backend.Repositories.Penjualan
             await connection.ExecuteAsync(
                 query,
                 dto,
+                transaction);
+        }
+
+        public async Task UpdateDeliveryOrderHeader(
+            DeliveryOrderHeaderDTO dto,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            const string query = @"
+                UPDATE delivery_order_header
+                SET
+                    customer_id = @CustomerId,
+                    do_number = @DoNumber,
+                    delivery_category_id = @DeliveryCategoryId,
+                    po_number = @PoNumber,
+                    address = @Address,
+                    notes = @Notes,
+                    do_date = @DoDate,
+                    so_id = @SoId
+                WHERE id = @Id;";
+
+            await connection.ExecuteAsync(query, dto, transaction);
+        }
+
+        public async Task DeleteDeliveryOrderDetail(
+            int deliveryOrderId,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            const string query = @"
+                DELETE FROM delivery_order_detail
+                WHERE delivery_id = @DeliveryOrderId;";
+
+            await connection.ExecuteAsync(
+                query,
+                new { DeliveryOrderId = deliveryOrderId },
                 transaction);
         }
  

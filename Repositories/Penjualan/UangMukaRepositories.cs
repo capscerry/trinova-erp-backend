@@ -10,8 +10,10 @@ namespace trinova_erp_backend.Repositories.Penjualan
     public interface IUangMukaRepositories
     {
         Task<bool> InsertUangMuka(UangMuka data);
+        Task<bool> UpdateUangMuka(UangMuka data);
         Task<UangMuka> GetUangMukaById(int id);
         Task MarkAsReceived(int id, SqlConnection connection, SqlTransaction transaction);
+        Task UpdatePaymentStatus(int id, SqlConnection connection, SqlTransaction transaction);
 
         //Task<UangMuka> GetAllUangMuka();
         Task<IEnumerable<UangMuka>> GetAllUangMuka();
@@ -134,12 +136,69 @@ namespace trinova_erp_backend.Repositories.Penjualan
             return result > 0;
         }
 
+        public async Task<bool> UpdateUangMuka(UangMuka data)
+        {
+            const string query = @"
+                UPDATE uang_muka
+                SET
+                    NoFaktur = @NoFaktur,
+                    Tanggal = @Tanggal,
+                    CustomerId = @CustomerId,
+                    NoPO = @NoPO,
+                    NominalUangMuka = @NominalUangMuka,
+                    IsTaxable = @IsTaxable,
+                    IsTaxIncluded = @IsTaxIncluded,
+                    TaxAmount = @TaxAmount,
+                    TotalAmount = @TotalAmount,
+                    SyaratPembayaran = @SyaratPembayaran,
+                    NoSo = @NoSo,
+                    Alamat = @Alamat,
+                    Keterangan = @Keterangan,
+                    Status = @Status,
+                    UpdatedBy = @UpdatedBy,
+                    UpdatedAt = GETDATE()
+                WHERE Id = @Id;";
+
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            var result = await connection.ExecuteAsync(query, data);
+            return result > 0;
+        }
+
         public async Task MarkAsReceived(int id, SqlConnection connection, SqlTransaction transaction)
         {
             const string query = @"
                 UPDATE uang_muka
                 SET
                     Status = 'Received',
+                    UpdatedAt = GETDATE()
+                WHERE Id = @Id;";
+
+            await connection.ExecuteAsync(query, new { Id = id }, transaction);
+        }
+
+        public async Task UpdatePaymentStatus(int id, SqlConnection connection, SqlTransaction transaction)
+        {
+            const string query = @"
+                UPDATE uang_muka
+                SET
+                    Status = CASE
+                        WHEN (
+                            SELECT ISNULL(SUM(nilai_pembayaran), 0)
+                            FROM sales_receipt
+                            WHERE uang_muka_id = @Id
+                              AND ISNULL(status, '') NOT IN ('Cancelled', 'Dibatalkan')
+                        ) >= ISNULL(NULLIF(TotalAmount, 0), NominalUangMuka)
+                            THEN 'Received'
+                        WHEN (
+                            SELECT ISNULL(SUM(nilai_pembayaran), 0)
+                            FROM sales_receipt
+                            WHERE uang_muka_id = @Id
+                              AND ISNULL(status, '') NOT IN ('Cancelled', 'Dibatalkan')
+                        ) > 0
+                            THEN 'Partially Paid'
+                        ELSE 'Draft'
+                    END,
                     UpdatedAt = GETDATE()
                 WHERE Id = @Id;";
 

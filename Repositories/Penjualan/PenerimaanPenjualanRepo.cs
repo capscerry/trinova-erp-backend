@@ -11,6 +11,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
     public interface IPenerimaanPenjualanRepo {
         Task<List<BankDTO>> GetBankDTO();
         Task<PenerimaanPenjualan> InsertSalesReceipt(PenerimaanPenjualan dto);
+        Task<bool> UpdateSalesReceipt(int id, PenerimaanPenjualan dto);
 
         Task<List<PenerimaanPenjualan>> GetAllSalesReceipt();
 
@@ -144,15 +145,21 @@ namespace trinova_erp_backend.Repositories.Penjualan
 
                 var uangMukaId = dto.UangMukaId.GetValueOrDefault();
                 var salesInvoiceId = dto.SalesInvoiceId.GetValueOrDefault();
+                var salesOrderId = dto.SalesOrderId.GetValueOrDefault();
 
                 if (uangMukaId > 0)
                 {
-                    await _uangMukaRepo.MarkAsReceived(uangMukaId, connection, transaction);
+                    await _uangMukaRepo.UpdatePaymentStatus(uangMukaId, connection, transaction);
                 }
 
                 if (uangMukaId <= 0 || salesInvoiceId > 0)
                 {
                     await ApplyPaymentToOutstandingInvoices(dto, connection, transaction);
+                }
+
+                if (salesOrderId > 0 && salesInvoiceId <= 0 && uangMukaId <= 0)
+                {
+                    await UpdateSalesOrderPaymentStatus(salesOrderId, connection, transaction);
                 }
 
                 await transaction.CommitAsync();
@@ -163,6 +170,168 @@ namespace trinova_erp_backend.Repositories.Penjualan
             {
                 await transaction.RollbackAsync();
                 throw;
+            }
+        }
+
+        public async Task<bool> UpdateSalesReceipt(int id, PenerimaanPenjualan dto)
+        {
+            const string query = @"
+                UPDATE sales_receipt
+                SET
+                    no_bukti = @NoBukti,
+                    customer_id = @CustomerId,
+                    bank_id = @BankId,
+                    nilai_pembayaran = @NilaiPembayaran,
+                    tanggal_bayar = @TanggalBayar,
+                    uang_muka_id = @UangMukaId,
+                    sales_order_id = @SalesOrderId,
+                    sales_invoice_id = @SalesInvoiceId
+                WHERE id = @Id;";
+
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                var previous = await connection.QueryFirstOrDefaultAsync<PenerimaanPenjualan>(
+                    @"SELECT
+                        id AS Id,
+                        nilai_pembayaran AS NilaiPembayaran,
+                        uang_muka_id AS UangMukaId,
+                        sales_order_id AS SalesOrderId,
+                        sales_invoice_id AS SalesInvoiceId
+                      FROM sales_receipt
+                      WHERE id = @Id",
+                    new { Id = id },
+                    transaction);
+
+                var result = await connection.ExecuteAsync(
+                    query,
+                    new
+                    {
+                        Id = id,
+                        dto.NoBukti,
+                        dto.CustomerId,
+                        dto.BankId,
+                        dto.NilaiPembayaran,
+                        dto.TanggalBayar,
+                        UangMukaId = dto.UangMukaId == 0 ? null : dto.UangMukaId,
+                        SalesOrderId = dto.SalesOrderId == 0 ? null : dto.SalesOrderId,
+                        SalesInvoiceId = dto.SalesInvoiceId == 0 ? null : dto.SalesInvoiceId
+                    },
+                    transaction);
+
+                if (result == 0)
+                {
+                    await transaction.RollbackAsync();
+                    return false;
+                }
+
+                await RefreshRelatedPaymentStatus(previous, connection, transaction);
+                if (previous?.SalesInvoiceId.GetValueOrDefault() > 0)
+                {
+                    await ApplySalesInvoicePaymentDelta(
+                        previous.SalesInvoiceId.Value,
+                        -previous.NilaiPembayaran,
+                        connection,
+                        transaction);
+                }
+
+                if (dto.SalesInvoiceId.GetValueOrDefault() > 0)
+                {
+                    await ApplySalesInvoicePaymentDelta(
+                        dto.SalesInvoiceId.Value,
+                        dto.NilaiPembayaran,
+                        connection,
+                        transaction);
+                }
+
+                await RefreshRelatedPaymentStatus(dto, connection, transaction);
+
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        private async Task RefreshRelatedPaymentStatus(
+            PenerimaanPenjualan? receipt,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            if (receipt == null)
+                return;
+
+            var uangMukaId = receipt.UangMukaId.GetValueOrDefault();
+            var salesInvoiceId = receipt.SalesInvoiceId.GetValueOrDefault();
+            var salesOrderId = receipt.SalesOrderId.GetValueOrDefault();
+
+            if (uangMukaId > 0)
+            {
+                await _uangMukaRepo.UpdatePaymentStatus(uangMukaId, connection, transaction);
+            }
+
+            if (salesOrderId > 0 && salesInvoiceId <= 0)
+            {
+                await UpdateSalesOrderPaymentStatus(salesOrderId, connection, transaction);
+            }
+        }
+
+        private static async Task ApplySalesInvoicePaymentDelta(
+            int salesInvoiceId,
+            decimal paymentDelta,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            const string query = @"
+                ;WITH InvoicePayment AS (
+                    SELECT
+                        id,
+                        grand_total,
+                        CASE
+                            WHEN ISNULL(paid_amount, 0) + @PaymentDelta < 0 THEN 0
+                            ELSE ISNULL(paid_amount, 0) + @PaymentDelta
+                        END AS NewPaidAmount
+                    FROM sales_invoice
+                    WHERE id = @SalesInvoiceId
+                )
+                UPDATE si
+                SET
+                    paid_amount = ip.NewPaidAmount,
+                    remaining_amount = CASE
+                        WHEN ip.grand_total - ip.NewPaidAmount <= 0 THEN 0
+                        ELSE ip.grand_total - ip.NewPaidAmount
+                    END,
+                    status = CASE
+                        WHEN ip.NewPaidAmount <= 0 THEN 'Unpaid'
+                        WHEN ip.NewPaidAmount >= ip.grand_total THEN 'Paid'
+                        ELSE 'Partially Paid'
+                    END
+                FROM sales_invoice si
+                INNER JOIN InvoicePayment ip ON ip.id = si.id;";
+
+            await connection.ExecuteAsync(
+                query,
+                new
+                {
+                    SalesInvoiceId = salesInvoiceId,
+                    PaymentDelta = paymentDelta
+                },
+                transaction);
+
+            var salesOrderId = await connection.ExecuteScalarAsync<int?>(
+                @"SELECT sales_order_id FROM sales_invoice WHERE id = @SalesInvoiceId",
+                new { SalesInvoiceId = salesInvoiceId },
+                transaction);
+
+            if (salesOrderId.HasValue && salesOrderId.Value > 0)
+            {
+                await UpdateSalesOrderInvoiceStatus(salesOrderId.Value, connection, transaction);
             }
         }
 
@@ -178,6 +347,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
             const string outstandingQuery = @"
                 SELECT
                     id AS Id,
+                    sales_order_id AS SalesOrderId,
                     remaining_amount AS RemainingAmount
                 FROM sales_invoice
                 WHERE customer_id = @CustomerId
@@ -239,12 +409,70 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         PaymentApplied = paymentApplied
                     },
                     transaction);
+
+                if (invoice.SalesOrderId.HasValue && invoice.SalesOrderId.Value > 0)
+                {
+                    await UpdateSalesOrderInvoiceStatus(invoice.SalesOrderId.Value, connection, transaction);
+                }
             }
+        }
+
+        private static async Task UpdateSalesOrderPaymentStatus(
+            int salesOrderId,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            const string query = @"
+                UPDATE sales_order
+                SET status = CASE
+                    WHEN (
+                        SELECT ISNULL(SUM(nilai_pembayaran), 0)
+                        FROM sales_receipt
+                        WHERE sales_order_id = @SalesOrderId
+                          AND ISNULL(status, '') NOT IN ('Cancelled', 'Dibatalkan')
+                    ) >= ISNULL(subtotal, 0)
+                        THEN 'Completed'
+                    WHEN (
+                        SELECT ISNULL(SUM(nilai_pembayaran), 0)
+                        FROM sales_receipt
+                        WHERE sales_order_id = @SalesOrderId
+                          AND ISNULL(status, '') NOT IN ('Cancelled', 'Dibatalkan')
+                    ) > 0
+                        THEN 'Partially Paid'
+                    ELSE status
+                END
+                WHERE order_id = @SalesOrderId;";
+
+            await connection.ExecuteAsync(query, new { SalesOrderId = salesOrderId }, transaction);
+        }
+
+        private static async Task UpdateSalesOrderInvoiceStatus(
+            int salesOrderId,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            const string query = @"
+                UPDATE sales_order
+                SET status = CASE
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM sales_invoice
+                        WHERE sales_order_id = @SalesOrderId
+                          AND ISNULL(status, '') NOT IN ('Paid', 'Cancelled', 'Lunas', 'Dibatalkan')
+                          AND ISNULL(remaining_amount, 0) > 0
+                    )
+                        THEN 'Partially Paid'
+                    ELSE 'Completed'
+                END
+                WHERE order_id = @SalesOrderId;";
+
+            await connection.ExecuteAsync(query, new { SalesOrderId = salesOrderId }, transaction);
         }
 
         private sealed class OutstandingInvoicePaymentTarget
         {
             public int Id { get; set; }
+            public int? SalesOrderId { get; set; }
             public decimal RemainingAmount { get; set; }
         }
     }

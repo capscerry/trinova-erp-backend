@@ -83,5 +83,27 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 });
             }
         }
+
+        [HttpPut("/api/delivery-order/{id}")]
+        public async Task<IActionResult> UpdateDeliveryOrder(int id, [FromBody] PengirimanPenjualan model)
+        {
+            try
+            {
+                await _pengirimanUsecase.UpdateDeliveryOrder(id, model);
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Update Data"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
+        }
     }
 }

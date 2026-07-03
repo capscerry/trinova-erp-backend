@@ -71,6 +71,38 @@ namespace trinova_erp_backend.Controllers.Penjualan
             });
         }
 
+        [HttpPut("/api/uang-muka/{id}")]
+        public async Task<IActionResult> UpdateUangMuka(int id, [FromBody] UangMuka model)
+        {
+            try
+            {
+                var result = await _uangMukaUsecase.UpdateUangMuka(id, model);
+
+                if (!result)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Gagal memperbarui data uang muka"
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Data uang muka berhasil diperbarui"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
+
         [HttpGet("/api/uang-muka")]
         public async Task<IActionResult> GetAllUangMuka()
         {

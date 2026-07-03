@@ -85,5 +85,37 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 });
             }
         }
+
+        [HttpPut("/api/sales-receipt/{id}")]
+        public async Task<IActionResult> UpdateSalesReceipt(int id, [FromBody] PenerimaanPenjualan dto)
+        {
+            try
+            {
+                var result = await _penerimaanUsecase.UpdateSalesReceipt(id, dto);
+
+                if (!result)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Gagal memperbarui data penerimaan penjualan."
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Data penerimaan penjualan berhasil diperbarui."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
     }
 }
