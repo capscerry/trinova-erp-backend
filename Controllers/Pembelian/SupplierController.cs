@@ -69,39 +69,50 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 Supplier supplier
             )
         {
-            var result =
-                await _supplierUsecase
-                    .InsertSupplier(
-                        supplier
-                    );
+            try
+            {
+                var result =
+                    await _supplierUsecase
+                        .InsertSupplier(
+                            supplier
+                        );
 
-            if (result == null)
+                if (result == null)
+                {
+                    return BadRequest(new
+                    {
+                        status = false,
+
+                        message =
+                            "Insert Failed"
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = true,
+
+                    message =
+                        "Insert Successfully",
+
+                    data = new
+                    {
+                        supplier_id =
+                            result.supplier_id,
+
+                        supplier_name =
+                            result.supplier_name
+                    }
+                });
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {
                     status = false,
-
-                    message =
-                        "Insert Failed"
+                    message = ex.Message
                 });
             }
-
-            return Ok(new
-            {
-                status = true,
-
-                message =
-                    "Insert Successfully",
-
-                data = new
-                {
-                    supplier_id =
-                        result.supplier_id,
-
-                    supplier_name =
-                        result.supplier_name
-                }
-            });
         }
 
         // ─── GET ALL ────────────────────────────

@@ -30,6 +30,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
         Task<List<SupplierProduct>>
             GetAllSupplierProduct();
 
+        Task<List<SupplierProduct>>
+            GetProductsBySupplier(int supplierId);
+
         Task<bool> BulkInsertSupplierProduct(
             List<SupplierProduct> models
         );
@@ -155,29 +158,52 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 List<SupplierProduct> models
             )
         {
+            // MERGE so that re-uploading the same catalog updates existing rows
+            // instead of creating duplicates. Keyed on (supplier_id, product_id).
             const string query = @"
 
-                INSERT INTO supplier_products
-                (
-                    supplier_id,
-                    product_id,
-                    supplier_price,
-                    available_stock,
-                    lead_time_days,
-                    is_available,
-                    created_at
-                )
+                MERGE supplier_products AS target
 
-                VALUES
-                (
-                    @supplier_id,
-                    @product_id,
-                    @supplier_price,
-                    @available_stock,
-                    @lead_time_days,
-                    @is_available,
-                    @created_at
-                )";
+                USING (
+                    SELECT
+                        @supplier_id     AS supplier_id,
+                        @product_id      AS product_id,
+                        @supplier_price  AS supplier_price,
+                        @available_stock AS available_stock,
+                        @lead_time_days  AS lead_time_days,
+                        @is_available    AS is_available,
+                        @created_at      AS created_at
+                ) AS source
+                ON  target.supplier_id = source.supplier_id
+                AND target.product_id  = source.product_id
+
+                WHEN MATCHED THEN
+                    UPDATE SET
+                        supplier_price  = source.supplier_price,
+                        available_stock = source.available_stock,
+                        lead_time_days  = source.lead_time_days,
+                        is_available    = source.is_available
+
+                WHEN NOT MATCHED THEN
+                    INSERT (
+                        supplier_id,
+                        product_id,
+                        supplier_price,
+                        available_stock,
+                        lead_time_days,
+                        is_available,
+                        created_at
+                    )
+                    VALUES (
+                        source.supplier_id,
+                        source.product_id,
+                        source.supplier_price,
+                        source.available_stock,
+                        source.lead_time_days,
+                        source.is_available,
+                        source.created_at
+                    );
+            ";
 
             try
             {
@@ -295,6 +321,157 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 )
                 {
                     await connection.OpenAsync();
+
+                    using (
+                        SqlDataReader reader =
+                            await command.ExecuteReaderAsync()
+                    )
+                    {
+                        while (
+                            await reader.ReadAsync()
+                        )
+                        {
+                            var data =
+                                new SupplierProduct()
+                                {
+                                    supplier_product_id =
+                                        reader["supplier_product_id"] != DBNull.Value
+                                        ? Convert.ToInt32(
+                                            reader["supplier_product_id"]
+                                        )
+                                        : 0,
+
+                                    supplier_id =
+                                        reader["supplier_id"] != DBNull.Value
+                                        ? Convert.ToInt32(
+                                            reader["supplier_id"]
+                                        )
+                                        : 0,
+
+                                    product_id =
+                                        reader["product_id"] != DBNull.Value
+                                        ? Convert.ToInt32(
+                                            reader["product_id"]
+                                        )
+                                        : 0,
+
+                                    supplier_price =
+                                        reader["supplier_price"] != DBNull.Value
+                                        ? Convert.ToDecimal(
+                                            reader["supplier_price"]
+                                        )
+                                        : 0,
+
+                                    available_stock =
+                                        reader["available_stock"] != DBNull.Value
+                                        ? Convert.ToInt32(
+                                            reader["available_stock"]
+                                        )
+                                        : 0,
+
+                                    lead_time_days =
+                                        reader["lead_time_days"] != DBNull.Value
+                                        ? Convert.ToInt32(
+                                            reader["lead_time_days"]
+                                        )
+                                        : 0,
+
+                                    is_available =
+                                        reader["is_available"] != DBNull.Value
+                                        && Convert.ToBoolean(
+                                            reader["is_available"]
+                                        ),
+
+                                    created_at =
+                                        reader["created_at"] != DBNull.Value
+                                        ? Convert.ToDateTime(
+                                            reader["created_at"]
+                                        )
+                                        : DateTime.Now,
+
+                                    product_name =
+                                        reader["product_name"]?.ToString(),
+
+                                    supplier_name =
+                                        reader["supplier_name"]?.ToString(),
+
+                                    uom_id =
+                                        reader["uom_id"] != DBNull.Value
+                                        ? Convert.ToInt32(
+                                            reader["uom_id"]
+                                        )
+                                        : 0
+                                };
+
+                            response.Add(data);
+                        }
+                    }
+                }
+            }
+
+            catch (Exception ex)
+            {
+                var msg = ex.Message;
+
+                throw new Exception(msg);
+            }
+
+            return response;
+        }
+
+        // ─── GET BY SUPPLIER ────────────────────────────
+
+        public async Task<List<SupplierProduct>>
+            GetProductsBySupplier(int supplierId)
+        {
+            const string query = @"
+
+                SELECT
+                    sp.*,
+
+                    p.product_name,
+
+                    p.uom_id,
+
+                    s.supplier_name
+
+                FROM supplier_products sp
+
+                JOIN master_product p
+                    ON sp.product_id = p.product_id
+
+                JOIN master_supplier s
+                    ON sp.supplier_id = s.supplier_id
+
+                WHERE sp.supplier_id = @supplier_id
+            ";
+
+            var response =
+                new List<SupplierProduct>();
+
+            try
+            {
+                using (
+                    SqlConnection connection =
+                        new SqlConnection(
+                            _connectionString
+                        )
+                )
+
+                using (
+                    SqlCommand command =
+                        new SqlCommand(
+                            query,
+                            connection
+                        )
+                )
+                {
+                    await connection.OpenAsync();
+
+                    command.Parameters.AddWithValue(
+                        "@supplier_id",
+                        supplierId
+                    );
 
                     using (
                         SqlDataReader reader =
