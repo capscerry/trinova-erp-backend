@@ -32,11 +32,16 @@ namespace trinova_erp_backend.Controllers.Penjualan
                     });
                 }
 
+                var created = (await _uangMukaUsecase.GetAllUangMuka())
+                    .FirstOrDefault(item =>
+                        string.Equals(item.NoFaktur, model.NoFaktur, StringComparison.OrdinalIgnoreCase)
+                        && item.CustomerId == model.CustomerId);
+
                 return Ok(new
                 {
                     success = true,
                     message = "Data uang muka berhasil disimpan",
-                    data = result
+                    data = created ?? model
                 });
             }
             catch (Exception ex)

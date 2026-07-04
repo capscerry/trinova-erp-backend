@@ -41,8 +41,8 @@ namespace trinova_erp_backend.Usecase.Penjualan
             if (string.IsNullOrWhiteSpace(model.CreatedBy))
                 model.CreatedBy = "SYSTEM";
 
-            if (string.IsNullOrWhiteSpace(model.Status) || model.Status == "Received")
-                model.Status = "Issued";
+            if (string.IsNullOrWhiteSpace(model.Status) || model.Status == "Received" || model.Status == "Issued")
+                model.Status = "Unpaid";
 
             var result = await _uangMuka.InsertUangMuka(model);
 
@@ -87,8 +87,8 @@ namespace trinova_erp_backend.Usecase.Penjualan
             if (string.IsNullOrWhiteSpace(model.UpdatedBy))
                 model.UpdatedBy = "SYSTEM";
 
-            if (string.IsNullOrWhiteSpace(model.Status))
-                model.Status = "Issued";
+            if (string.IsNullOrWhiteSpace(model.Status) || model.Status == "Issued")
+                model.Status = "Unpaid";
 
             var result = await _uangMuka.UpdateUangMuka(model);
 
