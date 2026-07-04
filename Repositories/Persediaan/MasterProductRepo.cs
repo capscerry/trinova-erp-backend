@@ -387,6 +387,23 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
             return response;
         }
+        
+        public async Task<int> GetTotalProductsAsync()
+        {
+            const string query = @"
+                SELECT COUNT(*)
+                FROM master_product";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            await connection.OpenAsync();
+
+            return Convert.ToInt32(await command.ExecuteScalarAsync());
+        }
 
         // GET BY ID
         public async Task<MasterProduct?>

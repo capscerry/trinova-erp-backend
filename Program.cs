@@ -126,6 +126,10 @@ builder.Services.AddScoped<DemandForecastUsecase>();
 builder.Services.AddScoped<PurchaseRequisitionDetailRepo>();
 builder.Services.AddScoped<StockTransactionRepo>();
 builder.Services.AddScoped<StockTransferUsecase>();
+builder.Services.AddScoped<InventoryDashboardUsecase>();
+builder.Services.AddScoped<InventoryStockRepo>();
+builder.Services.AddScoped<MasterProductRepo>();
+builder.Services.AddControllers();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowCors", policy =>
