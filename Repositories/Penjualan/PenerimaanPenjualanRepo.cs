@@ -59,7 +59,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 sr.nilai_pembayaran AS NilaiPembayaran,
                 sr.tanggal_bayar AS TanggalBayar,
                 sr.uang_muka_id AS UangMukaId,
+                um.NoFaktur AS UangMukaNumber,
                 sr.sales_order_id AS SalesOrderId,
+                so.so_number AS SalesOrderNumber,
                 sr.sales_invoice_id AS SalesInvoiceId,
                 ISNULL(sr.status, 'Draft') AS Status
             FROM sales_receipt sr
@@ -67,6 +69,10 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 ON sr.customer_id = mc.customer_id
             INNER JOIN bank b
                 ON sr.bank_id = b.id
+            LEFT JOIN sales_order so
+                ON so.order_id = sr.sales_order_id
+            LEFT JOIN uang_muka um
+                ON um.Id = sr.uang_muka_id
             ORDER BY sr.id DESC
         ";
 
@@ -128,6 +134,10 @@ namespace trinova_erp_backend.Repositories.Penjualan
 
             try
             {
+                var uangMukaId = dto.UangMukaId.GetValueOrDefault();
+                var salesInvoiceId = dto.SalesInvoiceId.GetValueOrDefault();
+                var salesOrderId = await ResolveSalesOrderIdForReceipt(dto, connection, transaction);
+
                 var result = await connection.QueryFirstOrDefaultAsync<PenerimaanPenjualan>(
                     query,
                     new
@@ -138,14 +148,12 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         dto.NilaiPembayaran,
                         dto.TanggalBayar,
                         UangMukaId = dto.UangMukaId == 0 ? null : dto.UangMukaId,
-                        SalesOrderId = dto.SalesOrderId == 0 ? null : dto.SalesOrderId,
+                        SalesOrderId = salesOrderId > 0 ? (int?)salesOrderId : null,
                         SalesInvoiceId = dto.SalesInvoiceId == 0 ? null : dto.SalesInvoiceId
                     },
                     transaction);
 
-                var uangMukaId = dto.UangMukaId.GetValueOrDefault();
-                var salesInvoiceId = dto.SalesInvoiceId.GetValueOrDefault();
-                var salesOrderId = dto.SalesOrderId.GetValueOrDefault();
+                dto.SalesOrderId = salesOrderId > 0 ? salesOrderId : null;
 
                 if (uangMukaId > 0)
                 {
@@ -157,7 +165,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     await ApplyPaymentToOutstandingInvoices(dto, connection, transaction);
                 }
 
-                if (salesOrderId > 0 && salesInvoiceId <= 0 && uangMukaId <= 0)
+                if (salesOrderId > 0 && salesInvoiceId <= 0)
                 {
                     await UpdateSalesOrderPaymentStatus(salesOrderId, connection, transaction);
                 }
@@ -171,6 +179,49 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        private static async Task<int> ResolveSalesOrderIdForReceipt(
+            PenerimaanPenjualan dto,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            var salesOrderId = dto.SalesOrderId.GetValueOrDefault();
+            if (salesOrderId > 0)
+            {
+                return salesOrderId;
+            }
+
+            var salesInvoiceId = dto.SalesInvoiceId.GetValueOrDefault();
+            if (salesInvoiceId > 0)
+            {
+                salesOrderId = await connection.QueryFirstOrDefaultAsync<int>(
+                    @"SELECT ISNULL(sales_order_id, 0)
+                      FROM sales_invoice
+                      WHERE id = @SalesInvoiceId",
+                    new { SalesInvoiceId = salesInvoiceId },
+                    transaction);
+
+                if (salesOrderId > 0)
+                {
+                    return salesOrderId;
+                }
+            }
+
+            var uangMukaId = dto.UangMukaId.GetValueOrDefault();
+            if (uangMukaId <= 0)
+            {
+                return 0;
+            }
+
+            return await connection.QueryFirstOrDefaultAsync<int>(
+                @"SELECT TOP 1 ISNULL(so.order_id, 0)
+                  FROM uang_muka um
+                  INNER JOIN sales_order so
+                      ON so.so_number = um.NoSo
+                  WHERE um.Id = @UangMukaId",
+                new { UangMukaId = uangMukaId },
+                transaction);
         }
 
         public async Task<bool> UpdateSalesReceipt(int id, PenerimaanPenjualan dto)
@@ -194,6 +245,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
 
             try
             {
+                var salesOrderId = await ResolveSalesOrderIdForReceipt(dto, connection, transaction);
+                dto.SalesOrderId = salesOrderId > 0 ? salesOrderId : null;
+
                 var previous = await connection.QueryFirstOrDefaultAsync<PenerimaanPenjualan>(
                     @"SELECT
                         id AS Id,
@@ -217,7 +271,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         dto.NilaiPembayaran,
                         dto.TanggalBayar,
                         UangMukaId = dto.UangMukaId == 0 ? null : dto.UangMukaId,
-                        SalesOrderId = dto.SalesOrderId == 0 ? null : dto.SalesOrderId,
+                        SalesOrderId = salesOrderId > 0 ? (int?)salesOrderId : null,
                         SalesInvoiceId = dto.SalesInvoiceId == 0 ? null : dto.SalesInvoiceId
                     },
                     transaction);
@@ -425,13 +479,6 @@ namespace trinova_erp_backend.Repositories.Penjualan
             const string query = @"
                 UPDATE sales_order
                 SET status = CASE
-                    WHEN (
-                        SELECT ISNULL(SUM(nilai_pembayaran), 0)
-                        FROM sales_receipt
-                        WHERE sales_order_id = @SalesOrderId
-                          AND ISNULL(status, '') NOT IN ('Cancelled', 'Dibatalkan')
-                    ) >= ISNULL(subtotal, 0)
-                        THEN 'Completed'
                     WHEN (
                         SELECT ISNULL(SUM(nilai_pembayaran), 0)
                         FROM sales_receipt

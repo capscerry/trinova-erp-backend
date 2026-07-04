@@ -197,7 +197,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                               AND ISNULL(status, '') NOT IN ('Cancelled', 'Dibatalkan')
                         ) > 0
                             THEN 'Partially Paid'
-                        ELSE 'Draft'
+                        ELSE 'Unpaid'
                     END,
                     UpdatedAt = GETDATE()
                 WHERE Id = @Id;";

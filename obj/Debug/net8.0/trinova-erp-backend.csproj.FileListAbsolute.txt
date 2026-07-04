@@ -282,7 +282,6 @@ C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.bu
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.development.json
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-.B3CAAC3E.Up2Date
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.dll
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\refint\trinova-erp-backend.dll
