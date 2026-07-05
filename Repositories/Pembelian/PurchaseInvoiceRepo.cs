@@ -63,6 +63,20 @@ namespace trinova_erp_backend.Repositories.Pembelian
             decimal creditAmount,
             string invoiceNumber
         );
+
+        /// <summary>
+        /// Recalculates the outstanding_amount for a single invoice and
+        /// updates its status column to 'Paid' or 'Unpaid' accordingly.
+        /// Invoices already set to 'Cancelled' are left unchanged.
+        /// </summary>
+        Task SyncInvoiceStatus(int purchaseInvoiceId);
+
+        /// <summary>
+        /// Recalculates outstanding_amount for every non-Cancelled invoice
+        /// and bulk-updates their status. Used for the one-time backfill
+        /// of existing records.
+        /// </summary>
+        Task SyncAllInvoiceStatuses();
     }
 
     public class PurchaseInvoiceRepo : IPurchaseInvoiceRepo
@@ -633,6 +647,75 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
                 return Convert.ToInt32(await command.ExecuteScalarAsync());
             }
+        }
+
+        // SYNC INVOICE STATUS (single invoice)
+        // Recomputes outstanding and flips status to Paid/Unpaid.
+        // Cancelled invoices are never touched.
+        public async Task SyncInvoiceStatus(int purchaseInvoiceId)
+        {
+            const string query = @"
+                UPDATE pi
+                SET pi.status = CASE
+                    WHEN pi.status = 'Cancelled' THEN pi.status
+                    WHEN (
+                        pi.total_amount
+                        - ISNULL((
+                            SELECT SUM(pdp.amount)
+                            FROM purchase_down_payment pdp
+                            WHERE pdp.purchase_order_id = gr.purchase_order_id
+                          ), 0)
+                        - ISNULL((
+                            SELECT SUM(pp.amount)
+                            FROM purchase_payment pp
+                            WHERE pp.purchase_invoice_id = pi.purchase_invoice_id
+                          ), 0)
+                    ) <= 0 THEN 'Paid'
+                    ELSE 'Unpaid'
+                END
+                FROM purchase_invoice pi
+                LEFT JOIN goods_receipt gr
+                    ON pi.goods_receipt_id = gr.goods_receipt_id
+                WHERE pi.purchase_invoice_id = @purchase_invoice_id";
+
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlCommand command = new SqlCommand(query, connection);
+            await connection.OpenAsync();
+            command.Parameters.AddWithValue("@purchase_invoice_id", purchaseInvoiceId);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        // SYNC ALL INVOICE STATUSES (backfill)
+        // Touches every non-Cancelled invoice in one statement.
+        public async Task SyncAllInvoiceStatuses()
+        {
+            const string query = @"
+                UPDATE pi
+                SET pi.status = CASE
+                    WHEN (
+                        pi.total_amount
+                        - ISNULL((
+                            SELECT SUM(pdp.amount)
+                            FROM purchase_down_payment pdp
+                            WHERE pdp.purchase_order_id = gr.purchase_order_id
+                          ), 0)
+                        - ISNULL((
+                            SELECT SUM(pp.amount)
+                            FROM purchase_payment pp
+                            WHERE pp.purchase_invoice_id = pi.purchase_invoice_id
+                          ), 0)
+                    ) <= 0 THEN 'Paid'
+                    ELSE 'Unpaid'
+                END
+                FROM purchase_invoice pi
+                LEFT JOIN goods_receipt gr
+                    ON pi.goods_receipt_id = gr.goods_receipt_id
+                WHERE pi.status <> 'Cancelled'";
+
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlCommand command = new SqlCommand(query, connection);
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
         }
 
         // GET ALL

@@ -125,7 +125,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 await _purchaseOrderDetailRepo.GetDetailsByPurchaseOrderId(id);
 
             if (details.Count == 0)
-                return (false, "Purchase Order has no detail lines");
+                return (false, $"Purchase Order (id={id}, po_number={po.po_number}) has no detail lines");
 
             // Hard-reserve stock for each line. Track what was actually deducted
             // so we can roll back if a later line has insufficient stock.

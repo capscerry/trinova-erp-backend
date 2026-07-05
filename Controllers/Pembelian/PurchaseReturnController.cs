@@ -84,19 +84,17 @@ namespace trinova_erp_backend.Controllers.Pembelian
         }
 
         /// <summary>
-        /// Returns all unpaid / partially-paid invoices for the supplier linked
-        /// to this purchase return. The supplier is resolved internally via the
-        /// return's goods_receipt_id -> purchase_order -> supplier_id chain,
-        /// so the frontend only needs the purchase_return_id.
-        /// Each invoice carries a real-time outstanding_amount.
+        /// Returns the product lines (product_name + quantity) for the Goods
+        /// Receipt linked to this purchase return.
+        /// The Accept Loss modal calls this to display the correct items and
+        /// quantities that will be restored when the settlement is confirmed.
         /// </summary>
-        [HttpGet("/api/purchase-return/{id}/invoices")]
-        public async Task<IActionResult> GetUnpaidInvoicesForReturn(int id)
+        [HttpGet("/api/purchase-return/{id}/details")]
+        public async Task<IActionResult> GetReturnDetails(int id)
         {
             try
             {
-                var result = await _purchaseReturnUsecase
-                    .GetUnpaidInvoicesForReturn(id);
+                var result = await _purchaseReturnUsecase.GetReturnDetails(id);
 
                 return Ok(new
                 {
@@ -109,6 +107,43 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 return BadRequest(new
                 {
                     status = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Returns all unpaid / partially-paid invoices for the supplier linked
+        /// to this purchase return. The supplier is resolved internally via the
+        /// return's goods_receipt_id -> purchase_order -> supplier_id chain,
+        /// so the frontend only needs the purchase_return_id.
+        /// Each invoice carries a real-time outstanding_amount.
+        ///
+        /// <c>cash_refund_available</c> is <c>true</c> when at least one
+        /// outstanding invoice exists. The frontend should lock Option C
+        /// (Cash Refund) and force the user to pick Option A or B when this
+        /// is <c>false</c>.
+        /// </summary>
+        [HttpGet("/api/purchase-return/{id}/invoices")]
+        public async Task<IActionResult> GetUnpaidInvoicesForReturn(int id)
+        {
+            try
+            {
+                var result = await _purchaseReturnUsecase
+                    .GetUnpaidInvoicesForReturn(id);
+
+                return Ok(new
+                {
+                    status               = true,
+                    cash_refund_available = result.CashRefundAvailable,
+                    data                 = result.Invoices
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status  = false,
                     message = ex.Message
                 });
             }

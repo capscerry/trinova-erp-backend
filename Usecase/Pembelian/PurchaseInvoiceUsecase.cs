@@ -30,6 +30,18 @@ namespace trinova_erp_backend.Usecase.Pembelian
         Task<bool> DeletePurchaseInvoice(
             int id
         );
+
+        /// <summary>
+        /// Recalculates the outstanding_amount for one invoice and updates
+        /// its status to 'Paid' or 'Unpaid'. Cancelled invoices are skipped.
+        /// </summary>
+        Task SyncInvoiceStatus(int purchaseInvoiceId);
+
+        /// <summary>
+        /// Recalculates outstanding_amount for every non-Cancelled invoice
+        /// and bulk-updates their status. Used for the one-time backfill.
+        /// </summary>
+        Task SyncAllInvoiceStatuses();
     }
 
     public class PurchaseInvoiceUsecase
@@ -121,15 +133,25 @@ public async Task<bool>
 
     if (existing == null)
     {
-        return false;
+        throw new KeyNotFoundException(
+            $"Purchase Invoice with id {model.purchase_invoice_id} not found"
+        );
     }
 
-    if (
-        existing.status == "Paid"
-        || existing.status == "Cancelled"
-    )
+    // Block edits on Cancelled invoices.
+    if (existing.status == "Cancelled")
     {
-        return false;
+        throw new InvalidOperationException(
+            "Cancelled invoices cannot be updated"
+        );
+    }
+
+    // If the invoice is already in the requested status, treat as success
+    // (idempotent). This handles the case where the payment flow already
+    // auto-synced the invoice status via SyncInvoiceStatus.
+    if (existing.status == model.status)
+    {
+        return true;
     }
 
     return await _purchaseInvoiceRepo
@@ -163,5 +185,17 @@ public async Task<bool>
         return await _purchaseInvoiceRepo
             .DeletePurchaseInvoice(id);
     }
+
+        public async Task SyncInvoiceStatus(int purchaseInvoiceId)
+        {
+            await _purchaseInvoiceRepo
+                .SyncInvoiceStatus(purchaseInvoiceId);
+        }
+
+        public async Task SyncAllInvoiceStatuses()
+        {
+            await _purchaseInvoiceRepo
+                .SyncAllInvoiceStatuses();
+        }
         }
     }
