@@ -20,5 +20,7 @@ namespace trinova_erp_backend.Models
         public DateTime? update_date { get; set; }
 
         public string? update_by { get; set; }
+
+        public bool is_active { get; set; } = true;
     }
 }

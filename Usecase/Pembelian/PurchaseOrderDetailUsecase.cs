@@ -31,7 +31,13 @@ namespace trinova_erp_backend.Usecase.Pembelian
             PurchaseOrderDetail model
         )
         {
-            model.subtotal = model.quantity * model.price;
+            // Recalculate tax_amount and subtotal server-side so they are always
+            // consistent with quantity, price, and tax_percentage — even if the
+            // client sends a stale or missing value.
+            decimal baseAmount = (model.quantity * (model.price ?? 0m));
+            decimal taxRate    = (model.tax_percentage ?? 0m) / 100m;
+            model.tax_amount   = Math.Round(baseAmount * taxRate, 2);
+            model.subtotal     = baseAmount + model.tax_amount;
 
             var result = await _purchaseOrderDetailRepo
                 .InsertPurchaseOrderDetail(model);
@@ -59,8 +65,13 @@ namespace trinova_erp_backend.Usecase.Pembelian
             PurchaseOrderDetail model
         )
         {
-            // AUTO RECALCULATE SUBTOTAL
-            model.subtotal = model.quantity * model.price;
+            // Recalculate tax_amount and subtotal server-side so they are always
+            // consistent with quantity, price, and tax_percentage — even if the
+            // client sends a stale or missing value.
+            decimal baseAmount = (model.quantity * (model.price ?? 0m));
+            decimal taxRate    = (model.tax_percentage ?? 0m) / 100m;
+            model.tax_amount   = Math.Round(baseAmount * taxRate, 2);
+            model.subtotal     = baseAmount + model.tax_amount;
 
             var result = await _purchaseOrderDetailRepo
                 .UpdatePurchaseOrderDetail(model);

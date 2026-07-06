@@ -33,16 +33,14 @@ namespace trinova_erp_backend.Repositories.Pembelian
         }
 
         // ─── SELF-HEALING SCHEMA + BACK-FILL ────────────────────────────────────
-        // Called internally before any read/write that touches category_code.
-        // 1. Adds the column if it doesn't exist yet (no external migration needed).
-        // 2. Back-fills any rows that are still NULL or not in SUC-XXXXXXXXXX format.
-        // Safe to run on every request — the UPDATE touches zero rows once all
-        // codes are already correct.
+        // Adds category_code (if missing), adds is_active (if missing), then
+        // back-fills any rows that still lack a valid SUC- code.
+        // Idempotent — safe to call on every request.
 
         private async Task EnsureCategoryCodeColumn(SqlConnection connection)
         {
-            // Step 1 — add column if absent
-            const string addColumn = @"
+            // 1. Add category_code if absent
+            const string addCode = @"
                 IF NOT EXISTS (
                     SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
                     WHERE TABLE_NAME  = 'supplier_category'
@@ -53,7 +51,19 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     ADD category_code NVARCHAR(20) NULL;
                 END";
 
-            // Step 2 — back-fill rows that have no code or a malformed code
+            // 2. Add is_active if absent (defaults existing rows to 1 = active)
+            const string addActive = @"
+                IF NOT EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME  = 'supplier_category'
+                      AND COLUMN_NAME = 'is_active'
+                )
+                BEGIN
+                    ALTER TABLE supplier_category
+                    ADD is_active BIT NOT NULL DEFAULT 1;
+                END";
+
+            // 3. Back-fill missing / malformed category_code values
             const string backFill = @"
                 UPDATE sc
                 SET sc.category_code = 'SUC-' + RIGHT(
@@ -70,14 +80,17 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             'SUC-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
                 ) rn ON sc.category_id = rn.category_id";
 
-            using var cmd1 = new SqlCommand(addColumn, connection);
+            using var cmd1 = new SqlCommand(addCode,   connection);
             await cmd1.ExecuteNonQueryAsync();
 
-            using var cmd2 = new SqlCommand(backFill, connection);
+            using var cmd2 = new SqlCommand(addActive, connection);
             await cmd2.ExecuteNonQueryAsync();
+
+            using var cmd3 = new SqlCommand(backFill,  connection);
+            await cmd3.ExecuteNonQueryAsync();
         }
 
-        // ─── MIGRATE EXISTING CODES (public endpoint) ────────────────────────────
+        // ─── MIGRATE (public endpoint) ───────────────────────────────────────────
 
         public async Task MigrateCategoryCodes()
         {
@@ -102,18 +115,14 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 )";
 
             const string existsQuery = @"
-                SELECT COUNT(1)
-                FROM supplier_category
+                SELECT COUNT(1) FROM supplier_category
                 WHERE category_code = @code";
 
             using SqlConnection connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
-
-            // Make sure the column exists before querying it
             await EnsureCategoryCodeColumn(connection);
 
             long nextNumber;
-
             using (var cmd = new SqlCommand(maxQuery, connection))
             {
                 object? result = await cmd.ExecuteScalarAsync();
@@ -125,16 +134,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
             using (var cmd = new SqlCommand(existsQuery, connection))
             {
                 cmd.Parameters.Add("@code", System.Data.SqlDbType.NVarChar, 20);
-
                 while (true)
                 {
                     string candidate = $"SUC-{nextNumber:D10}";
                     cmd.Parameters["@code"].Value = candidate;
-
                     int count = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-                    if (count == 0)
-                        return candidate;
-
+                    if (count == 0) return candidate;
                     nextNumber++;
                 }
             }
@@ -151,6 +156,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 (
                     category_code,
                     category_name,
+                    is_active,
                     created_by,
                     created_date
                 )
@@ -158,6 +164,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 (
                     @category_code,
                     @category_name,
+                    @is_active,
                     @created_by,
                     GETDATE()
                 )";
@@ -166,20 +173,16 @@ namespace trinova_erp_backend.Repositories.Pembelian
             {
                 using SqlConnection connection = new SqlConnection(_connectionString);
                 using SqlCommand command = new SqlCommand(query, connection);
-
                 await connection.OpenAsync();
 
                 command.Parameters.AddWithValue("@category_code", model.category_code);
-                command.Parameters.AddWithValue("@category_name", model.category_name);
-                command.Parameters.AddWithValue("@created_by", (object?)model.created_by ?? DBNull.Value);
+                command.Parameters.AddWithValue("@category_name",  model.category_name);
+                command.Parameters.AddWithValue("@is_active",      model.is_active);
+                command.Parameters.AddWithValue("@created_by",     (object?)model.created_by ?? DBNull.Value);
 
-                int result = await command.ExecuteNonQueryAsync();
-                return result > 0;
+                return await command.ExecuteNonQueryAsync() > 0;
             }
-            catch (Exception)
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
         // ─── UPDATE ──────────────────────────────────────────────────────────────
@@ -190,6 +193,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 UPDATE supplier_category
                 SET
                     category_name = @category_name,
+                    is_active     = @is_active,
                     update_by     = @update_by,
                     update_date   = GETDATE()
                 WHERE category_id = @category_id";
@@ -198,20 +202,16 @@ namespace trinova_erp_backend.Repositories.Pembelian
             {
                 using SqlConnection connection = new SqlConnection(_connectionString);
                 using SqlCommand command = new SqlCommand(query, connection);
-
                 await connection.OpenAsync();
 
-                command.Parameters.AddWithValue("@category_id", model.category_id);
-                command.Parameters.AddWithValue("@category_name", model.category_name);
-                command.Parameters.AddWithValue("@update_by", (object?)model.update_by ?? DBNull.Value);
+                command.Parameters.AddWithValue("@category_id",   model.category_id);
+                command.Parameters.AddWithValue("@category_name",  model.category_name);
+                command.Parameters.AddWithValue("@is_active",      model.is_active);
+                command.Parameters.AddWithValue("@update_by",      (object?)model.update_by ?? DBNull.Value);
 
-                int result = await command.ExecuteNonQueryAsync();
-                return result > 0;
+                return await command.ExecuteNonQueryAsync() > 0;
             }
-            catch (Exception)
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
         // ─── IS CATEGORY USED ────────────────────────────────────────────────────
@@ -219,19 +219,14 @@ namespace trinova_erp_backend.Repositories.Pembelian
         public async Task<bool> IsCategoryUsed(int categoryId)
         {
             const string query = @"
-                SELECT COUNT(*)
-                FROM master_supplier
+                SELECT COUNT(*) FROM master_supplier
                 WHERE supplier_category_id = @categoryId";
 
             using SqlConnection connection = new SqlConnection(_connectionString);
             using SqlCommand command = new SqlCommand(query, connection);
-
             await connection.OpenAsync();
-
             command.Parameters.AddWithValue("@categoryId", categoryId);
-
-            int count = Convert.ToInt32(await command.ExecuteScalarAsync());
-            return count > 0;
+            return Convert.ToInt32(await command.ExecuteScalarAsync()) > 0;
         }
 
         // ─── DELETE ──────────────────────────────────────────────────────────────
@@ -239,18 +234,13 @@ namespace trinova_erp_backend.Repositories.Pembelian
         public async Task<bool> DeleteSupplierCategory(int id)
         {
             const string query = @"
-                DELETE FROM supplier_category
-                WHERE category_id = @id";
+                DELETE FROM supplier_category WHERE category_id = @id";
 
             using SqlConnection connection = new SqlConnection(_connectionString);
             using SqlCommand command = new SqlCommand(query, connection);
-
             await connection.OpenAsync();
-
             command.Parameters.AddWithValue("@id", id);
-
-            int result = await command.ExecuteNonQueryAsync();
-            return result > 0;
+            return await command.ExecuteNonQueryAsync() > 0;
         }
 
         // ─── GET ALL ─────────────────────────────────────────────────────────────
@@ -264,7 +254,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 using SqlConnection connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                // Ensure column exists and all rows have codes before reading
+                // Ensure schema is up-to-date before querying
                 await EnsureCategoryCodeColumn(connection);
 
                 const string query = @"
@@ -272,6 +262,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                         category_id,
                         category_code,
                         category_name,
+                        is_active,
                         created_date,
                         created_by,
                         update_date,
@@ -289,6 +280,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                         category_id   = reader.GetInt32(reader.GetOrdinal("category_id")),
                         category_code = reader["category_code"]?.ToString() ?? string.Empty,
                         category_name = reader.GetString(reader.GetOrdinal("category_name")),
+                        is_active     = reader["is_active"] != DBNull.Value && Convert.ToBoolean(reader["is_active"]),
                         created_date  = reader["created_date"] as DateTime?,
                         created_by    = reader["created_by"]?.ToString(),
                         update_date   = reader["update_date"] as DateTime?,
