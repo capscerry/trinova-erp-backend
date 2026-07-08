@@ -5,9 +5,33 @@ using trinova_erp_backend.Models;
 
 namespace trinova_erp_backend.Repositories.Pembelian
 {
+    // ── Helper ────────────────────────────────────────────────────────────────
+    // Safe column reader: returns null instead of throwing IndexOutOfRangeException
+    // when a column is absent from the result set (e.g. before a migration runs).
+    internal static class DataReaderExtensions
+    {
+        internal static string? SafeGetString(this SqlDataReader reader, string column)
+        {
+            try
+            {
+                int ordinal = reader.GetOrdinal(column);
+                return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+            }
+            catch (IndexOutOfRangeException)
+            {
+                return null;
+            }
+        }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
     public interface IPurchaseInvoiceRepo
     {
         Task<string> GenerateInvoiceNumber();
+
+        /// <summary>
+        /// Generates the next unique nomor faktur pajak in FP-NNNNNNNNNN format.
+        /// </summary>
+        Task<string> GenerateTaxNumber();
 
         Task<int> InsertPurchaseInvoice(
             PurchaseInvoice model
@@ -132,6 +156,37 @@ namespace trinova_erp_backend.Repositories.Pembelian
             return $"INV-{nextNumber:D10}";
         }
 
+        // GENERATE TAX NUMBER (Nomor Faktur Pajak)
+        // Follows the same TOP-1 + canonical-format pattern as GenerateInvoiceNumber.
+        // Canonical format: FP-NNNNNNNNNN (FP prefix, 10-digit zero-padded sequence).
+        public async Task<string> GenerateTaxNumber()
+        {
+            const string query = @"
+                SELECT TOP 1 nomor_faktur_pajak
+                FROM purchase_invoice
+                WHERE nomor_faktur_pajak LIKE 'FP-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+                ORDER BY purchase_invoice_id DESC";
+
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            using SqlCommand command = new SqlCommand(query, connection);
+
+            object? result = await command.ExecuteScalarAsync();
+
+            int nextNumber = 1;
+
+            if (result != null && result != DBNull.Value)
+            {
+                string lastFp = result.ToString() ?? "FP-0000000000";
+                // Strip the "FP-" prefix (always 3 chars) before parsing
+                string numericPart = lastFp.Substring(3);
+                if (int.TryParse(numericPart, out int parsed))
+                    nextNumber = parsed + 1;
+            }
+
+            return $"FP-{nextNumber:D10}";
+        }
+
         // INSERT
         public async Task<int> InsertPurchaseInvoice(
             PurchaseInvoice model
@@ -146,6 +201,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     supplier_id,
                     total_amount,
                     status,
+                    nomor_faktur_pajak,
                     created_at
                 )
                 VALUES
@@ -156,6 +212,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     @supplier_id,
                     @total_amount,
                     @status,
+                    @nomor_faktur_pajak,
                     GETDATE()
                 );
 
@@ -199,6 +256,11 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     command.Parameters.AddWithValue(
                         "@status",
                         model.status
+                    );
+
+                    command.Parameters.AddWithValue(
+                        "@nomor_faktur_pajak",
+                        (object?)model.nomor_faktur_pajak ?? DBNull.Value
                     );
 
                     int purchaseInvoiceId =
@@ -724,10 +786,20 @@ namespace trinova_erp_backend.Repositories.Pembelian
         {
         const string query = @"
         SELECT
-            pi.*,
+            pi.purchase_invoice_id,
+            pi.goods_receipt_id,
+            pi.invoice_number,
+            pi.invoice_date,
+            pi.supplier_id,
+            pi.total_amount,
+            pi.status,
+            pi.created_at,
             ms.supplier_name,
             po.transaction_name,
             po.transaction_detail,
+            po.tax_percentage,
+            po.tax_amount,
+            COALESCE(NULLIF(pi.nomor_faktur_pajak, ''), NULLIF(po.nomor_faktur_pajak, '')) AS nomor_faktur_pajak_resolved,
 
             ISNULL(
                 (
@@ -883,6 +955,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                         reader["transaction_detail"] == DBNull.Value
                                             ? null
                                             : reader["transaction_detail"]?.ToString(),
+
+                                    nomor_faktur_pajak =
+                                        reader.SafeGetString("nomor_faktur_pajak_resolved"),
                                 }
                             );
                         }

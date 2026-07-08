@@ -33,5 +33,13 @@ namespace trinova_erp_backend.Models
 
         public string? transaction_detail { get; set; }
 
+        /// <summary>
+        /// Nomor Faktur Pajak — unique, auto-incremented (FP-NNNNNNNNNN).
+        /// Auto-populated from the linked Purchase Order when its tax fields
+        /// (tax_percentage / tax_amount) are non-zero. Null when the PO has
+        /// no tax or when the user intentionally leaves the field blank.
+        /// </summary>
+        public string? nomor_faktur_pajak { get; set; }
+
     }
 }
