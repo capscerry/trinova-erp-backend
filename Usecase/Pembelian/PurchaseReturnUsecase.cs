@@ -1,3 +1,4 @@
+using System.Text.Json;
 using trinova_erp_backend.Models;
 using trinova_erp_backend.Repositories.Pembelian;
 
@@ -19,6 +20,17 @@ namespace trinova_erp_backend.Usecase.Pembelian
         /// (Cash Refund) is available to the user. False locks Option C on the frontend.
         /// </summary>
         public bool CashRefundAvailable => Invoices.Count > 0;
+    }
+
+    /// <summary>
+    /// Mirrors the ReturnLineItem shape serialised by the frontend into
+    /// purchase_return.transaction_detail.
+    /// Only the fields needed for stock operations are mapped here.
+    /// </summary>
+    internal sealed class ReturnLineItemDto
+    {
+        public int    product_id  { get; set; }
+        public int    qty_return  { get; set; }
     }
 
     public interface IPurchaseReturnUsecase
@@ -66,6 +78,11 @@ namespace trinova_erp_backend.Usecase.Pembelian
         private readonly ISupplierProductRepo     _supplierProductRepo;
         private readonly IPurchaseInvoiceRepo     _purchaseInvoiceRepo;
 
+        private static readonly JsonSerializerOptions _jsonOpts = new()
+        {
+            PropertyNameCaseInsensitive = true,
+        };
+
         public PurchaseReturnUsecase(
             IPurchaseReturnRepo     purchaseReturnRepo,
             IGoodsReceiptRepo       goodsReceiptRepo,
@@ -86,9 +103,36 @@ namespace trinova_erp_backend.Usecase.Pembelian
             return await _purchaseReturnRepo.GenerateReturnNumber();
         }
 
-        // When a Purchase Return is created the goods are going back to the
-        // supplier, so inventory_stock is reduced for every product line that
-        // was on the originating Goods Receipt.
+        /// <summary>
+        /// Parses the JSON array stored in <c>transaction_detail</c> into a list
+        /// of (product_id, qty_return) pairs.  Returns an empty list when the
+        /// field is missing, empty, or not valid JSON — callers fall back to the
+        /// full-GR-line path in that case.
+        /// </summary>
+        private static List<ReturnLineItemDto> ParseReturnItems(string? transactionDetail)
+        {
+            if (string.IsNullOrWhiteSpace(transactionDetail))
+                return [];
+
+            try
+            {
+                var items = JsonSerializer.Deserialize<List<ReturnLineItemDto>>(
+                    transactionDetail, _jsonOpts
+                );
+                // Filter out rows with zero or negative qty so we never deduct/restore 0
+                return items?.Where(i => i.qty_return > 0).ToList() ?? [];
+            }
+            catch
+            {
+                // transaction_detail is free-text on old records — treat as no items
+                return [];
+            }
+        }
+
+        // When a Purchase Return is created the returned goods leave the warehouse,
+        // so inventory_stock is reduced.  We deduct only the products and quantities
+        // that were actually returned (from transaction_detail), falling back to the
+        // full GR lines only when transaction_detail is absent (legacy records).
         public async Task<int> InsertPurchaseReturn(PurchaseReturn model)
         {
             // Guard: Cash Refund requires at least one outstanding invoice from
@@ -118,13 +162,28 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
             if (returnId > 0)
             {
-                var details = await _goodsReceiptDetailRepo
-                    .GetDetailsByGoodsReceiptId(model.goods_receipt_id);
+                var returnItems = ParseReturnItems(model.transaction_detail);
 
-                foreach (var line in details)
+                if (returnItems.Count > 0)
                 {
-                    await _goodsReceiptDetailRepo
-                        .DeductInventoryStock(line.product_id, line.quantity);
+                    // Precise path: deduct only the actually-returned quantities
+                    foreach (var item in returnItems)
+                    {
+                        await _goodsReceiptDetailRepo
+                            .DeductInventoryStock(item.product_id, item.qty_return);
+                    }
+                }
+                else
+                {
+                    // Legacy fallback: no item-level data, deduct every GR line
+                    var grDetails = await _goodsReceiptDetailRepo
+                        .GetDetailsByGoodsReceiptId(model.goods_receipt_id);
+
+                    foreach (var line in grDetails)
+                    {
+                        await _goodsReceiptDetailRepo
+                            .DeductInventoryStock(line.product_id, line.quantity);
+                    }
                 }
             }
 
@@ -235,25 +294,45 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 );
             }
 
-            // Accept Loss: restore stock for every product line on the originating GR.
+            // Accept Loss: the supplier has shipped back the exact goods that were
+            // returned, so we restore inventory_stock for exactly those items and
+            // quantities.  We read them from transaction_detail (set at creation
+            // time), falling back to all GR lines only for legacy records that
+            // predate the per-item JSON serialisation.
             if (status == "Closed" &&
                 pr.settlement_option.Equals("Accept Loss", StringComparison.OrdinalIgnoreCase))
             {
-                var gr = await _goodsReceiptRepo.GetGoodsReceiptById(pr.goods_receipt_id)
-                    ?? throw new Exception("Goods receipt linked to this return was not found.");
+                var returnItems = ParseReturnItems(pr.transaction_detail);
 
-                var details = await _goodsReceiptDetailRepo
-                    .GetDetailsByGoodsReceiptId(pr.goods_receipt_id);
+                int restoredLineCount;
 
-                foreach (var line in details)
+                if (returnItems.Count > 0)
                 {
-                    await _goodsReceiptDetailRepo
-                        .RestoreInventoryStock(line.product_id, line.quantity);
+                    // Precise path: restore only the actually-returned quantities
+                    foreach (var item in returnItems)
+                    {
+                        await _goodsReceiptDetailRepo
+                            .RestoreInventoryStock(item.product_id, item.qty_return);
+                    }
+                    restoredLineCount = returnItems.Count;
+                }
+                else
+                {
+                    // Legacy fallback: no item-level data stored, restore every GR line
+                    var grDetails = await _goodsReceiptDetailRepo
+                        .GetDetailsByGoodsReceiptId(pr.goods_receipt_id);
+
+                    foreach (var line in grDetails)
+                    {
+                        await _goodsReceiptDetailRepo
+                            .RestoreInventoryStock(line.product_id, line.quantity);
+                    }
+                    restoredLineCount = grDetails.Count;
                 }
 
                 string generatedCondition =
                     $"Accept Loss settled. Supplier returned fixed goods worth Rp {pr.total_amount:N0}. " +
-                    $"Stock restored for {details.Count} product line(s).";
+                    $"Stock restored for {restoredLineCount} product line(s).";
 
                 string generatedNotes =
                     string.IsNullOrWhiteSpace(notes)
