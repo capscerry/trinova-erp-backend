@@ -12,6 +12,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
         Task<List<GoodsReceiptDetail>> GetDetailsByGoodsReceiptId(int goodsReceiptId);
 
         /// <summary>
+        /// Same as GetDetailsByGoodsReceiptId but joins master_product to
+        /// populate the product_name field — used by the Accept Loss modal.
+        /// </summary>
+        Task<List<GoodsReceiptDetail>> GetDetailsByGoodsReceiptIdWithProductName(int goodsReceiptId);
+
+        /// <summary>
         /// Deducts qty from inventory_stock for the given product (used when a
         /// Purchase Return sends goods back to the supplier) and re-syncs the
         /// supplier_products.available_stock mirror.
@@ -274,6 +280,54 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
             return response;
         }
+        // ─── GET DETAILS WITH PRODUCT NAME ──────────────────────────────
+
+        public async Task<List<GoodsReceiptDetail>> GetDetailsByGoodsReceiptIdWithProductName(int goodsReceiptId)
+        {
+            const string query = @"
+                SELECT
+                    grd.goods_receipt_detail_id,
+                    grd.goods_receipt_id,
+                    grd.product_id,
+                    grd.quantity,
+                    mp.product_name
+                FROM goods_receipt_detail grd
+                INNER JOIN master_product mp
+                    ON grd.product_id = mp.product_id
+                WHERE grd.goods_receipt_id = @goods_receipt_id";
+
+            var response = new List<GoodsReceiptDetail>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                await connection.OpenAsync();
+                command.Parameters.AddWithValue("@goods_receipt_id", goodsReceiptId);
+
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        response.Add(new GoodsReceiptDetail
+                        {
+                            goods_receipt_detail_id =
+                                reader.GetInt32(reader.GetOrdinal("goods_receipt_detail_id")),
+                            goods_receipt_id =
+                                reader.GetInt32(reader.GetOrdinal("goods_receipt_id")),
+                            product_id =
+                                Convert.ToInt32(reader["product_id"]),
+                            quantity =
+                                reader.GetInt32(reader.GetOrdinal("quantity")),
+                            product_name =
+                                reader["product_name"]?.ToString() ?? ""
+                        });
+                    }
+                }
+            }
+
+            return response;
+        }
+
         // ─── DEDUCT INVENTORY STOCK (used by Purchase Return) ───────────
         // Mirrors the inverse of what InsertGoodsReceiptDetail does:
         // reduces inventory_stock and re-syncs the supplier_products mirror.

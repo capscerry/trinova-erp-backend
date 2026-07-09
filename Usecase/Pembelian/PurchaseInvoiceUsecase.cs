@@ -14,11 +14,6 @@ namespace trinova_erp_backend.Usecase.Pembelian
         Task<List<PurchaseInvoice>>
             GetAllPurchaseInvoice();
 
-        /// <summary>
-        /// Returns all unpaid / partially-paid invoices for the given supplier
-        /// with real-time outstanding amounts. Used to populate the invoice
-        /// dropdown in the Purchase Return settlement dialog.
-        /// </summary>
         Task<List<PurchaseInvoice>> GetUnpaidInvoicesBySupplier(
             int supplierId
         );
@@ -30,6 +25,18 @@ namespace trinova_erp_backend.Usecase.Pembelian
         Task<bool> DeletePurchaseInvoice(
             int id
         );
+
+        /// <summary>
+        /// Recalculates the outstanding_amount for one invoice and updates
+        /// its status to 'Paid' or 'Unpaid'. Cancelled invoices are skipped.
+        /// </summary>
+        Task SyncInvoiceStatus(int purchaseInvoiceId);
+
+        /// <summary>
+        /// Recalculates outstanding_amount for every non-Cancelled invoice
+        /// and bulk-updates their status. Used for the one-time backfill.
+        /// </summary>
+        Task SyncAllInvoiceStatuses();
     }
 
     public class PurchaseInvoiceUsecase
@@ -42,8 +49,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
             IPurchaseInvoiceRepo purchaseInvoiceRepo
         )
         {
-            _purchaseInvoiceRepo =
-                purchaseInvoiceRepo;
+            _purchaseInvoiceRepo = purchaseInvoiceRepo;
         }
 
         public async Task<string> GetNextInvoiceNumber()
@@ -57,25 +63,17 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 PurchaseInvoice model
             )
         {
-            model.created_at =
-                DateTime.Now;
-
-            model.invoice_date =
-                DateTime.Now;
-
-            model.status =
-                "Unpaid";
+            model.created_at   = DateTime.Now;
+            model.invoice_date = DateTime.Now;
+            model.status       = "Unpaid";
 
             model.invoice_number =
                 await _purchaseInvoiceRepo
                     .GenerateInvoiceNumber();
 
-            
             bool isExist =
                 await _purchaseInvoiceRepo
-                    .IsInvoiceExist(
-                        model.goods_receipt_id
-                    );
+                    .IsInvoiceExist(model.goods_receipt_id);
 
             if (isExist)
             {
@@ -84,13 +82,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 );
             }
 
-            var result =
-                await _purchaseInvoiceRepo
-                    .InsertPurchaseInvoice(
-                        model
-                    );
-
-            return result;
+            return await _purchaseInvoiceRepo
+                .InsertPurchaseInvoice(model);
         }
 
         public async Task<List<PurchaseInvoice>>
@@ -108,60 +101,76 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 .GetUnpaidInvoicesBySupplier(supplierId);
         }
 
-public async Task<bool>
-    UpdatePurchaseInvoice(
-        PurchaseInvoice model
-    )
-{
-    var existing =
-        await _purchaseInvoiceRepo
-            .GetPurchaseInvoiceById(
-                model.purchase_invoice_id
-            );
+        public async Task<bool>
+            UpdatePurchaseInvoice(
+                PurchaseInvoice model
+            )
+        {
+            var existing =
+                await _purchaseInvoiceRepo
+                    .GetPurchaseInvoiceById(
+                        model.purchase_invoice_id
+                    );
 
-    if (existing == null)
-    {
-        return false;
-    }
+            if (existing == null)
+            {
+                throw new KeyNotFoundException(
+                    $"Purchase Invoice with id {model.purchase_invoice_id} not found"
+                );
+            }
 
-    if (
-        existing.status == "Paid"
-        || existing.status == "Cancelled"
-    )
-    {
-        return false;
-    }
+            if (existing.status == "Cancelled")
+            {
+                throw new InvalidOperationException(
+                    "Cancelled invoices cannot be updated"
+                );
+            }
 
-    return await _purchaseInvoiceRepo
-        .UpdatePurchaseInvoice(
-            model
-        );
-}
+            if (existing.status == model.status)
+            {
+                return true;
+            }
 
-    public async Task<bool>
-        DeletePurchaseInvoice(
-            int id
-        )
-    {
-        var existing =
+            return await _purchaseInvoiceRepo
+                .UpdatePurchaseInvoice(model);
+        }
+
+        public async Task<bool>
+            DeletePurchaseInvoice(
+                int id
+            )
+        {
+            var existing =
+                await _purchaseInvoiceRepo
+                    .GetPurchaseInvoiceById(id);
+
+            if (existing == null)
+            {
+                return false;
+            }
+
+            if (
+                existing.status == "Paid"
+                || existing.status == "Cancelled"
+            )
+            {
+                return false;
+            }
+
+            return await _purchaseInvoiceRepo
+                .DeletePurchaseInvoice(id);
+        }
+
+        public async Task SyncInvoiceStatus(int purchaseInvoiceId)
+        {
             await _purchaseInvoiceRepo
-                .GetPurchaseInvoiceById(id);
-
-        if (existing == null)
-        {
-            return false;
+                .SyncInvoiceStatus(purchaseInvoiceId);
         }
 
-        if (
-            existing.status == "Paid"
-            || existing.status == "Cancelled"
-        )
+        public async Task SyncAllInvoiceStatuses()
         {
-            return false;
-        }
-
-        return await _purchaseInvoiceRepo
-            .DeletePurchaseInvoice(id);
-    }
+            await _purchaseInvoiceRepo
+                .SyncAllInvoiceStatuses();
         }
     }
+}

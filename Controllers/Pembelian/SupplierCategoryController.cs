@@ -11,40 +11,63 @@ namespace trinova_erp_backend.Controllers.Pembelian
     {
         private readonly ISupplierCategoryUsecase _supplierCategoryUsecase;
 
-        public SupplierCategoryController(
-            ISupplierCategoryUsecase supplierCategoryUsecase
-        )
+        public SupplierCategoryController(ISupplierCategoryUsecase supplierCategoryUsecase)
         {
             _supplierCategoryUsecase = supplierCategoryUsecase;
         }
 
-        [HttpPost("/api/supplier-category")]
-        public async Task<IActionResult> InsertSupplierCategory(
-            [FromBody] SupplierCategory category
-        )
+        // ─── MIGRATE EXISTING CODES ──────────────────────────────────────────────
+
+        [HttpPost("/api/supplier-category/migrate-codes")]
+        public async Task<IActionResult> MigrateCategoryCodes()
         {
-            var result = await _supplierCategoryUsecase
-                .InsertSupplierCategory(category);
+            await _supplierCategoryUsecase.MigrateCategoryCodes();
 
             return Ok(new
             {
-                status = true,
+                status  = true,
+                message = "Category codes migrated"
+            });
+        }
+
+        // ─── GET NEXT CODE ───────────────────────────────────────────────────────
+
+        [HttpGet("/api/supplier-category/next-code")]
+        public async Task<IActionResult> GetNextCategoryCode()
+        {
+            var code = await _supplierCategoryUsecase.GenerateCategoryCode();
+
+            return Ok(new { category_code = code });
+        }
+
+        // ─── INSERT ──────────────────────────────────────────────────────────────
+
+        [HttpPost("/api/supplier-category")]
+        public async Task<IActionResult> InsertSupplierCategory(
+            [FromBody] SupplierCategory category)
+        {
+            var result = await _supplierCategoryUsecase.InsertSupplierCategory(category);
+
+            return Ok(new
+            {
+                status  = true,
                 message = result
             });
         }
 
+        // ─── GET ALL ─────────────────────────────────────────────────────────────
+
         [HttpGet("/api/supplier-category")]
         public async Task<IActionResult> GetAllSupplierCategory()
         {
-            var result = await _supplierCategoryUsecase
-                .GetAllSupplierCategory();
+            var result = await _supplierCategoryUsecase.GetAllSupplierCategory();
 
             if (result == null || result.Count == 0)
             {
                 return Ok(new
                 {
-                    status = true,
-                    data = new List<object>(),
+                    status  = true,
+                    data    = new List<object>(),
                     message = "No Category Found"
                 });
             }
@@ -52,52 +75,49 @@ namespace trinova_erp_backend.Controllers.Pembelian
             return Ok(new
             {
                 status = true,
-                data = result
+                data   = result
             });
         }
+
+        // ─── UPDATE ──────────────────────────────────────────────────────────────
 
         [HttpPut("/api/supplier-category/{id}")]
         public async Task<IActionResult> UpdateSupplierCategory(
             int id,
-            [FromBody] SupplierCategory model
-        )
+            [FromBody] SupplierCategory model)
         {
             model.category_id = id;
 
-            var result = await _supplierCategoryUsecase
-                .UpdateSupplierCategory(model);
+            var result = await _supplierCategoryUsecase.UpdateSupplierCategory(model);
 
             if (result)
             {
                 return Ok(new
                 {
-                    status = true,
+                    status  = true,
                     message = "Success Update Data"
                 });
             }
 
             return BadRequest(new
             {
-                status = false,
+                status  = false,
                 message = "Failed Update Data"
             });
         }
 
+        // ─── DELETE ──────────────────────────────────────────────────────────────
+
         [HttpDelete("/api/supplier-category/{id}")]
-        public async Task<IActionResult>
-            DeleteSupplierCategory(
-                int id
-            )
+        public async Task<IActionResult> DeleteSupplierCategory(int id)
         {
             try
             {
-                var result =
-                    await _supplierCategoryUsecase
-                        .DeleteSupplierCategory(id);
+                await _supplierCategoryUsecase.DeleteSupplierCategory(id);
 
                 return Ok(new
                 {
-                    status = true,
+                    status  = true,
                     message = "Success Delete Data"
                 });
             }
@@ -105,7 +125,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
             {
                 return BadRequest(new
                 {
-                    status = false,
+                    status  = false,
                     message = ex.Message
                 });
             }

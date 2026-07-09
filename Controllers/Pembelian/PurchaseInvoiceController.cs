@@ -121,31 +121,55 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 PurchaseInvoice purchaseInvoice
             )
         {
-            purchaseInvoice.purchase_invoice_id =
-                id;
+            try
+            {
+                purchaseInvoice.purchase_invoice_id = id;
 
-            var result =
-                await _purchaseInvoiceUsecase
-                    .UpdatePurchaseInvoice(
-                        purchaseInvoice
-                    );
+                var result =
+                    await _purchaseInvoiceUsecase
+                        .UpdatePurchaseInvoice(
+                            purchaseInvoice
+                        );
 
-            if (!result)
+                if (!result)
+                {
+                    return BadRequest(new
+                    {
+                        status = false,
+                        message = "Purchase Invoice cannot be updated"
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = true,
+                    message = "Purchase Invoice updated successfully"
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new
                 {
                     status = false,
-                    message =
-                        "Purchase Invoice cannot be updated"
+                    message = ex.Message
                 });
             }
-
-            return Ok(new
+            catch (Exception ex)
             {
-                status = true,
-                message =
-                    "Purchase Invoice updated successfully"
-            });
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
         }
 
         [HttpDelete("/api/purchase-invoice/{id}")]
@@ -176,6 +200,26 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 message =
                     "Purchase Invoice deleted successfully"
             });
+        }
+
+        /// <summary>
+        /// Recalculates outstanding_amount for every non-Cancelled invoice
+        /// and bulk-updates their status to Paid/Unpaid.
+        /// Call this once from the frontend on page load to fix any invoices
+        /// whose status was not updated by prior payment operations.
+        /// </summary>
+        [HttpPost("/api/purchase-invoice/sync-status")]
+        public async Task<IActionResult> SyncAllInvoiceStatuses()
+        {
+            try
+            {
+                await _purchaseInvoiceUsecase.SyncAllInvoiceStatuses();
+                return Ok(new { status = true, message = "Invoice statuses synced successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { status = false, message = ex.Message });
+            }
         }
     }
 }
