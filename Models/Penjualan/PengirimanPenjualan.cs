@@ -33,6 +33,8 @@
         public string? UomName { get; set; }
         public int QtyDikirim { get; set; }
         public int QtyDipesan { get; set; }
+        public int? WarehouseId { get; set; }
+        public string? WarehouseName { get; set; }
     }
 
 

@@ -337,6 +337,37 @@ namespace trinova_erp_backend.Controllers.Penjualan
             });
         }
 
+        [HttpPatch("/api/sales-order/{id}/cancel")]
+        public async Task<IActionResult> CancelSalesOrder(int id)
+        {
+            try
+            {
+                await _salesOrderUsecase.CancelSalesOrder(id);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Sales Order berhasil dibatalkan, reservasi stok yang belum dikirim sudah dilepas"
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
+
         [HttpGet("/api/sales-order/by-customer/{customerId}")]
         public async Task<IActionResult> GetSalesOrderByCustId(int customerId)
         {
@@ -357,6 +388,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 id = so.OrderId,
                 soNumber = so.SoNumber,
                 soDate = so.SoDate,
+                tanggalKirim = so.TanggalKirim,
                 customerName = so.CustomerName,
                 poNumber = so.PoNumber,
                 address = so.Address,

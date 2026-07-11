@@ -98,8 +98,8 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@movement_date", movement.movement_date ?? DateTime.Now);
             command.Parameters.AddWithValue("@created_by", movement.created_by ?? "");
             command.Parameters.AddWithValue("@created_at", movement.created_at ?? DateTime.Now);
-            command.Parameters.AddWithValue("@source_warehouse_id", movement.source_warehouse_id);
-            command.Parameters.AddWithValue("@destination_warehouse_id", movement.destination_warehouse_id ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@source_warehouse_id", (object?)movement.source_warehouse_id ?? DBNull.Value);
+            command.Parameters.AddWithValue("@destination_warehouse_id", (object?)movement.destination_warehouse_id ?? DBNull.Value);
 
             await connection.OpenAsync();
 
@@ -114,6 +114,58 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
                 throw;
             }
+        }
+
+        // Same insert as InsertAsync, but runs on the caller's connection
+        // and transaction so it's committed/rolled back atomically with
+        // whatever stock change it's auditing (e.g. DO deduct).
+        public async Task InsertAsync(
+            StockMovement movement,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            const string query = @"
+            INSERT INTO stock_movement
+            (
+                product_id,
+                movement_type,
+                quantity,
+                reference_number,
+                notes,
+                movement_date,
+                created_by,
+                created_at,
+                source_warehouse_id,
+                destination_warehouse_id
+            )
+            VALUES
+            (
+                @product_id,
+                @movement_type,
+                @quantity,
+                @reference_number,
+                @notes,
+                @movement_date,
+                @created_by,
+                @created_at,
+                @source_warehouse_id,
+                @destination_warehouse_id
+            )";
+
+            using var command = new SqlCommand(query, connection, transaction);
+
+            command.Parameters.AddWithValue("@product_id", movement.product_id);
+            command.Parameters.AddWithValue("@movement_type", movement.movement_type ?? "");
+            command.Parameters.AddWithValue("@quantity", movement.quantity);
+            command.Parameters.AddWithValue("@reference_number", movement.reference_number ?? "");
+            command.Parameters.AddWithValue("@notes", movement.notes ?? "");
+            command.Parameters.AddWithValue("@movement_date", movement.movement_date ?? DateTime.Now);
+            command.Parameters.AddWithValue("@created_by", movement.created_by ?? "");
+            command.Parameters.AddWithValue("@created_at", movement.created_at ?? DateTime.Now);
+            command.Parameters.AddWithValue("@source_warehouse_id", (object?)movement.source_warehouse_id ?? DBNull.Value);
+            command.Parameters.AddWithValue("@destination_warehouse_id", (object?)movement.destination_warehouse_id ?? DBNull.Value);
+
+            await command.ExecuteNonQueryAsync();
         }
 
         public async Task<List<StockMovement>>

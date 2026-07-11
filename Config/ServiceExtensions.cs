@@ -29,6 +29,7 @@ namespace trinova_erp_backend.Config
             services.AddScoped<IPengirimanPenjualanRepo, PengirimanPenjualanRepo>();
             services.AddScoped<ISalesInvoiceRepo, SalesInvoiceRepo>();
             services.AddScoped<ISalesDashboardRepo, SalesDashboardRepo>();
+            services.AddScoped<ISalesReturnRepo, SalesReturnRepo>();
             // PENJUALAN USECASE
             services.AddScoped<ICustomerUsecase, CustomerUsecase>();
             services.AddScoped<ISalesQuotationUsecase, SalesQuotationUsecase>();
@@ -39,6 +40,7 @@ namespace trinova_erp_backend.Config
             services.AddScoped<IPengirimanPenjualanUsecase, PengirimanPenjualanUsecase>();
             services.AddScoped<ISalesInvoiceUsecase, SalesInvoiceUsecase>();
             services.AddScoped<ISalesDashboardUsecase, SalesDashboardUsecase>();
+            services.AddScoped<ISalesReturnUsecase, SalesReturnUsecase>();
 
             // PEMBELIAN REPOSITORY
             services.AddScoped<ISupplierRepo, SupplierRepo>();

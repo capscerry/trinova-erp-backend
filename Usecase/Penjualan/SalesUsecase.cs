@@ -4,6 +4,7 @@ using trinova_erp_backend.Config;
 using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Models.Penjualan;
 using trinova_erp_backend.Repositories.Penjualan;
+using trinova_erp_backend.Repositories.Persediaan;
 using trinova_erp_backend.Services;
 
 namespace trinova_erp_backend.Usecase.Penjualan
@@ -31,6 +32,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
         Task<List<SalesOrderHeader>> GetAllSalesOrder();
         Task<List<SalesOrderHeader>> GetSalesOrderByCustomerId(int customerId);
         Task<SalesOrderDetailDTO?> GetSalesOrderDetail(int orderId);
+        Task CancelSalesOrder(int orderId);
     }
 
     public class SalesQuotationUsecase : ISalesQuotationUsecase
@@ -181,15 +183,18 @@ namespace trinova_erp_backend.Usecase.Penjualan
     public class SalesOrderUsecase : ISalesOrderUsecase
     {
         private readonly ISalesOrderRepositories _salesOrderRepo;
+        private readonly InventoryStockRepo _inventoryStockRepo;
         private readonly string _connectionString;
         private readonly IActivityLogService _activityLogService;
         public SalesOrderUsecase(
             ISalesOrderRepositories salesOrderRepo,
+            InventoryStockRepo inventoryStockRepo,
             IOptions<DatabaseConnection> options,
             IActivityLogService activityLogService
         )
         {
             _salesOrderRepo = salesOrderRepo;
+            _inventoryStockRepo = inventoryStockRepo;
             _connectionString = options.Value.SQLServer;
             _activityLogService = activityLogService;
 
@@ -203,6 +208,12 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
         public async Task<SalesOrderRequest> InsertSalesOrder(SalesOrderRequest model)
         {
+            // Sales order ini punya tanda tangan (belum punya OrderId) HANYA saat
+            // pertama kali dibuat — bukan saat diedit. Stok cuma boleh direservasi
+            // sekali, di momen pembuatan itu, supaya edit berulang tidak
+            // menumpuk reservasi.
+            bool isNewOrder = model.Header.OrderId <= 0;
+
             using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
 
@@ -236,6 +247,28 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
                 model.Detail = insertedDetails;
 
+                if (isNewOrder)
+                {
+                    foreach (var detail in insertedDetails)
+                    {
+                        if (detail.WareHouseId == null || detail.WareHouseId <= 0)
+                            throw new InvalidOperationException(
+                                $"Produk {detail.ProductName} belum memiliki gudang, sales order tidak bisa dibuat.");
+
+                        // Reservasi cuma menggeser qty_reserved/qty_available di
+                        // inventory_stock — belum ada barang fisik yang bergerak,
+                        // jadi tidak dicatat ke stock_transaction (tabel itu
+                        // dibatasi CHECK constraint hanya untuk IN/OUT/TRANSFER/
+                        // ADJUSTMENT, semuanya pergerakan fisik).
+                        await _inventoryStockRepo.ReserveAsync(
+                            connection,
+                            tx,
+                            detail.ProductId,
+                            detail.WareHouseId.Value,
+                            detail.ProductQty);
+                    }
+                }
+
                 tx.Commit();
 
                 await _activityLogService.LogSalesAsync(
@@ -250,7 +283,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
             }
             catch
             {
-                tx.Rollback();  
+                tx.Rollback();
                 throw;
             }
         }
@@ -263,6 +296,62 @@ namespace trinova_erp_backend.Usecase.Penjualan
         public async Task<SalesOrderDetailDTO?> GetSalesOrderDetail(int orderId)
         {
             return await _salesOrderRepo.GetSalesOrderDetail(orderId);
+        }
+
+        public async Task CancelSalesOrder(int orderId)
+        {
+            var detail = await _salesOrderRepo.GetSalesOrderDetail(orderId);
+
+            if (detail == null)
+                throw new InvalidOperationException("Sales order tidak ditemukan.");
+
+            if (string.Equals(detail.Status, "Cancelled", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(detail.Status, "Completed", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException(
+                    $"Sales order dengan status '{detail.Status}' tidak bisa dibatalkan.");
+
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var tx = connection.BeginTransaction();
+
+            try
+            {
+                var shipped = await _salesOrderRepo.GetShippedQuantitiesAsync(orderId, connection, tx);
+
+                foreach (var line in detail.Detail)
+                {
+                    var shippedQty = shipped.TryGetValue(line.ProductId, out var s) ? s : 0m;
+                    var remaining = line.ProductQty - shippedQty;
+
+                    if (remaining > 0 && line.WareHouseId.HasValue && line.WareHouseId > 0)
+                    {
+                        await _inventoryStockRepo.ReleaseReservedAsync(
+                            connection,
+                            tx,
+                            line.ProductId,
+                            line.WareHouseId.Value,
+                            remaining);
+                    }
+                }
+
+                await _salesOrderRepo.SetSalesOrderCancelledAsync(orderId, connection, tx);
+
+                await tx.CommitAsync();
+
+                await _activityLogService.LogSalesAsync(
+                    "sales_order_cancelled",
+                    $"Sales Order {detail.SoNumber} cancelled",
+                    "Reservasi stok untuk bagian yang belum dikirim sudah dilepas.",
+                    "sales_order",
+                    orderId,
+                    detail.SoNumber);
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
         }
     }
 }

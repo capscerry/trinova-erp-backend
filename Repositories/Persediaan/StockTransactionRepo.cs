@@ -340,5 +340,58 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
             return transaction;
         }
+
+        // =========================
+        // CREATE (within an existing transaction)
+        // =========================
+        // Same insert as CreateAsync, but runs on the caller's connection
+        // and transaction so it's committed/rolled back atomically with
+        // whatever stock change it's auditing (e.g. SO reserve, DO deduct).
+        public async Task CreateAsync(
+            StockTransaction transaction,
+            SqlConnection connection,
+            SqlTransaction sqlTransaction
+        )
+        {
+            const string query = @"
+                INSERT INTO stock_transaction
+                (
+                    product_id,
+                    warehouse_id,
+                    transaction_type,
+                    quantity,
+                    reference_no,
+                    reference_module,
+                    reference_id,
+                    remarks,
+                    created_at
+                )
+                VALUES
+                (
+                    @product_id,
+                    @warehouse_id,
+                    @transaction_type,
+                    @quantity,
+                    @reference_no,
+                    @reference_module,
+                    @reference_id,
+                    @remarks,
+                    @created_at
+                )";
+
+            using var command = new SqlCommand(query, connection, sqlTransaction);
+
+            command.Parameters.AddWithValue("@product_id", transaction.product_id);
+            command.Parameters.AddWithValue("@warehouse_id", transaction.warehouse_id);
+            command.Parameters.AddWithValue("@transaction_type", transaction.transaction_type);
+            command.Parameters.AddWithValue("@quantity", transaction.quantity);
+            command.Parameters.AddWithValue("@reference_no", (object?)transaction.reference_no ?? DBNull.Value);
+            command.Parameters.AddWithValue("@reference_module", (object?)transaction.reference_module ?? DBNull.Value);
+            command.Parameters.AddWithValue("@reference_id", (object?)transaction.reference_id ?? DBNull.Value);
+            command.Parameters.AddWithValue("@remarks", (object?)transaction.remarks ?? DBNull.Value);
+            command.Parameters.AddWithValue("@created_at", transaction.created_at);
+
+            await command.ExecuteNonQueryAsync();
+        }
     }
 }

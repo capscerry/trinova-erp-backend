@@ -74,6 +74,14 @@ namespace trinova_erp_backend.Controllers.Penjualan
                     message = "Success Insert Data"
                 });
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new
@@ -105,5 +113,6 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 });
             }
         }
+
     }
 }
