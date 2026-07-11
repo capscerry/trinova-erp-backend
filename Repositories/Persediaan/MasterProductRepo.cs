@@ -35,12 +35,18 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     mpc.category_id    AS CategoryId,
                     mpc.category_name  AS CategoryName,
                     mu.uom_code        AS Uom,
-                    mu.uom_id          AS UomId
+                    mu.uom_id          AS UomId,
+                    ISNULL(stock.TotalAvailable, 0) AS Stock
                 FROM master_product mp
                 JOIN master_product_category mpc
                     ON mp.category_id = mpc.category_id
                 JOIN master_uom mu
                     ON mp.uom_id = mu.uom_id
+                LEFT JOIN (
+                    SELECT product_id, SUM(qty_available) AS TotalAvailable
+                    FROM inventory_stock
+                    GROUP BY product_id
+                ) stock ON stock.product_id = mp.product_id
                 ORDER BY mp.product_name
             ";
 

@@ -142,6 +142,13 @@ c:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend
 c:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.csproj.CopyComplete
 c:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.genruntimeconfig.cache
 c:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\ref\trinova-erp-backend.dll
+C:\Users\aisya\Documents\Codex\2026-06-25\ini-ad\backend-build-check\appsettings.Development.json
+C:\Users\aisya\Documents\Codex\2026-06-25\ini-ad\backend-build-check\appsettings.json
+C:\Users\aisya\Documents\Codex\2026-06-25\ini-ad\backend-build-check\trinova-erp-backend.staticwebassets.endpoints.json
+C:\Users\aisya\Documents\Codex\2026-06-25\ini-ad\backend-build-check\trinova-erp-backend.deps.json
+C:\Users\aisya\Documents\Codex\2026-06-25\ini-ad\backend-build-check\trinova-erp-backend.runtimeconfig.json
+C:\Users\aisya\Documents\Codex\2026-06-25\ini-ad\backend-build-check\trinova-erp-backend.dll
+C:\Users\aisya\Documents\Codex\2026-06-25\ini-ad\backend-build-check\trinova-erp-backend.pdb
 C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\appsettings.Development.json
 C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\appsettings.json
 C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.staticwebassets.endpoints.json
@@ -288,3 +295,4 @@ C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\refint\trinova-erp
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.pdb
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.genruntimeconfig.cache
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\ref\trinova-erp-backend.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

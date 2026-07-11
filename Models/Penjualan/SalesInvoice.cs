@@ -60,6 +60,7 @@ namespace trinova_erp_backend.Models.Penjualan
         public decimal Subtotal { get; set; }
         public int? SalesOrderItemId { get; set; }
         public int? DeliveryOrderItemId { get; set; }
+        public int? WarehouseId { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }

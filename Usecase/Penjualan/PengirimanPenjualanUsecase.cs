@@ -3,7 +3,9 @@ using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
 using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Models.Penjualan;
+using trinova_erp_backend.Models.Persediaan;
 using trinova_erp_backend.Repositories.Penjualan;
+using trinova_erp_backend.Repositories.Persediaan;
 
 namespace trinova_erp_backend.Usecase.Penjualan
 {
@@ -19,15 +21,24 @@ namespace trinova_erp_backend.Usecase.Penjualan
     public class PengirimanPenjualanUsecase : IPengirimanPenjualanUsecase
     {
         private readonly IPengirimanPenjualanRepo _pengirimanRepo;
+        private readonly InventoryStockRepo _inventoryStockRepo;
+        private readonly StockTransactionRepo _stockTransactionRepo;
+        private readonly StockMovementRepo _stockMovementRepo;
         private readonly string _connectionString;
         private readonly trinova_erp_backend.Services.IActivityLogService _activityLogService;
 
         public PengirimanPenjualanUsecase(
             IPengirimanPenjualanRepo pengirimanRepo,
+            InventoryStockRepo inventoryStockRepo,
+            StockTransactionRepo stockTransactionRepo,
+            StockMovementRepo stockMovementRepo,
             IOptions<DatabaseConnection> options,
             trinova_erp_backend.Services.IActivityLogService activityLogService)
         {
             _pengirimanRepo = pengirimanRepo;
+            _inventoryStockRepo = inventoryStockRepo;
+            _stockTransactionRepo = stockTransactionRepo;
+            _stockMovementRepo = stockMovementRepo;
             _connectionString = options.Value.SQLServer;
             _activityLogService = activityLogService;
         }
@@ -80,18 +91,89 @@ namespace trinova_erp_backend.Usecase.Penjualan
                     connection,
                     transaction);
 
+                // Tidak ada langkah "konfirmasi" terpisah di alur Delivery
+                // Order — dokumen DO itu sendiri ADALAH bukti barang keluar
+                // gudang, jadi stok langsung dikurangi di sini, satu
+                // transaksi dengan pembuatan dokumennya.
+                var isLinkedToSalesOrder = header.SoId.HasValue && header.SoId.Value > 0;
+
                 foreach (var detail in model.Detail)
                 {
+                    var warehouseId = await ResolveWarehouseIdAsync(
+                        detail.WarehouseId,
+                        header.SoId,
+                        detail.ProductId,
+                        connection,
+                        transaction);
+
+                    if (warehouseId == null || warehouseId <= 0)
+                        throw new InvalidOperationException(
+                            $"Produk (id {detail.ProductId}) belum memiliki gudang, delivery order tidak bisa dibuat.");
+
                     var detailDTO = new DeliveryOrderDetailDTO
                     {
                         DoId = doId, // sesuaikan nama property DTO
                         ProductId = detail.ProductId,
                         QtyDikirim = detail.QtyDikirim,
-                        QtyDipesan = detail.QtyDipesan
+                        QtyDipesan = detail.QtyDipesan,
+                        WarehouseId = warehouseId
                     };
 
                     await _pengirimanRepo.InsertDeliveryOrderDetail(
                         detailDTO,
+                        connection,
+                        transaction);
+
+                    if (detail.QtyDikirim <= 0)
+                        continue;
+
+                    if (isLinkedToSalesOrder)
+                    {
+                        await _inventoryStockRepo.DeductReservedAsync(
+                            connection,
+                            transaction,
+                            detail.ProductId,
+                            warehouseId.Value,
+                            detail.QtyDikirim);
+                    }
+                    else
+                    {
+                        await _inventoryStockRepo.DeductAvailableAsync(
+                            connection,
+                            transaction,
+                            detail.ProductId,
+                            warehouseId.Value,
+                            detail.QtyDikirim);
+                    }
+
+                    await _stockTransactionRepo.CreateAsync(
+                        new StockTransaction
+                        {
+                            product_id = detail.ProductId,
+                            warehouse_id = warehouseId.Value,
+                            transaction_type = "OUT",
+                            quantity = detail.QtyDikirim,
+                            reference_no = header.DoNumber,
+                            reference_module = "DELIVERY_ORDER",
+                            reference_id = doId,
+                            remarks = "Stok keluar saat Delivery Order dibuat",
+                            created_at = DateTime.Now
+                        },
+                        connection,
+                        transaction);
+
+                    await _stockMovementRepo.InsertAsync(
+                        new StockMovement
+                        {
+                            product_id = detail.ProductId,
+                            movement_type = "OUTBOUND",
+                            quantity = detail.QtyDikirim,
+                            reference_number = header.DoNumber,
+                            notes = "Delivery Order created",
+                            movement_date = DateTime.Now,
+                            created_at = DateTime.Now,
+                            source_warehouse_id = warehouseId.Value
+                        },
                         connection,
                         transaction);
                 }
@@ -157,12 +239,20 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
                 foreach (var detail in model.Detail)
                 {
+                    var warehouseId = await ResolveWarehouseIdAsync(
+                        detail.WarehouseId,
+                        header.SoId,
+                        detail.ProductId,
+                        connection,
+                        transaction);
+
                     var detailDTO = new DeliveryOrderDetailDTO
                     {
                         DoId = id,
                         ProductId = detail.ProductId,
                         QtyDikirim = detail.QtyDikirim,
-                        QtyDipesan = detail.QtyDipesan
+                        QtyDipesan = detail.QtyDipesan,
+                        WarehouseId = warehouseId
                     };
 
                     await _pengirimanRepo.InsertDeliveryOrderDetail(
@@ -187,6 +277,30 @@ namespace trinova_erp_backend.Usecase.Penjualan
                 throw;
             }
         }
+
+        // Uses the warehouse chosen on the DO line as-is. Only falls back to
+        // the linked Sales Order's warehouse for that product when the
+        // client didn't send one (safety net for older/manual clients).
+        private async Task<int?> ResolveWarehouseIdAsync(
+            int? warehouseId,
+            int? soId,
+            int productId,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            if (warehouseId.HasValue && warehouseId.Value > 0)
+                return warehouseId;
+
+            if (!soId.HasValue || soId.Value <= 0)
+                return null;
+
+            return await _pengirimanRepo.GetSalesOrderLineWarehouseAsync(
+                soId.Value,
+                productId,
+                connection,
+                transaction);
+        }
+
     }
 
 }

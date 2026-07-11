@@ -11,6 +11,8 @@
         public string? Uom { get; set; }
         public int UomId { get; set; }
 
+        public int Stock { get; set; }
+
         
     }
 }

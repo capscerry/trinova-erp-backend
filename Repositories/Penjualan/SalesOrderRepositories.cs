@@ -28,6 +28,18 @@ namespace trinova_erp_backend.Repositories.Penjualan
         Task<List<SalesOrderHeader>> GetAllSalesOrder();
 
         Task<SalesOrderDetailDTO> GetSalesOrderDetail(int orderId);
+
+        Task<Dictionary<int, decimal>> GetShippedQuantitiesAsync(
+            int orderId,
+            IDbConnection connection,
+            IDbTransaction tx
+        );
+
+        Task SetSalesOrderCancelledAsync(
+            int orderId,
+            IDbConnection connection,
+            IDbTransaction tx
+        );
     }
 
     public class SalesOrderRepositories : ISalesOrderRepositories
@@ -329,9 +341,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 so.quotation_id AS QuotationId,
                 sq.quotation_number AS QuotationNumber
             FROM sales_order so
-            JOIN master_customer mc 
+            JOIN master_customer mc
                 ON mc.customer_id = so.customer_id
-            JOIN sales_quotation sq
+            LEFT JOIN sales_quotation sq
                 ON sq.quotation_id = so.quotation_id
             WHERE so.order_id = @OrderId
         ";
@@ -349,11 +361,11 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 sod.uom_id AS UomId,
                 mu.uom_code AS UomCode
             FROM sales_order_detail sod
-            JOIN master_product mp 
+            JOIN master_product mp
                 ON mp.product_id = sod.product_id
-            JOIN master_warehouse mw
-	            ON sod.warehouse_id  = mw.warehouse_id  
-            JOIN master_uom mu 
+            LEFT JOIN master_warehouse mw
+	            ON sod.warehouse_id  = mw.warehouse_id
+            JOIN master_uom mu
                 ON sod.uom_id = mu.uom_id
             WHERE sod.order_id = @OrderId
         ";
@@ -382,6 +394,48 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     ex
                 );
             }
+        }
+
+        public async Task<Dictionary<int, decimal>> GetShippedQuantitiesAsync(
+            int orderId,
+            IDbConnection connection,
+            IDbTransaction tx
+        )
+        {
+            const string query = @"
+                SELECT dod.product_id AS ProductId, SUM(dod.qty_dikirim) AS Shipped
+                FROM delivery_order_detail dod
+                JOIN delivery_order_header doh ON doh.id = dod.delivery_id
+                WHERE doh.so_id = @OrderId
+                GROUP BY dod.product_id";
+
+            var rows = await connection.QueryAsync<ShippedQuantityRow>(
+                query,
+                new { OrderId = orderId },
+                tx
+            );
+
+            return rows.ToDictionary(r => r.ProductId, r => r.Shipped);
+        }
+
+        private sealed class ShippedQuantityRow
+        {
+            public int ProductId { get; set; }
+            public decimal Shipped { get; set; }
+        }
+
+        public async Task SetSalesOrderCancelledAsync(
+            int orderId,
+            IDbConnection connection,
+            IDbTransaction tx
+        )
+        {
+            const string query = @"
+                UPDATE sales_order
+                SET status = 'Cancelled'
+                WHERE order_id = @OrderId;";
+
+            await connection.ExecuteAsync(query, new { OrderId = orderId }, tx);
         }
     }
 }

@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 using trinova_erp_backend.Config;
 using trinova_erp_backend.Data;
 using trinova_erp_backend.Models;
@@ -36,7 +38,7 @@ builder.Services.AddApplicationServices();
 builder.Services.AddMemoryCache();
 
 // Named HttpClient for the XGBoost FastAPI service.
-// Base URL is read from appsettings.json → ExternalServices:XGBoostApiUrl
+// Base URL is read from appsettings.json -> ExternalServices:XGBoostApiUrl
 builder.Services.AddHttpClient("XGBoost", (serviceProvider, client) =>
 {
     var config  = serviceProvider.GetRequiredService<IConfiguration>();
@@ -71,6 +73,46 @@ builder.Services
         };
         options.Events = new JwtBearerEvents
         {
+            OnTokenValidated = async context =>
+            {
+                var userIdClaim = context.Principal?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                    ?? context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (!int.TryParse(userIdClaim, out var userId))
+                {
+                    context.Fail("Invalid user token.");
+                    return;
+                }
+
+                var connectionString = Env.GetString("SQL_CONNECTION_STRING_DEV");
+                await using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync();
+
+                await using var command = connection.CreateCommand();
+                command.CommandText = "SELECT is_active FROM master_user WHERE id = @UserId";
+                command.Parameters.AddWithValue("@UserId", userId);
+
+                var result = await command.ExecuteScalarAsync();
+                if (result == null || result == DBNull.Value || !Convert.ToBoolean(result))
+                {
+                    var logger = context.HttpContext.RequestServices.GetService<IActivityLogService>();
+                    if (logger != null)
+                    {
+                        await logger.LogAsync(new ActivityLogCreate
+                        {
+                            Module = "security",
+                            ActivityType = "inactive_user_token_rejected",
+                            Title = "Inactive user token rejected",
+                            Description = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}",
+                            RefTable = "master_user",
+                            RefId = userId,
+                            RefNumber = context.HttpContext.Request.Path
+                        });
+                    }
+
+                    context.Fail("User account is inactive.");
+                }
+            },
             OnChallenge = async context =>
             {
                 var logger = context.HttpContext.RequestServices.GetService<IActivityLogService>();

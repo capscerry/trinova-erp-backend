@@ -305,6 +305,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     subtotal,
                     sales_order_item_id,
                     delivery_order_item_id,
+                    warehouse_id,
                     created_at,
                     updated_at
                 )
@@ -321,6 +322,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @Subtotal,
                     @SalesOrderItemId,
                     @DeliveryOrderItemId,
+                    @WarehouseId,
                     GETDATE(),
                     GETDATE()
                 )";

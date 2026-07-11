@@ -404,5 +404,238 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
             return await CreateAsync(newStock);
         }
+
+        // =========================
+        // RESERVE (Sales Order confirm)
+        // =========================
+        // qty_reserved up, qty_available down. Runs inside the caller's
+        // transaction so a whole SO confirm (all lines) is atomic, and
+        // row-locks the stock row for the duration to avoid a lost update
+        // if two confirms race on the same product+warehouse.
+        public async Task ReserveAsync(
+            SqlConnection connection,
+            SqlTransaction transaction,
+            int productId,
+            int warehouseId,
+            decimal qty)
+        {
+            var available = await GetLockedAvailableAsync(connection, transaction, productId, warehouseId);
+
+            if (available < qty)
+                throw new InvalidOperationException(
+                    $"Stok tidak mencukupi untuk product_id {productId} di warehouse_id {warehouseId} (tersedia {available}, dibutuhkan {qty}).");
+
+            const string updateQuery = @"
+                UPDATE inventory_stock
+                SET qty_reserved = qty_reserved + @qty,
+                    qty_available = qty_available - @qty,
+                    updated_at = @updated_at
+                WHERE product_id = @product_id AND warehouse_id = @warehouse_id";
+
+            using var command = new SqlCommand(updateQuery, connection, transaction);
+            command.Parameters.AddWithValue("@qty", qty);
+            command.Parameters.AddWithValue("@product_id", productId);
+            command.Parameters.AddWithValue("@warehouse_id", warehouseId);
+            command.Parameters.AddWithValue("@updated_at", DateTime.Now);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        // =========================
+        // DEDUCT RESERVED (Delivery Order confirm, SO-linked lines)
+        // =========================
+        // qty_on_hand down, qty_reserved down. qty_available was already
+        // reduced at reservation time, so it's untouched here.
+        public async Task DeductReservedAsync(
+            SqlConnection connection,
+            SqlTransaction transaction,
+            int productId,
+            int warehouseId,
+            decimal qty)
+        {
+            const string selectQuery = @"
+                SELECT qty_reserved
+                FROM inventory_stock WITH (UPDLOCK, ROWLOCK)
+                WHERE product_id = @product_id AND warehouse_id = @warehouse_id";
+
+            decimal reserved;
+            using (var selectCommand = new SqlCommand(selectQuery, connection, transaction))
+            {
+                selectCommand.Parameters.AddWithValue("@product_id", productId);
+                selectCommand.Parameters.AddWithValue("@warehouse_id", warehouseId);
+
+                var result = await selectCommand.ExecuteScalarAsync();
+                if (result == null)
+                    throw new InvalidOperationException(
+                        $"Stok tidak ditemukan untuk product_id {productId} di warehouse_id {warehouseId}.");
+
+                reserved = Convert.ToDecimal(result);
+            }
+
+            if (reserved < qty)
+                throw new InvalidOperationException(
+                    $"Qty reserved tidak mencukupi untuk product_id {productId} di warehouse_id {warehouseId} (reserved {reserved}, dibutuhkan {qty}).");
+
+            const string updateQuery = @"
+                UPDATE inventory_stock
+                SET qty_on_hand = qty_on_hand - @qty,
+                    qty_reserved = qty_reserved - @qty,
+                    updated_at = @updated_at
+                WHERE product_id = @product_id AND warehouse_id = @warehouse_id";
+
+            using var updateCommand = new SqlCommand(updateQuery, connection, transaction);
+            updateCommand.Parameters.AddWithValue("@qty", qty);
+            updateCommand.Parameters.AddWithValue("@product_id", productId);
+            updateCommand.Parameters.AddWithValue("@warehouse_id", warehouseId);
+            updateCommand.Parameters.AddWithValue("@updated_at", DateTime.Now);
+
+            await updateCommand.ExecuteNonQueryAsync();
+        }
+
+        // =========================
+        // RELEASE RESERVED (Sales Order cancellation)
+        // =========================
+        // qty_reserved down, qty_available up — the exact mirror of
+        // ReserveAsync. Used to give back whatever portion of a cancelled
+        // SO's reservation was never shipped.
+        public async Task ReleaseReservedAsync(
+            SqlConnection connection,
+            SqlTransaction transaction,
+            int productId,
+            int warehouseId,
+            decimal qty)
+        {
+            const string selectQuery = @"
+                SELECT qty_reserved
+                FROM inventory_stock WITH (UPDLOCK, ROWLOCK)
+                WHERE product_id = @product_id AND warehouse_id = @warehouse_id";
+
+            decimal reserved;
+            using (var selectCommand = new SqlCommand(selectQuery, connection, transaction))
+            {
+                selectCommand.Parameters.AddWithValue("@product_id", productId);
+                selectCommand.Parameters.AddWithValue("@warehouse_id", warehouseId);
+
+                var result = await selectCommand.ExecuteScalarAsync();
+                if (result == null)
+                    throw new InvalidOperationException(
+                        $"Stok tidak ditemukan untuk product_id {productId} di warehouse_id {warehouseId}.");
+
+                reserved = Convert.ToDecimal(result);
+            }
+
+            // Clamp instead of throwing — a race with a concurrent DO could've
+            // already consumed part of the reservation between the caller's
+            // shipped-qty calculation and this call. Releasing "at most what's
+            // actually still reserved" is always safe.
+            var releaseQty = Math.Min(qty, reserved);
+            if (releaseQty <= 0)
+                return;
+
+            const string updateQuery = @"
+                UPDATE inventory_stock
+                SET qty_reserved = qty_reserved - @qty,
+                    qty_available = qty_available + @qty,
+                    updated_at = @updated_at
+                WHERE product_id = @product_id AND warehouse_id = @warehouse_id";
+
+            using var updateCommand = new SqlCommand(updateQuery, connection, transaction);
+            updateCommand.Parameters.AddWithValue("@qty", releaseQty);
+            updateCommand.Parameters.AddWithValue("@product_id", productId);
+            updateCommand.Parameters.AddWithValue("@warehouse_id", warehouseId);
+            updateCommand.Parameters.AddWithValue("@updated_at", DateTime.Now);
+
+            await updateCommand.ExecuteNonQueryAsync();
+        }
+
+        // =========================
+        // DEDUCT AVAILABLE (Delivery Order confirm, manual/no-SO lines)
+        // =========================
+        // qty_on_hand down, qty_available down. Used when a Delivery Order
+        // has no linked Sales Order, so nothing was reserved beforehand.
+        public async Task DeductAvailableAsync(
+            SqlConnection connection,
+            SqlTransaction transaction,
+            int productId,
+            int warehouseId,
+            decimal qty)
+        {
+            var available = await GetLockedAvailableAsync(connection, transaction, productId, warehouseId);
+
+            if (available < qty)
+                throw new InvalidOperationException(
+                    $"Stok tidak mencukupi untuk product_id {productId} di warehouse_id {warehouseId} (tersedia {available}, dibutuhkan {qty}).");
+
+            const string updateQuery = @"
+                UPDATE inventory_stock
+                SET qty_on_hand = qty_on_hand - @qty,
+                    qty_available = qty_available - @qty,
+                    updated_at = @updated_at
+                WHERE product_id = @product_id AND warehouse_id = @warehouse_id";
+
+            using var command = new SqlCommand(updateQuery, connection, transaction);
+            command.Parameters.AddWithValue("@qty", qty);
+            command.Parameters.AddWithValue("@product_id", productId);
+            command.Parameters.AddWithValue("@warehouse_id", warehouseId);
+            command.Parameters.AddWithValue("@updated_at", DateTime.Now);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        // =========================
+        // ADD AVAILABLE (Sales Return)
+        // =========================
+        // qty_on_hand up, qty_available up — the mirror of DeductAvailableAsync.
+        // Used when a customer returns goods and they physically re-enter the
+        // warehouse; assumes the product+warehouse row already exists (it was
+        // shipped from there in the first place).
+        public async Task AddAvailableAsync(
+            SqlConnection connection,
+            SqlTransaction transaction,
+            int productId,
+            int warehouseId,
+            decimal qty)
+        {
+            const string updateQuery = @"
+                UPDATE inventory_stock
+                SET qty_on_hand = qty_on_hand + @qty,
+                    qty_available = qty_available + @qty,
+                    updated_at = @updated_at
+                WHERE product_id = @product_id AND warehouse_id = @warehouse_id";
+
+            using var command = new SqlCommand(updateQuery, connection, transaction);
+            command.Parameters.AddWithValue("@qty", qty);
+            command.Parameters.AddWithValue("@product_id", productId);
+            command.Parameters.AddWithValue("@warehouse_id", warehouseId);
+            command.Parameters.AddWithValue("@updated_at", DateTime.Now);
+
+            var rowsAffected = await command.ExecuteNonQueryAsync();
+            if (rowsAffected == 0)
+                throw new InvalidOperationException(
+                    $"Stok tidak ditemukan untuk product_id {productId} di warehouse_id {warehouseId}.");
+        }
+
+        private static async Task<decimal> GetLockedAvailableAsync(
+            SqlConnection connection,
+            SqlTransaction transaction,
+            int productId,
+            int warehouseId)
+        {
+            const string selectQuery = @"
+                SELECT qty_available
+                FROM inventory_stock WITH (UPDLOCK, ROWLOCK)
+                WHERE product_id = @product_id AND warehouse_id = @warehouse_id";
+
+            using var command = new SqlCommand(selectQuery, connection, transaction);
+            command.Parameters.AddWithValue("@product_id", productId);
+            command.Parameters.AddWithValue("@warehouse_id", warehouseId);
+
+            var result = await command.ExecuteScalarAsync();
+            if (result == null)
+                throw new InvalidOperationException(
+                    $"Stok tidak ditemukan untuk product_id {productId} di warehouse_id {warehouseId}.");
+
+            return Convert.ToDecimal(result);
+        }
     }
 }
