@@ -6,6 +6,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
     public interface IUangMukaUsecase
     {
         Task<bool> InsertUangMuka(UangMuka model);
+        Task<bool> UpdateUangMuka(int id, UangMuka model);
         Task<IEnumerable<UangMuka>> GetAllUangMuka();
         Task<UangMuka?> GetUangMukaById(int id);
     }
@@ -40,8 +41,8 @@ namespace trinova_erp_backend.Usecase.Penjualan
             if (string.IsNullOrWhiteSpace(model.CreatedBy))
                 model.CreatedBy = "SYSTEM";
 
-            if (string.IsNullOrWhiteSpace(model.Status) || model.Status == "Received")
-                model.Status = "Issued";
+            if (string.IsNullOrWhiteSpace(model.Status) || model.Status == "Received" || model.Status == "Issued")
+                model.Status = "Unpaid";
 
             var result = await _uangMuka.InsertUangMuka(model);
 
@@ -62,6 +63,47 @@ namespace trinova_erp_backend.Usecase.Penjualan
         public async Task<IEnumerable<UangMuka>> GetAllUangMuka()
         {
             return await _uangMuka.GetAllUangMuka();
+        }
+
+        public async Task<bool> UpdateUangMuka(int id, UangMuka model)
+        {
+            if (model == null)
+                throw new Exception("Data uang muka tidak boleh kosong");
+
+            if (id <= 0)
+                throw new Exception("Id uang muka tidak valid");
+
+            if (string.IsNullOrWhiteSpace(model.NoFaktur))
+                throw new Exception("No faktur wajib diisi");
+
+            if (model.CustomerId <= 0)
+                throw new Exception("Customer wajib dipilih");
+
+            if (model.NominalUangMuka <= 0)
+                throw new Exception("Nominal uang muka harus lebih dari 0");
+
+            model.Id = id;
+
+            if (string.IsNullOrWhiteSpace(model.UpdatedBy))
+                model.UpdatedBy = "SYSTEM";
+
+            if (string.IsNullOrWhiteSpace(model.Status) || model.Status == "Issued")
+                model.Status = "Unpaid";
+
+            var result = await _uangMuka.UpdateUangMuka(model);
+
+            if (result)
+            {
+                await _activityLogService.LogSalesAsync(
+                    "down_payment_updated",
+                    $"Sales Down Payment {model.NoFaktur} updated",
+                    $"Down payment updated for {model.CustomerName ?? "customer"}.",
+                    "uang_muka",
+                    id,
+                    model.NoFaktur);
+            }
+
+            return result;
         }
 
         public async Task<UangMuka?> GetUangMukaById(int id)

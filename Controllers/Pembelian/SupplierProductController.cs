@@ -95,6 +95,25 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        // ─── GET BY SUPPLIER ────────────────────
+
+        [HttpGet("/api/supplier-product/by-supplier/{supplierId}")]
+
+        public async Task<IActionResult>
+            GetProductsBySupplier(int supplierId)
+        {
+            var result =
+                await
+                    _supplierProductUsecase
+                        .GetProductsBySupplier(supplierId);
+
+            return Ok(new
+            {
+                status = true,
+                data = result
+            });
+        }
+
         // ─── IMPORT EXCEL ──────────────────────
 
         [HttpPost(
@@ -160,6 +179,19 @@ namespace trinova_erp_backend.Controllers.Pembelian
                     DataTable table =
                         result.Tables[0];
 
+                    // The header may appear as "available_stock" or
+                    // "available_" (truncated in some Excel exports).
+                    string availableColName =
+                        table.Columns.Contains("available_stock")
+                            ? "available_stock"
+                            : table.Columns.Contains("available_")
+                                ? "available_"
+                                : throw new Exception(
+                                    "Column 'available_stock' not found in the uploaded file. " +
+                                    "Please ensure the header row contains: " +
+                                    "product_id, supplier_price, available_stock, lead_time_days"
+                                );
+
                     foreach (
                         DataRow row
                         in table.Rows
@@ -180,7 +212,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
 
                                 available_stock =
                                     Convert.ToInt32(
-                                        row["available_stock"]
+                                        row[availableColName]
                                     ),
 
                                 lead_time_days =

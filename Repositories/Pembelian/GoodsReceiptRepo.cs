@@ -193,6 +193,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 po.po_number,
                 po.transaction_name,
                 po.transaction_detail,
+                po.nomor_faktur_pajak,
                 s.supplier_name
             FROM goods_receipt gr
             INNER JOIN purchase_order po
@@ -268,6 +269,11 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                     ? reader["transaction_detail"]?.ToString()
                                     : null,
 
+                                nomor_faktur_pajak =
+                                    reader["nomor_faktur_pajak"] != DBNull.Value
+                                    ? reader["nomor_faktur_pajak"]?.ToString()
+                                    : null,
+
                             };
 
                             response.Add(receipt);
@@ -292,6 +298,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 po.supplier_id,
                 po.total_amount,
                 po.po_number,
+                po.nomor_faktur_pajak,
                 s.supplier_name
             FROM goods_receipt gr
             INNER JOIN purchase_order po
@@ -336,7 +343,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                     reader["total_amount"] != DBNull.Value
                                     ? Convert.ToDecimal(reader["total_amount"]) : 0,
                                 po_number =
-                                    reader["po_number"]?.ToString() ?? ""
+                                    reader["po_number"]?.ToString() ?? "",
+
+                                nomor_faktur_pajak =
+                                    reader["nomor_faktur_pajak"] != DBNull.Value
+                                    ? reader["nomor_faktur_pajak"]?.ToString()
+                                    : null
                             };
                         }
                     }
@@ -361,6 +373,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 po.po_number,
                 po.transaction_name,
                 po.transaction_detail,
+                po.nomor_faktur_pajak,
                 s.supplier_name
             FROM goods_receipt gr
             INNER JOIN purchase_order po
@@ -438,6 +451,11 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 transaction_detail =
                                     reader["transaction_detail"] != DBNull.Value
                                     ? reader["transaction_detail"]?.ToString()
+                                    : null,
+
+                                nomor_faktur_pajak =
+                                    reader["nomor_faktur_pajak"] != DBNull.Value
+                                    ? reader["nomor_faktur_pajak"]?.ToString()
                                     : null,
                             });
                         }

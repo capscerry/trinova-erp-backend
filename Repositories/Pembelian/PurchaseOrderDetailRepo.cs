@@ -324,6 +324,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 price =
                                     reader["price"] != DBNull.Value
                                         ? Convert.ToDecimal(reader["price"]) : 0,
+                                tax_percentage =
+                                    reader["tax_percentage"] != DBNull.Value
+                                        ? Convert.ToDecimal(reader["tax_percentage"]) : null,
+                                tax_amount =
+                                    reader["tax_amount"] != DBNull.Value
+                                        ? Convert.ToDecimal(reader["tax_amount"]) : null,
                                 subtotal =
                                     reader["subtotal"] != DBNull.Value
                                         ? Convert.ToDecimal(reader["subtotal"]) : 0
@@ -341,31 +347,19 @@ namespace trinova_erp_backend.Repositories.Pembelian
         }
 
         // UPDATE PURCHASE ORDER TOTAL
+        // Recomputes the PO header total_amount as the sum of all detail subtotals.
+        // Each detail subtotal already includes its own tax_amount (price × qty + tax),
+        // so no additional tax multiplication is needed here.
         public async Task UpdatePurchaseOrderTotal(int purchaseOrderId)
         {
             const string query = @"
                 UPDATE purchase_order
-                SET
-                    tax_amount =
-                    (
-                        SELECT ISNULL(SUM(subtotal), 0)
-                        FROM purchase_order_detail
-                        WHERE purchase_order_id = @purchase_order_id
-                    ) * ISNULL(tax_percentage, 0) / 100,
-                    total_amount =
-                    (
-                        SELECT ISNULL(SUM(subtotal), 0)
-                        FROM purchase_order_detail
-                        WHERE purchase_order_id = @purchase_order_id
-                    )
-                    +
-                    (
-                        (
-                            SELECT ISNULL(SUM(subtotal), 0)
-                            FROM purchase_order_detail
-                            WHERE purchase_order_id = @purchase_order_id
-                        ) * ISNULL(tax_percentage, 0) / 100
-                    )
+                SET total_amount =
+                (
+                    SELECT ISNULL(SUM(subtotal), 0)
+                    FROM purchase_order_detail
+                    WHERE purchase_order_id = @purchase_order_id
+                )
                 WHERE purchase_order_id = @purchase_order_id";
 
             using (SqlConnection connection = new SqlConnection(_connectionString))

@@ -70,6 +70,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     transaction_name,
                     transaction_detail,
                     expected_date,
+                    nomor_faktur_pajak,
                     created_at
                 )
                 OUTPUT INSERTED.purchase_order_id
@@ -85,6 +86,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     @transaction_name,
                     @transaction_detail,
                     @expected_date,
+                    @nomor_faktur_pajak,
                     GETDATE()
                 )";
 
@@ -105,6 +107,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     command.Parameters.AddWithValue("@transaction_name", (object?)model.transaction_name ?? DBNull.Value);
                     command.Parameters.AddWithValue("@transaction_detail", (object?)model.transaction_detail ?? DBNull.Value);
                     command.Parameters.AddWithValue("@expected_date", (object?)model.expected_date ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@nomor_faktur_pajak", (object?)model.nomor_faktur_pajak ?? DBNull.Value);
 
                     int insertedId =
                         Convert.ToInt32(
@@ -136,7 +139,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     total_amount = @total_amount,
                     transaction_name = @transaction_name,
                     transaction_detail = @transaction_detail,
-                    expected_date = @expected_date
+                    expected_date = @expected_date,
+                    nomor_faktur_pajak = @nomor_faktur_pajak
                 WHERE purchase_order_id = @purchase_order_id";
 
             try
@@ -157,6 +161,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     command.Parameters.AddWithValue("@transaction_name", (object?)model.transaction_name ?? DBNull.Value);
                     command.Parameters.AddWithValue("@transaction_detail", (object?)model.transaction_detail ?? DBNull.Value);
                     command.Parameters.AddWithValue("@expected_date", (object?)model.expected_date ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@nomor_faktur_pajak", (object?)model.nomor_faktur_pajak ?? DBNull.Value);
 
                     int result = await command.ExecuteNonQueryAsync();
 
@@ -248,6 +253,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                     : null,
                                 expected_date = reader["expected_date"] != DBNull.Value
                                     ? Convert.ToDateTime(reader["expected_date"])
+                                    : null,
+                                nomor_faktur_pajak = reader["nomor_faktur_pajak"] != DBNull.Value
+                                    ? reader["nomor_faktur_pajak"].ToString()
                                     : null
                             };
 
@@ -313,6 +321,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                     : null,
                                 expected_date = reader["expected_date"] != DBNull.Value
                                     ? Convert.ToDateTime(reader["expected_date"])
+                                    : null,
+                                nomor_faktur_pajak = reader["nomor_faktur_pajak"] != DBNull.Value
+                                    ? reader["nomor_faktur_pajak"].ToString()
                                     : null
                             };
                         }

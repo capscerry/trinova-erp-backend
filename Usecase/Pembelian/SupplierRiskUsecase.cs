@@ -112,8 +112,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 supplier_id      = agg.supplier_id,
                 supplier_price   = agg.total_po_value,        // total PO value as price proxy
                 lead_time_days   = Math.Max(1, (int)Math.Round(agg.avg_delivery_days)),
-                claim_rate       = agg.claim_rate,
-                on_time_rate     = agg.on_time_rate,
+                claim_rate       = ClampRate(agg.claim_rate),
+                on_time_rate     = ClampRate(agg.on_time_rate),
                 order_frequency  = Math.Max(1, agg.total_orders)
             };
 
@@ -142,8 +142,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 supplier_name   = r.supplier_name,
                 supplier_price  = r.total_po_value,
                 lead_time_days  = Math.Max(1, (int)Math.Round(r.avg_delivery_days)),
-                claim_rate      = r.claim_rate,
-                on_time_rate    = r.on_time_rate,
+                claim_rate      = ClampRate(r.claim_rate),
+                on_time_rate    = ClampRate(r.on_time_rate),
                 order_frequency = Math.Max(1, r.total_orders)
             }).ToList();
 
@@ -221,10 +221,10 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 supplier_id     = r.supplier_id,
                 supplier_price  = r.total_po_value,
                 lead_time_days  = Math.Max(1, (int)Math.Round(r.avg_delivery_days)),
-                claim_rate      = r.claim_rate,
-                on_time_rate    = r.on_time_rate,
+                claim_rate      = ClampRate(r.claim_rate),
+                on_time_rate    = ClampRate(r.on_time_rate),
                 order_frequency = Math.Max(1, r.total_orders),
-                late_delivery   = (r.claim_rate > 0.1 || r.on_time_rate < 0.8) ? 1 : 0
+                late_delivery   = (ClampRate(r.claim_rate) > 0.1 || ClampRate(r.on_time_rate) < 0.8) ? 1 : 0
             }).ToList();
 
             var requestBody = new SupplierRiskTrainFromRowsRequest
@@ -290,14 +290,17 @@ namespace trinova_erp_backend.Usecase.Pembelian
                     COUNT(DISTINCT po.purchase_order_id)                             AS total_orders,
                     CASE
                         WHEN COUNT(DISTINCT po.purchase_order_id) = 0 THEN 0.0
-                        ELSE CAST(COUNT(DISTINCT pr.purchase_return_id) AS FLOAT)
+                        ELSE CAST(COUNT(DISTINCT CASE
+                                WHEN pr.purchase_return_id IS NOT NULL THEN po.purchase_order_id
+                             END) AS FLOAT)
                              / COUNT(DISTINCT po.purchase_order_id)
                     END                                                              AS claim_rate,
                     CASE
                         WHEN COUNT(DISTINCT gr.goods_receipt_id) = 0 THEN 1.0
-                        ELSE CAST(
-                            SUM(CASE WHEN gr.receipt_date <= po.expected_date THEN 1 ELSE 0 END)
-                            AS FLOAT) / COUNT(DISTINCT gr.goods_receipt_id)
+                        ELSE CAST(COUNT(DISTINCT CASE
+                                WHEN gr.receipt_date <= po.expected_date THEN gr.goods_receipt_id
+                             END) AS FLOAT)
+                             / COUNT(DISTINCT gr.goods_receipt_id)
                     END                                                              AS on_time_rate,
                     ISNULL(AVG(CAST(DATEDIFF(day, po.order_date, gr.receipt_date) AS FLOAT)), 3)
                                                                                      AS avg_delivery_days
@@ -323,14 +326,17 @@ namespace trinova_erp_backend.Usecase.Pembelian
                     COUNT(DISTINCT po.purchase_order_id)                             AS total_orders,
                     CASE
                         WHEN COUNT(DISTINCT po.purchase_order_id) = 0 THEN 0.0
-                        ELSE CAST(COUNT(DISTINCT pr.purchase_return_id) AS FLOAT)
+                        ELSE CAST(COUNT(DISTINCT CASE
+                                WHEN pr.purchase_return_id IS NOT NULL THEN po.purchase_order_id
+                             END) AS FLOAT)
                              / COUNT(DISTINCT po.purchase_order_id)
                     END                                                              AS claim_rate,
                     CASE
                         WHEN COUNT(DISTINCT gr.goods_receipt_id) = 0 THEN 1.0
-                        ELSE CAST(
-                            SUM(CASE WHEN gr.receipt_date <= po.expected_date THEN 1 ELSE 0 END)
-                            AS FLOAT) / COUNT(DISTINCT gr.goods_receipt_id)
+                        ELSE CAST(COUNT(DISTINCT CASE
+                                WHEN gr.receipt_date <= po.expected_date THEN gr.goods_receipt_id
+                             END) AS FLOAT)
+                             / COUNT(DISTINCT gr.goods_receipt_id)
                     END                                                              AS on_time_rate,
                     ISNULL(AVG(CAST(DATEDIFF(day, po.order_date, gr.receipt_date) AS FLOAT)), 3)
                                                                                      AS avg_delivery_days
@@ -357,6 +363,14 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 throw new HttpRequestException(
                     $"FastAPI /{endpoint} returned {(int)response.StatusCode}: {body}");
             }
+        }
+
+        private static double ClampRate(double value)
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value))
+                return 0.0;
+
+            return Math.Clamp(value, 0.0, 1.0);
         }
     }
 }

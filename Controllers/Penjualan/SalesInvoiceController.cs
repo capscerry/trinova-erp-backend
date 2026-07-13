@@ -131,6 +131,14 @@ namespace trinova_erp_backend.Controllers.Penjualan
                     data = result.Header
                 });
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, new

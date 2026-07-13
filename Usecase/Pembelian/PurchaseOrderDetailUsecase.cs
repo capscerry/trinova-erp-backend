@@ -9,6 +9,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
         Task<List<PurchaseOrderDetail>> GetAllPurchaseOrderDetail();
 
+        Task<List<PurchaseOrderDetail>> GetDetailsByPurchaseOrderId(int purchaseOrderId);
+
         Task<bool> UpdatePurchaseOrderDetail(PurchaseOrderDetail model);
 
         Task<bool> DeletePurchaseOrderDetail(int id);
@@ -29,8 +31,10 @@ namespace trinova_erp_backend.Usecase.Pembelian
             PurchaseOrderDetail model
         )
         {
-            // AUTO SUBTOTAL
-            model.subtotal = model.quantity * model.price;
+            decimal baseAmount = (model.quantity * (model.price ?? 0m));
+            decimal taxRate    = (model.tax_percentage ?? 0m) / 100m;
+            model.tax_amount   = Math.Round(baseAmount * taxRate, 2);
+            model.subtotal     = baseAmount + model.tax_amount;
 
             var result = await _purchaseOrderDetailRepo
                 .InsertPurchaseOrderDetail(model);
@@ -47,12 +51,21 @@ namespace trinova_erp_backend.Usecase.Pembelian
             return result;
         }
 
+        public async Task<List<PurchaseOrderDetail>>
+            GetDetailsByPurchaseOrderId(int purchaseOrderId)
+        {
+            return await _purchaseOrderDetailRepo
+                .GetDetailsByPurchaseOrderId(purchaseOrderId);
+        }
+
         public async Task<bool> UpdatePurchaseOrderDetail(
             PurchaseOrderDetail model
         )
         {
-            // AUTO RECALCULATE SUBTOTAL
-            model.subtotal = model.quantity * model.price;
+            decimal baseAmount = (model.quantity * (model.price ?? 0m));
+            decimal taxRate    = (model.tax_percentage ?? 0m) / 100m;
+            model.tax_amount   = Math.Round(baseAmount * taxRate, 2);
+            model.subtotal     = baseAmount + model.tax_amount;
 
             var result = await _purchaseOrderDetailRepo
                 .UpdatePurchaseOrderDetail(model);

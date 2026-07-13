@@ -84,6 +84,48 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        [HttpPut("/api/purchase-payment/{id}")]
+        public async Task<IActionResult>
+            UpdatePurchasePayment(
+                int id,
+                [FromBody]
+                PurchasePayment purchasePayment
+            )
+        {
+            try
+            {
+                var result =
+                    await _purchasePaymentUsecase
+                        .UpdatePurchasePayment(
+                            id,
+                            purchasePayment
+                        );
+
+                if (!result)
+                {
+                    return BadRequest(new
+                    {
+                        status = false,
+                        message = "Purchase Payment not found or could not be updated"
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = true,
+                    message = "Purchase Payment updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
+        }
+
         [HttpDelete("/api/purchase-payment/{id}")]
         public async Task<IActionResult>
             DeletePurchasePayment(

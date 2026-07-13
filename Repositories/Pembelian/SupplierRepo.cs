@@ -99,11 +99,11 @@ namespace trinova_erp_backend.Repositories.Pembelian
         public async Task<string>
             GenerateSupplierCode()
         {
-            // Find the highest numeric suffix across all well-formed SUP- codes
-            // AND fall back to MAX(supplier_id) for any rows whose code has no
-            // extractable number (e.g. "Emmaaaaaa"), so every existing row is
-            // accounted for in the sequence.
-            const string query = @"
+            // Find the highest numeric suffix across ALL well-formed SUP- codes,
+            // then keep incrementing until we land on a code that doesn't yet
+            // exist in the table.  This handles gaps and out-of-sequence rows
+            // left by manual inserts or failed migrations.
+            const string maxQuery = @"
                 SELECT ISNULL(
                     (
                         SELECT MAX(
@@ -119,23 +119,47 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     )
                 )";
 
+            const string existsQuery = @"
+                SELECT COUNT(1)
+                FROM master_supplier
+                WHERE supplier_code = @code";
+
             using SqlConnection connection =
                 new SqlConnection(_connectionString);
 
             await connection.OpenAsync();
 
-            using SqlCommand command =
-                new SqlCommand(query, connection);
+            long nextNumber;
 
-            object? result =
-                await command.ExecuteScalarAsync();
+            using (var cmd = new SqlCommand(maxQuery, connection))
+            {
+                object? result = await cmd.ExecuteScalarAsync();
+                nextNumber = (result != null && result != DBNull.Value)
+                    ? Convert.ToInt64(result) + 1
+                    : 1;
+            }
 
-            long nextNumber = 1;
+            // Advance past any codes that already exist (handles duplicates
+            // caused by manual inserts or out-of-sequence data).
+            using (var cmd = new SqlCommand(existsQuery, connection))
+            {
+                cmd.Parameters.Add("@code", System.Data.SqlDbType.NVarChar, 20);
 
-            if (result != null && result != DBNull.Value)
-                nextNumber = Convert.ToInt64(result) + 1;
+                while (true)
+                {
+                    string candidate = $"SUP-{nextNumber:D10}";
+                    cmd.Parameters["@code"].Value = candidate;
 
-            return $"SUP-{nextNumber:D10}";
+                    int count = Convert.ToInt32(
+                        await cmd.ExecuteScalarAsync()
+                    );
+
+                    if (count == 0)
+                        return candidate;
+
+                    nextNumber++;
+                }
+            }
         }
 
         // ─── INSERT ─────────────────────────────
@@ -239,7 +263,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
                     command.Parameters.AddWithValue(
                         "@category_supplier",
-                        model.category_supplier
+                        (object?)model.category_supplier
+                        ?? DBNull.Value
                     );
 
                     command.Parameters.AddWithValue(
@@ -278,9 +303,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 }
             }
 
-            catch (Exception)
+            catch (Exception ex)
             {
-                return null;
+                Console.WriteLine(
+                    $"[InsertSupplier] {ex.Message}"
+                );
+                throw;
             }
         }
 
@@ -360,7 +388,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
                     command.Parameters.AddWithValue(
                         "@category_supplier",
-                        model.category_supplier
+                        (object?)model.category_supplier
+                        ?? DBNull.Value
                     );
 
                     command.Parameters.AddWithValue(

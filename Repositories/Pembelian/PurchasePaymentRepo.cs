@@ -16,8 +16,32 @@ public interface IPurchasePaymentRepo
     Task<List<PurchasePayment>>
         GetAllPurchasePayment();
 
+    Task<bool> UpdatePurchasePayment(
+        int id,
+        PurchasePayment model
+    );
+
     Task<bool> DeletePurchasePayment(
         int id
+    );
+
+    /// <summary>
+    /// Returns the purchase_invoice_id that a payment belongs to,
+    /// or null if the payment does not exist.
+    /// </summary>
+    Task<int?> GetInvoiceIdByPaymentId(int paymentId);
+
+    /// <summary>
+    /// Returns true when a non-deleted payment already exists for the same
+    /// invoice, date, and amount — used to prevent accidental double-submits.
+    /// Pass excludePaymentId when updating an existing record so the record
+    /// being edited is not compared against itself.
+    /// </summary>
+    Task<bool> IsDuplicatePayment(
+        int purchaseInvoiceId,
+        DateTime paymentDate,
+        decimal amount,
+        int? excludePaymentId = null
     );
 }
 
@@ -280,6 +304,41 @@ public class PurchasePaymentRepo
         return response;
     }
 
+    // UPDATE
+    public async Task<bool> UpdatePurchasePayment(
+        int id,
+        PurchasePayment model
+    )
+    {
+        const string query = @"
+            UPDATE purchase_payment
+            SET
+                payment_date   = @payment_date,
+                amount         = @amount,
+                payment_method = @payment_method,
+                status         = @status,
+                notes          = @notes
+            WHERE purchase_payment_id = @id";
+
+        using SqlConnection connection =
+            new SqlConnection(_connectionString);
+
+        using SqlCommand command =
+            new SqlCommand(query, connection);
+
+        await connection.OpenAsync();
+
+        command.Parameters.AddWithValue("@id",             id);
+        command.Parameters.AddWithValue("@payment_date",   model.payment_date);
+        command.Parameters.AddWithValue("@amount",         model.amount);
+        command.Parameters.AddWithValue("@payment_method", model.payment_method ?? "");
+        command.Parameters.AddWithValue("@status",         model.status ?? "");
+        command.Parameters.AddWithValue("@notes",          model.notes ?? "");
+
+        int result = await command.ExecuteNonQueryAsync();
+        return result > 0;
+    }
+
     // DELETE
     public async Task<bool>
         DeletePurchasePayment(
@@ -308,6 +367,61 @@ public class PurchasePaymentRepo
 
             return result > 0;
         }
+    }
+    // GET INVOICE ID BY PAYMENT ID
+    public async Task<int?> GetInvoiceIdByPaymentId(int paymentId)
+    {
+        const string query = @"
+            SELECT purchase_invoice_id
+            FROM purchase_payment
+            WHERE purchase_payment_id = @id";
+
+        using SqlConnection connection = new SqlConnection(_connectionString);
+        using SqlCommand command = new SqlCommand(query, connection);
+        await connection.OpenAsync();
+        command.Parameters.AddWithValue("@id", paymentId);
+
+        object? result = await command.ExecuteScalarAsync();
+        if (result == null || result == DBNull.Value) return null;
+        return Convert.ToInt32(result);
+    }
+
+    // IS DUPLICATE PAYMENT
+    // Checks whether a payment with the same invoice, date, and amount
+    // already exists. The date comparison ignores the time component so
+    // that two payments submitted seconds apart on the same day are still
+    // caught. Pass excludePaymentId when editing an existing record so the
+    // record being updated is not flagged against itself.
+    public async Task<bool> IsDuplicatePayment(
+        int purchaseInvoiceId,
+        DateTime paymentDate,
+        decimal amount,
+        int? excludePaymentId = null
+    )
+    {
+        const string query = @"
+            SELECT COUNT(*)
+            FROM purchase_payment
+            WHERE purchase_invoice_id = @purchase_invoice_id
+              AND CAST(payment_date AS DATE) = CAST(@payment_date AS DATE)
+              AND amount = @amount
+              AND (@exclude_id IS NULL
+                   OR purchase_payment_id <> @exclude_id)";
+
+        using SqlConnection connection = new SqlConnection(_connectionString);
+        using SqlCommand command = new SqlCommand(query, connection);
+        await connection.OpenAsync();
+
+        command.Parameters.AddWithValue("@purchase_invoice_id", purchaseInvoiceId);
+        command.Parameters.AddWithValue("@payment_date",        paymentDate);
+        command.Parameters.AddWithValue("@amount",              amount);
+        command.Parameters.AddWithValue(
+            "@exclude_id",
+            excludePaymentId.HasValue ? (object)excludePaymentId.Value : DBNull.Value
+        );
+
+        int count = Convert.ToInt32(await command.ExecuteScalarAsync());
+        return count > 0;
     }
 }
 

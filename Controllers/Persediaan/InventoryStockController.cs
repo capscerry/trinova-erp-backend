@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using trinova_erp_backend.Models.Persediaan;
 using trinova_erp_backend.Usecase.Persediaan;
@@ -6,7 +7,7 @@ namespace trinova_erp_backend.Controllers.Persediaan
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Inventory,inventory,Warehouse,warehouse,Persediaan,persediaan")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Inventory,inventory,Warehouse,warehouse,Persediaan,persediaan,Sales,Penjualan,sales,penjualan")]
     public class InventoryStockController : ControllerBase
     {
         private readonly InventoryStockUsecase _usecase;
@@ -17,6 +18,7 @@ namespace trinova_erp_backend.Controllers.Persediaan
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
             return Ok(await _usecase.GetAllAsync());

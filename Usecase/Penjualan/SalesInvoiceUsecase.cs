@@ -3,7 +3,9 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
 using trinova_erp_backend.Models.Penjualan;
+using trinova_erp_backend.Models.Persediaan;
 using trinova_erp_backend.Repositories.Penjualan;
+using trinova_erp_backend.Repositories.Persediaan;
 
 namespace trinova_erp_backend.Usecase.Penjualan
 {
@@ -22,15 +24,24 @@ namespace trinova_erp_backend.Usecase.Penjualan
     public class SalesInvoiceUsecase : ISalesInvoiceUsecase
     {
         private readonly ISalesInvoiceRepo _salesInvoiceRepo;
+        private readonly InventoryStockRepo _inventoryStockRepo;
+        private readonly StockTransactionRepo _stockTransactionRepo;
+        private readonly StockMovementRepo _stockMovementRepo;
         private readonly string _connectionString;
         private readonly trinova_erp_backend.Services.IActivityLogService _activityLogService;
 
         public SalesInvoiceUsecase(
             ISalesInvoiceRepo salesInvoiceRepo,
+            InventoryStockRepo inventoryStockRepo,
+            StockTransactionRepo stockTransactionRepo,
+            StockMovementRepo stockMovementRepo,
             IOptions<DatabaseConnection> options,
             trinova_erp_backend.Services.IActivityLogService activityLogService)
         {
             _salesInvoiceRepo = salesInvoiceRepo;
+            _inventoryStockRepo = inventoryStockRepo;
+            _stockTransactionRepo = stockTransactionRepo;
+            _stockMovementRepo = stockMovementRepo;
             _connectionString = options.Value.SQLServer!;
             _activityLogService = activityLogService;
         }
@@ -84,10 +95,59 @@ namespace trinova_erp_backend.Usecase.Penjualan
             {
                 var invoiceId = await _salesInvoiceRepo.InsertHeader(model.Header, connection, transaction);
 
+                // Invoice ini sudah punya SO/DO di belakangnya => stoknya sudah
+                // ditangani di sana (reserve saat SO, deduct saat DO). Cuma
+                // invoice yang berdiri sendiri (cash sale/direct sale) yang
+                // perlu memotong stok sendiri di sini.
+                var isDirectSale = model.Header.SalesOrderId == null && model.Header.DeliveryOrderId == null;
+
                 foreach (var detail in model.Detail)
                 {
                     detail.SalesInvoiceId = invoiceId;
                     await _salesInvoiceRepo.InsertDetail(detail, connection, transaction);
+
+                    if (!isDirectSale || detail.WarehouseId == null || detail.WarehouseId <= 0 || detail.Quantity <= 0)
+                        continue;
+
+                    // Baris tanpa gudang dianggap jasa (tidak ada stok fisik) —
+                    // cuma baris dengan gudang terisi yang memotong stok.
+                    await _inventoryStockRepo.DeductAvailableAsync(
+                        connection,
+                        transaction,
+                        detail.ProductId,
+                        detail.WarehouseId.Value,
+                        detail.Quantity);
+
+                    await _stockTransactionRepo.CreateAsync(
+                        new StockTransaction
+                        {
+                            product_id = detail.ProductId,
+                            warehouse_id = detail.WarehouseId.Value,
+                            transaction_type = "OUT",
+                            quantity = detail.Quantity,
+                            reference_no = model.Header.InvoiceNumber,
+                            reference_module = "SALES_INVOICE",
+                            reference_id = invoiceId,
+                            remarks = "Stok keluar saat Sales Invoice (cash sale) dibuat",
+                            created_at = DateTime.Now
+                        },
+                        connection,
+                        transaction);
+
+                    await _stockMovementRepo.InsertAsync(
+                        new StockMovement
+                        {
+                            product_id = detail.ProductId,
+                            movement_type = "OUTBOUND",
+                            quantity = detail.Quantity,
+                            reference_number = model.Header.InvoiceNumber,
+                            notes = "Sales Invoice (cash sale) created",
+                            movement_date = DateTime.Now,
+                            created_at = DateTime.Now,
+                            source_warehouse_id = detail.WarehouseId.Value
+                        },
+                        connection,
+                        transaction);
                 }
 
                 await UpdateRelatedDocumentStatuses(model.Header, connection, transaction);
@@ -303,7 +363,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
             {
                 const string updateSalesOrderQuery = @"
                     UPDATE sales_order
-                    SET status = 'Completed'
+                    SET status = 'Invoiced'
                     WHERE order_id = @SalesOrderId;";
 
                 await connection.ExecuteAsync(

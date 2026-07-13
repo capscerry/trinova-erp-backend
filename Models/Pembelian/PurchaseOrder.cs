@@ -31,6 +31,8 @@ namespace trinova_erp_backend.Models
 
         public DateTime? created_at { get; set; }
 
+        public string? nomor_faktur_pajak { get; set; }
+
         [ForeignKey("supplier_id")]
         public Supplier? Supplier { get; set; }
     }

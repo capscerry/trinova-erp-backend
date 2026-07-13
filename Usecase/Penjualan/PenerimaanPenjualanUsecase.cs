@@ -7,6 +7,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
     {
         Task<List<BankDTO>> GetBankAsync();
         Task<PenerimaanPenjualan> InsertSalesReceipt(PenerimaanPenjualan dto);
+        Task<bool> UpdateSalesReceipt(int id, PenerimaanPenjualan dto);
         Task<List<PenerimaanPenjualan>> GetAllSalesReceipt();
     }
     public class PenerimaanPenjualanUsecase : IPenerimaanPenjualanUsecase
@@ -112,6 +113,49 @@ namespace trinova_erp_backend.Usecase.Penjualan
             catch (Exception ex)
             {
                 throw new Exception($"Usecase GetAllSalesReceipt Error: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<bool> UpdateSalesReceipt(int id, PenerimaanPenjualan dto)
+        {
+            try
+            {
+                if (id <= 0)
+                    throw new Exception("Id penerimaan tidak valid.");
+
+                if (string.IsNullOrWhiteSpace(dto.NoBukti))
+                    throw new Exception("No Bukti wajib diisi.");
+
+                if (dto.CustomerId <= 0)
+                    throw new Exception("Customer wajib dipilih.");
+
+                if (dto.BankId <= 0)
+                    throw new Exception("Bank wajib dipilih.");
+
+                if (dto.NilaiPembayaran <= 0)
+                    throw new Exception("Nilai pembayaran harus lebih dari 0.");
+
+                if (dto.TanggalBayar == default)
+                    dto.TanggalBayar = DateTime.Now;
+
+                var result = await _penerimaanRepo.UpdateSalesReceipt(id, dto);
+
+                if (result)
+                {
+                    await _activityLogService.LogSalesAsync(
+                        "sales_receipt_updated",
+                        $"Sales Receipt {dto.NoBukti} updated",
+                        $"Payment receipt data was updated.",
+                        "sales_receipt",
+                        id,
+                        dto.NoBukti);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Usecase UpdateSalesReceipt Error: {ex.Message}", ex);
             }
         }
     }

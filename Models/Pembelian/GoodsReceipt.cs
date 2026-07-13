@@ -35,6 +35,9 @@ namespace trinova_erp_backend.Models
         [NotMapped]
         public string? transaction_detail { get; set; }
 
+        [NotMapped]
+        public string? nomor_faktur_pajak { get; set; }
+
         [ForeignKey("purchase_order_id")]
         public PurchaseOrder? PurchaseOrder { get; set; }
     }

@@ -7,6 +7,10 @@ namespace trinova_erp_backend.Repositories.Pembelian
 {
     public interface ISupplierCategoryRepo
     {
+        Task MigrateCategoryCodes();
+
+        Task<string> GenerateCategoryCode();
+
         Task<bool> InsertSupplierCategory(SupplierCategory model);
 
         Task<List<SupplierCategory>> GetAllSupplierCategory();
@@ -28,175 +32,265 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 ?? throw new InvalidOperationException("Database connection string is not configured.");
         }
 
-        // INSERT
+        // ─── SELF-HEALING SCHEMA + BACK-FILL ────────────────────────────────────
+        // Adds category_code (if missing), adds is_active (if missing), then
+        // back-fills any rows that still lack a valid SUC- code.
+        // Idempotent — safe to call on every request.
+
+        private async Task EnsureCategoryCodeColumn(SqlConnection connection)
+        {
+            // 1. Add category_code if absent
+            const string addCode = @"
+                IF NOT EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME  = 'supplier_category'
+                      AND COLUMN_NAME = 'category_code'
+                )
+                BEGIN
+                    ALTER TABLE supplier_category
+                    ADD category_code NVARCHAR(20) NULL;
+                END";
+
+            // 2. Add is_active if absent (defaults existing rows to 1 = active)
+            const string addActive = @"
+                IF NOT EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME  = 'supplier_category'
+                      AND COLUMN_NAME = 'is_active'
+                )
+                BEGIN
+                    ALTER TABLE supplier_category
+                    ADD is_active BIT NOT NULL DEFAULT 1;
+                END";
+
+            // 3. Back-fill missing / malformed category_code values
+            const string backFill = @"
+                UPDATE sc
+                SET sc.category_code = 'SUC-' + RIGHT(
+                    '0000000000' + CAST(rn.rn AS NVARCHAR(10)), 10
+                )
+                FROM supplier_category sc
+                INNER JOIN (
+                    SELECT
+                        category_id,
+                        ROW_NUMBER() OVER (ORDER BY category_id ASC) AS rn
+                    FROM supplier_category
+                    WHERE category_code IS NULL
+                       OR category_code NOT LIKE
+                            'SUC-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+                ) rn ON sc.category_id = rn.category_id";
+
+            using var cmd1 = new SqlCommand(addCode,   connection);
+            await cmd1.ExecuteNonQueryAsync();
+
+            using var cmd2 = new SqlCommand(addActive, connection);
+            await cmd2.ExecuteNonQueryAsync();
+
+            using var cmd3 = new SqlCommand(backFill,  connection);
+            await cmd3.ExecuteNonQueryAsync();
+        }
+
+        // ─── MIGRATE (public endpoint) ───────────────────────────────────────────
+
+        public async Task MigrateCategoryCodes()
+        {
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            await EnsureCategoryCodeColumn(connection);
+        }
+
+        // ─── GENERATE NEXT CODE ──────────────────────────────────────────────────
+
+        public async Task<string> GenerateCategoryCode()
+        {
+            const string maxQuery = @"
+                SELECT ISNULL(
+                    (
+                        SELECT MAX(CAST(SUBSTRING(category_code, 5, 10) AS BIGINT))
+                        FROM supplier_category
+                        WHERE category_code LIKE
+                            'SUC-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+                    ),
+                    (SELECT ISNULL(MAX(category_id), 0) FROM supplier_category)
+                )";
+
+            const string existsQuery = @"
+                SELECT COUNT(1) FROM supplier_category
+                WHERE category_code = @code";
+
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            await EnsureCategoryCodeColumn(connection);
+
+            long nextNumber;
+            using (var cmd = new SqlCommand(maxQuery, connection))
+            {
+                object? result = await cmd.ExecuteScalarAsync();
+                nextNumber = (result != null && result != DBNull.Value)
+                    ? Convert.ToInt64(result) + 1
+                    : 1;
+            }
+
+            using (var cmd = new SqlCommand(existsQuery, connection))
+            {
+                cmd.Parameters.Add("@code", System.Data.SqlDbType.NVarChar, 20);
+                while (true)
+                {
+                    string candidate = $"SUC-{nextNumber:D10}";
+                    cmd.Parameters["@code"].Value = candidate;
+                    int count = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+                    if (count == 0) return candidate;
+                    nextNumber++;
+                }
+            }
+        }
+
+        // ─── INSERT ──────────────────────────────────────────────────────────────
+
         public async Task<bool> InsertSupplierCategory(SupplierCategory model)
         {
+            model.category_code = await GenerateCategoryCode();
+
             const string query = @"
                 INSERT INTO supplier_category
                 (
+                    category_code,
                     category_name,
+                    is_active,
                     created_by,
                     created_date
                 )
                 VALUES
                 (
+                    @category_code,
                     @category_name,
+                    @is_active,
                     @created_by,
                     GETDATE()
                 )";
 
             try
             {
-                using (SqlConnection connection = new SqlConnection(_connectionString))
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    await connection.OpenAsync();
+                using SqlConnection connection = new SqlConnection(_connectionString);
+                using SqlCommand command = new SqlCommand(query, connection);
+                await connection.OpenAsync();
 
-                    command.Parameters.AddWithValue("@category_name", model.category_name);
-                    command.Parameters.AddWithValue("@created_by", model.created_by);
+                command.Parameters.AddWithValue("@category_code", model.category_code);
+                command.Parameters.AddWithValue("@category_name",  model.category_name);
+                command.Parameters.AddWithValue("@is_active",      model.is_active);
+                command.Parameters.AddWithValue("@created_by",     (object?)model.created_by ?? DBNull.Value);
 
-                    int result = await command.ExecuteNonQueryAsync();
-
-                    return result > 0;
-                }
+                return await command.ExecuteNonQueryAsync() > 0;
             }
-            catch (Exception)
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
-        // UPDATE
+        // ─── UPDATE ──────────────────────────────────────────────────────────────
+
         public async Task<bool> UpdateSupplierCategory(SupplierCategory model)
         {
             const string query = @"
                 UPDATE supplier_category
                 SET
                     category_name = @category_name,
-                    update_by = @update_by,
-                    update_date = GETDATE()
+                    is_active     = @is_active,
+                    update_by     = @update_by,
+                    update_date   = GETDATE()
                 WHERE category_id = @category_id";
 
             try
             {
-                using (SqlConnection connection = new SqlConnection(_connectionString))
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    await connection.OpenAsync();
-
-                    command.Parameters.AddWithValue("@category_id", model.category_id);
-                    command.Parameters.AddWithValue("@category_name", model.category_name);
-                    command.Parameters.AddWithValue("@update_by", model.update_by);
-
-                    int result = await command.ExecuteNonQueryAsync();
-
-                    return result > 0;
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-            // DELETE
-            public async Task<bool> IsCategoryUsed(int categoryId)
-            {
-                const string query = @"
-                    SELECT COUNT(*)
-                    FROM master_supplier
-                    WHERE supplier_category_id =
-                        @categoryId";
-
-                using SqlConnection connection =
-                    new SqlConnection(
-                        _connectionString
-                    );
-
-                using SqlCommand command =
-                    new SqlCommand(
-                        query,
-                        connection
-                    );
-
+                using SqlConnection connection = new SqlConnection(_connectionString);
+                using SqlCommand command = new SqlCommand(query, connection);
                 await connection.OpenAsync();
 
-                command.Parameters.AddWithValue(
-                    "@categoryId",
-                    categoryId
-                );
+                command.Parameters.AddWithValue("@category_id",   model.category_id);
+                command.Parameters.AddWithValue("@category_name",  model.category_name);
+                command.Parameters.AddWithValue("@is_active",      model.is_active);
+                command.Parameters.AddWithValue("@update_by",      (object?)model.update_by ?? DBNull.Value);
 
-                int count =
-                    Convert.ToInt32(
-                        await command
-                            .ExecuteScalarAsync()
-                    );
-
-                return count > 0;
+                return await command.ExecuteNonQueryAsync() > 0;
             }
+            catch { return false; }
+        }
 
-            public async Task<bool> DeleteSupplierCategory(int id)
-    {
-        const string query = @"
-            DELETE FROM supplier_category
-            WHERE category_id = @id";
+        // ─── IS CATEGORY USED ────────────────────────────────────────────────────
 
-        using SqlConnection connection =
-            new SqlConnection(_connectionString);
+        public async Task<bool> IsCategoryUsed(int categoryId)
+        {
+            const string query = @"
+                SELECT COUNT(*) FROM master_supplier
+                WHERE supplier_category_id = @categoryId";
 
-        using SqlCommand command =
-            new SqlCommand(query, connection);
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlCommand command = new SqlCommand(query, connection);
+            await connection.OpenAsync();
+            command.Parameters.AddWithValue("@categoryId", categoryId);
+            return Convert.ToInt32(await command.ExecuteScalarAsync()) > 0;
+        }
 
-        await connection.OpenAsync();
+        // ─── DELETE ──────────────────────────────────────────────────────────────
 
-        command.Parameters.AddWithValue(
-            "@id",
-            id
-        );
+        public async Task<bool> DeleteSupplierCategory(int id)
+        {
+            const string query = @"
+                DELETE FROM supplier_category WHERE category_id = @id";
 
-        int result =
-            await command.ExecuteNonQueryAsync();
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlCommand command = new SqlCommand(query, connection);
+            await connection.OpenAsync();
+            command.Parameters.AddWithValue("@id", id);
+            return await command.ExecuteNonQueryAsync() > 0;
+        }
 
-        return result > 0;
-    }
+        // ─── GET ALL ─────────────────────────────────────────────────────────────
 
-        // GET ALL
         public async Task<List<SupplierCategory>> GetAllSupplierCategory()
         {
-            const string query = @"SELECT * FROM supplier_category";
-
             var response = new List<SupplierCategory>();
 
             try
             {
-                using (SqlConnection connection = new SqlConnection(_connectionString))
-                using (SqlCommand command = new SqlCommand(query, connection))
+                using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                // Ensure schema is up-to-date before querying
+                await EnsureCategoryCodeColumn(connection);
+
+                const string query = @"
+                    SELECT
+                        category_id,
+                        category_code,
+                        category_name,
+                        is_active,
+                        created_date,
+                        created_by,
+                        update_date,
+                        update_by
+                    FROM supplier_category
+                    ORDER BY category_id ASC";
+
+                using SqlCommand command = new SqlCommand(query, connection);
+                using SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
                 {
-                    await connection.OpenAsync();
-
-                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    response.Add(new SupplierCategory
                     {
-                        while (await reader.ReadAsync())
-                        {
-                            var category = new SupplierCategory()
-                            {
-                                category_id = reader.GetInt32(reader.GetOrdinal("category_id")),
-                                category_name = reader.GetString(reader.GetOrdinal("category_name")),
-                                created_date = reader["created_date"] as DateTime?,
-                                created_by = reader["created_by"].ToString(),
-                                update_date = reader["update_date"] as DateTime?,
-                                update_by = reader["update_by"].ToString()
-                            };
-
-                            response.Add(category);
-                        }
-                    }
+                        category_id   = reader.GetInt32(reader.GetOrdinal("category_id")),
+                        category_code = reader["category_code"]?.ToString() ?? string.Empty,
+                        category_name = reader.GetString(reader.GetOrdinal("category_name")),
+                        is_active     = reader["is_active"] != DBNull.Value && Convert.ToBoolean(reader["is_active"]),
+                        created_date  = reader["created_date"] as DateTime?,
+                        created_by    = reader["created_by"]?.ToString(),
+                        update_date   = reader["update_date"] as DateTime?,
+                        update_by     = reader["update_by"]?.ToString()
+                    });
                 }
             }
             catch (Exception ex)
             {
-                var msg = ex.Message;
-                throw new Exception(msg);
+                throw new Exception(ex.Message);
             }
 
             return response;

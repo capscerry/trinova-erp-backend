@@ -11,7 +11,9 @@
         public decimal NilaiPembayaran { get; set; }
         public DateTime TanggalBayar { get; set; }
         public int? UangMukaId { get; set; }
+        public string? UangMukaNumber { get; set; }
         public int? SalesOrderId { get; set; }
+        public string? SalesOrderNumber { get; set; }
         public int? SalesInvoiceId { get; set; }
         public string? Status { get; set; }
     }

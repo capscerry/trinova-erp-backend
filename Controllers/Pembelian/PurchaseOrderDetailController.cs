@@ -26,16 +26,42 @@ namespace trinova_erp_backend.Controllers.Pembelian
             var result = await _purchaseOrderDetailUsecase
                 .InsertPurchaseOrderDetail(detail);
 
-            return Ok(new
+            if (result == "Insert Successfully")
             {
-                status = true,
+                return Ok(new
+                {
+                    status = true,
+                    message = result
+                });
+            }
+
+            return BadRequest(new
+            {
+                status = false,
                 message = result
             });
         }
 
         [HttpGet("/api/purchase-order-detail")]
-        public async Task<IActionResult> GetAllPurchaseOrderDetail()
+        public async Task<IActionResult> GetAllPurchaseOrderDetail(
+            [FromQuery] int? purchase_order_id = null
+        )
         {
+            // When a purchase_order_id filter is provided, return only the
+            // details that belong to that PO — this lets the frontend avoid
+            // fetching every detail row just to filter client-side.
+            if (purchase_order_id.HasValue)
+            {
+                var filtered = await _purchaseOrderDetailUsecase
+                    .GetDetailsByPurchaseOrderId(purchase_order_id.Value);
+
+                return Ok(new
+                {
+                    status = true,
+                    data = filtered
+                });
+            }
+
             var result = await _purchaseOrderDetailUsecase
                 .GetAllPurchaseOrderDetail();
 

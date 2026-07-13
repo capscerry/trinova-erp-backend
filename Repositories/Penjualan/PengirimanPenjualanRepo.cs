@@ -12,6 +12,11 @@ namespace trinova_erp_backend.Repositories.Penjualan
         Task<List<ShippingDTO>> GetShippingCategory();
         Task<List<DeliveryOrderHeaderDTO>> GetDoHeader();
         Task<List<DeliveryOrderDetailDTO>> GetDoDetail(int deliveryOrderId);
+        Task<int?> GetSalesOrderLineWarehouseAsync(
+            int soId,
+            int productId,
+            SqlConnection connection,
+            SqlTransaction transaction);
 
         Task<int> InsertDeliveryOrderHeader(
         DeliveryOrderHeaderDTO dto,
@@ -21,7 +26,14 @@ namespace trinova_erp_backend.Repositories.Penjualan
     DeliveryOrderDetailDTO dto,
     SqlConnection connection,
     SqlTransaction transaction);
-
+        Task UpdateDeliveryOrderHeader(
+            DeliveryOrderHeaderDTO dto,
+            SqlConnection connection,
+            SqlTransaction transaction);
+        Task DeleteDeliveryOrderDetail(
+            int deliveryOrderId,
+            SqlConnection connection,
+            SqlTransaction transaction);
 
     }
     public class PengirimanPenjualanRepo : IPengirimanPenjualanRepo
@@ -83,6 +95,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     mp.product_name AS ProductName,
                     dod.qty_dikirim AS QtyDikirim,
                     dod.qty_dipesan AS QtyDipesan,
+                    dod.warehouse_id AS WarehouseId,
+                    mw.warehouse_name AS WarehouseName,
                     sod.uom_id AS UomId,
                     mu.uom_code AS UomName
                 FROM delivery_order_detail dod
@@ -92,6 +106,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     ON sod.order_id = doh.so_id
                    AND sod.product_id = dod.product_id
                 LEFT JOIN master_uom mu ON mu.uom_id = sod.uom_id
+                LEFT JOIN master_warehouse mw ON mw.warehouse_id = dod.warehouse_id
                 WHERE dod.delivery_id = @DeliveryOrderId
                 ORDER BY dod.product_id ASC";
 
@@ -101,6 +116,23 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 new { DeliveryOrderId = deliveryOrderId });
 
             return result.ToList();
+        }
+
+        public async Task<int?> GetSalesOrderLineWarehouseAsync(
+            int soId,
+            int productId,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            const string query = @"
+                SELECT warehouse_id
+                FROM sales_order_detail
+                WHERE order_id = @SoId AND product_id = @ProductId";
+
+            return await connection.QueryFirstOrDefaultAsync<int?>(
+                query,
+                new { SoId = soId, ProductId = productId },
+                transaction);
         }
 
 
@@ -166,14 +198,16 @@ namespace trinova_erp_backend.Repositories.Penjualan
             delivery_id,
             product_id,
             qty_dikirim,
-            qty_dipesan
+            qty_dipesan,
+            warehouse_id
         )
         VALUES
         (
             @DoId,
             @ProductId,
             @QtyDikirim,
-            @QtyDipesan
+            @QtyDipesan,
+            @WarehouseId
         )";
 
             await connection.ExecuteAsync(
@@ -181,6 +215,42 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 dto,
                 transaction);
         }
- 
+
+        public async Task UpdateDeliveryOrderHeader(
+            DeliveryOrderHeaderDTO dto,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            const string query = @"
+                UPDATE delivery_order_header
+                SET
+                    customer_id = @CustomerId,
+                    do_number = @DoNumber,
+                    delivery_category_id = @DeliveryCategoryId,
+                    po_number = @PoNumber,
+                    address = @Address,
+                    notes = @Notes,
+                    do_date = @DoDate,
+                    so_id = @SoId
+                WHERE id = @Id;";
+
+            await connection.ExecuteAsync(query, dto, transaction);
+        }
+
+        public async Task DeleteDeliveryOrderDetail(
+            int deliveryOrderId,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            const string query = @"
+                DELETE FROM delivery_order_detail
+                WHERE delivery_id = @DeliveryOrderId;";
+
+            await connection.ExecuteAsync(
+                query,
+                new { DeliveryOrderId = deliveryOrderId },
+                transaction);
+        }
+
     }
 }
