@@ -52,10 +52,10 @@ namespace trinova_erp_backend.Usecase.Persediaan
                     .GenerateNextCodeAsync();
 
             subcategory.created_at =
-                DateTime.UtcNow;
+                DateTime.Now;
 
             subcategory.updated_at =
-                DateTime.UtcNow;
+                DateTime.Now;
 
             subcategory.is_active = true;
 
@@ -79,7 +79,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
             subcategory.category_id = model.category_id;
             subcategory.code = model.code;
             subcategory.name = model.name;
-            subcategory.updated_at = DateTime.UtcNow;
+            subcategory.updated_at = DateTime.Now;
 
             return await _repository.UpdateAsync(subcategory);
         }

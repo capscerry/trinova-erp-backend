@@ -12,6 +12,5 @@ namespace trinova_erp_backend.Models.Persediaan.DTO
 
         public string? created_by { get; set; }
 
-        public string? reference_no { get; set; }
     }
 }

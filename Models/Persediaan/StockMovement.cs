@@ -11,6 +11,8 @@ namespace trinova_erp_backend.Models.Persediaan
 
         public int product_id { get; set; }
 
+        public string? product_name { get; set; }
+
         public string? movement_type { get; set; }
 
         public decimal quantity { get; set; }
@@ -27,6 +29,21 @@ namespace trinova_erp_backend.Models.Persediaan
 
         public int? source_warehouse_id { get; set; }
 
+        public string? warehouse_name { get; set; }
+
         public int? destination_warehouse_id { get; set; }
+
+        public string? source_warehouse_name { get; set; }
+
+        public string? destination_warehouse_name { get; set; }
+
+        public string? status { get; set; }
+
+        public DateTime? processed_at { get; set; }
+
+        public DateTime? completed_at { get; set; }
+
+        public DateTime? canceled_at { get; set; }
+
     }
 }

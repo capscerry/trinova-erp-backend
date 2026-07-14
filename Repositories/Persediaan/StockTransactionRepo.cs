@@ -38,7 +38,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
                     p.product_name,
                     p.product_code,
-                    p.product_type,
 
                     w.warehouse_name
 
@@ -118,9 +117,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
                         product_code =
                             reader["product_code"]?.ToString(),
-
-                        product_type =
-                            reader["product_type"]?.ToString()
                     },
 
                     Warehouse = new MasterWarehouse
@@ -148,7 +144,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
                     p.product_name,
                     p.product_code,
-                    p.product_type,
 
                     w.warehouse_name
 
@@ -234,9 +229,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
                     product_code =
                         reader["product_code"]?.ToString(),
-
-                    product_type =
-                        reader["product_type"]?.ToString()
                 },
 
                 Warehouse = new MasterWarehouse

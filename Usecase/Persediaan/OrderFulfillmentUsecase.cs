@@ -20,46 +20,25 @@ namespace trinova_erp_backend.Usecase.Persediaan
             _transactionRepo = transactionRepo;
         }
 
-        public async Task Fulfill(
-            OrderFulfillmentRequest request)
+        public async Task Fulfill(OrderFulfillmentRequest request)
         {
-            Console.WriteLine("========== ORDER FULFILLMENT ==========");
-
-            Console.WriteLine(
-                $"PRODUCT_ID = {request.product_id}");
-
-            Console.WriteLine(
-                $"WAREHOUSE_ID = {request.warehouse_id}");
-
-            Console.WriteLine(
-                $"QTY = {request.quantity}");
-
-            Console.WriteLine("STEP 1 - GET STOCK");
+            var referenceNo = $"FUL-{DateTime.Now:yyyyMMddHHmmss}";
 
             var stock =
                 await _stockRepo.GetByProductWarehouseAsync(
                     request.product_id,
                     request.warehouse_id);
 
-            Console.WriteLine(
-                $"STOCK FOUND = {stock != null}");
-
             if (stock == null)
                 throw new Exception("Stock not found");
 
-            Console.WriteLine("STEP 2 - VALIDATE STOCK");
-
             if (stock.qty_available < request.quantity)
                 throw new Exception("Insufficient stock");
-
-            Console.WriteLine("STEP 3 - UPDATE STOCK");
 
             stock.qty_on_hand -= request.quantity;
             stock.qty_available -= request.quantity;
 
             await _stockRepo.UpdateAsync(stock);
-
-            Console.WriteLine("STEP 4 - CREATE TRANSACTION");
 
             await _transactionRepo.CreateAsync(
                 new StockTransaction
@@ -68,13 +47,12 @@ namespace trinova_erp_backend.Usecase.Persediaan
                     warehouse_id = request.warehouse_id,
                     transaction_type = "OUT",
                     quantity = request.quantity,
-                    reference_no = request.reference_no,
+                    reference_no = referenceNo,
                     reference_module = "ORDER_FULFILLMENT",
                     remarks = request.notes,
                     created_at = DateTime.Now
-                });
-
-            Console.WriteLine("STEP 5 - CREATE MOVEMENT");
+                }
+            );
 
             await _movementRepo.InsertAsync(
                 new StockMovement
@@ -87,12 +65,9 @@ namespace trinova_erp_backend.Usecase.Persediaan
                     created_at = DateTime.Now,
                     created_by = request.created_by,
                     source_warehouse_id = request.warehouse_id,
-                    reference_number =
-                        request.reference_no ??
-                        $"FUL-{DateTime.Now:yyyyMMddHHmmss}"
-                });
-
-            Console.WriteLine("STEP 6 - DONE");
+                    reference_number = referenceNo
+                }
+            );
         }
 
         public async Task<List<StockMovement>>

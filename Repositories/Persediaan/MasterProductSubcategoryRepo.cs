@@ -340,7 +340,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
                 command.Parameters.AddWithValue(
                     "@updated_at",
-                    DateTime.UtcNow
+                    DateTime.Now
                 );
 
                 await connection.OpenAsync();

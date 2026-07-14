@@ -29,7 +29,8 @@ namespace trinova_erp_backend.Usecase.Persediaan
             if (
                 transaction.transaction_type != "IN" &&
                 transaction.transaction_type != "OUT" &&
-                transaction.transaction_type != "TRANSFER" &&
+                transaction.transaction_type != "TRANSFER_IN" &&
+                transaction.transaction_type != "TRANSFER_OUT"&&
                 transaction.transaction_type != "ADJUSTMENT"
             )
             {
@@ -43,7 +44,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
                 );
             }
 
-            transaction.created_at = DateTime.UtcNow;
+            transaction.created_at = DateTime.Now;
 
             return await _repo.CreateAsync(transaction);
         }

@@ -1,17 +1,29 @@
+using System.Text.Json.Serialization;
+
 namespace trinova_erp_backend.Models.Persediaan
 {
     public class ForecastResult
     {
-        public int product_id { get; set; }
+        [JsonPropertyName("product_id")]
+        public int ProductId { get; set; }
 
-        public string product_name { get; set; } = string.Empty;
+        [JsonPropertyName("product_name")]
+        public string ProductName { get; set; } = string.Empty;
 
-        public decimal total_usage { get; set; }
+        [JsonPropertyName("forecast_month")]
+        public string ForecastMonth { get; set; } = string.Empty;
 
-        public decimal forecast_next_month { get; set; }
+        [JsonPropertyName("last_training_period")]
+        public string LastTrainingPeriod { get; set; } = string.Empty;
 
-        public decimal current_stock { get; set; }
+        [JsonPropertyName("historical_records")]
+        public int HistoricalRecords { get; set; }
 
-        public string recommendation { get; set; } = string.Empty;
+        [JsonPropertyName("forecast_next_month")]
+        public double ForecastNextMonth { get; set; }
+
+        [JsonPropertyName("generated_at")]
+        public string GeneratedAt { get; set; } = string.Empty;
+
     }
 }

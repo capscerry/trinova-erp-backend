@@ -34,7 +34,19 @@ namespace trinova_erp_backend.Controllers.Persediaan
         public async Task<IActionResult> GetById(int id)
         {
             var result =
-                await _purchaseRequisitionUsecase.GetByIdAsync(id);
+                await _purchaseRequisitionUsecase.GetDetailAsync(id);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
+        [HttpGet("{id}/details")]
+        public async Task<IActionResult> GetDetail(int id)
+        {
+            var result =
+                await _purchaseRequisitionUsecase.GetDetailAsync(id);
 
             if (result == null)
                 return NotFound();
@@ -47,10 +59,13 @@ namespace trinova_erp_backend.Controllers.Persediaan
             [FromBody] PurchaseRequisition model
         )
         {
-            var result =
-                await _purchaseRequisitionUsecase.CreateAsync(model);
+            Console.WriteLine(
+            $"DETAIL COUNT = {model.Details?.Count}"
+        );
 
-            return Ok(result);
+        return Ok(
+            await _purchaseRequisitionUsecase.CreateAsync(model)
+        );
         }
 
         [HttpGet("next-number")]

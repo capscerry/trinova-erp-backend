@@ -184,6 +184,34 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     }
 
                     // ====================================================
+                    // GET GOODS RECEIPT NUMBER
+                    // ====================================================
+
+                    string receiptNumber = "";
+
+                    const string getReceiptNumberQuery = @"
+                        SELECT receipt_number
+                        FROM goods_receipt
+                        WHERE goods_receipt_id = @goods_receipt_id";
+
+                    using (SqlCommand receiptCommand =
+                        new SqlCommand(getReceiptNumberQuery, connection))
+                    {
+                        receiptCommand.Parameters.AddWithValue(
+                            "@goods_receipt_id",
+                            model.goods_receipt_id);
+
+                        var receiptResult =
+                            await receiptCommand.ExecuteScalarAsync();
+
+                        if (receiptResult != null &&
+                            receiptResult != DBNull.Value)
+                        {
+                            receiptNumber = receiptResult.ToString()!;
+                        }
+                    }
+
+                    // ====================================================
                     // INSERT STOCK TRANSACTION LOG
                     // ====================================================
 
@@ -194,6 +222,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             warehouse_id,
                             transaction_type,
                             quantity,
+                            reference_no,
                             reference_module,
                             reference_id,
                             remarks,
@@ -205,6 +234,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             1,
                             'IN',
                             @quantity,
+                            @reference_no,
                             'Goods Receipt',
                             @reference_id,
                             @remarks,
@@ -221,6 +251,10 @@ namespace trinova_erp_backend.Repositories.Pembelian
                         transactionCommand.Parameters.AddWithValue(
                             "@quantity",
                             model.quantity);
+                        
+                        transactionCommand.Parameters.AddWithValue(
+                            "@reference_no",
+                            receiptNumber);
 
                         transactionCommand.Parameters.AddWithValue(
                             "@reference_id",

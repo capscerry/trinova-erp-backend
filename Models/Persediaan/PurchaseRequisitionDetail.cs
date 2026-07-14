@@ -29,5 +29,7 @@ namespace trinova_erp_backend.Models.Persediaan
 
         [ForeignKey(nameof(product_id))]
         public MasterProduct? Product { get; set; }
+
+        public string? product_name { get; set; }
     }
 }
