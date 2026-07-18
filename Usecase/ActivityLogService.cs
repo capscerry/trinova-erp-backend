@@ -61,7 +61,7 @@ namespace trinova_erp_backend.Services
 
             var actor = ResolveActor();
 
-            await _activityLogRepo.InsertAsync(new ActivityLog
+            var log = new ActivityLog
             {
                 Module = data.Module,
                 ActivityType = data.ActivityType,
@@ -72,7 +72,16 @@ namespace trinova_erp_backend.Services
                 RefNumber = data.RefNumber,
                 UserId = actor.UserId,
                 UserName = actor.UserName
+            };
+
+            // Fire-and-forget: never block the HTTP response waiting for the log insert.
+            _ = Task.Run(async () =>
+            {
+                try { await _activityLogRepo.InsertAsync(log); }
+                catch { /* Swallow logging errors — they must not affect the response */ }
             });
+
+            await Task.CompletedTask;
         }
 
         private ActivityActor ResolveActor()

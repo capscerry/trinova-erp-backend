@@ -4,9 +4,11 @@ using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
 {
+    // All endpoints require authentication at minimum.
+    // Individual endpoints carry the narrowest role list needed.
     [Route("api/[controller]")]
     [ApiController]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class PurchaseOrderController : ControllerBase
     {
         private readonly IPurchaseOrderUsecase _purchaseOrderUsecase;
@@ -18,6 +20,11 @@ namespace trinova_erp_backend.Controllers.Pembelian
             _purchaseOrderUsecase = purchaseOrderUsecase;
         }
 
+        // ── PURCHASING-ONLY ENDPOINTS ────────────────────────────────────
+        // Create, edit, delete, and draft-number generation remain restricted
+        // to Purchasing staff. Procurement Manager has no access here.
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpPost("/api/purchase-order")]
         public async Task<IActionResult> InsertPurchaseOrder(
             [FromBody] PurchaseOrder purchaseOrder
@@ -43,11 +50,12 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpGet("/api/purchase-order/next-number")]
         public async Task<IActionResult> GetNextPONumber()
         {
             var number = await _purchaseOrderUsecase.GetNextPONumber();
-            
+
             return Ok(new
             {
                 status = true,
@@ -56,6 +64,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpGet("/api/purchase-order")]
         public async Task<IActionResult> GetAllPurchaseOrder()
         {
@@ -79,6 +88,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpPut("/api/purchase-order/{id}")]
         public async Task<IActionResult> UpdatePurchaseOrder(
             int id,
@@ -106,11 +116,12 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
-        [HttpPatch("/api/purchase-order/{id}/approve")]
-        public async Task<IActionResult> ApprovePurchaseOrder(int id)
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpPatch("/api/purchase-order/{id}/request-approval")]
+        public async Task<IActionResult> RequestApproval(int id)
         {
             var (success, message) = await _purchaseOrderUsecase
-                .ApprovePurchaseOrder(id);
+                .RequestApproval(id);
 
             if (success)
                 return Ok(new { status = true, message });
@@ -118,6 +129,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
             return BadRequest(new { status = false, message });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpPatch("/api/purchase-order/{id}/unapprove")]
         public async Task<IActionResult> UnapprovePurchaseOrder(int id)
         {
@@ -130,16 +142,13 @@ namespace trinova_erp_backend.Controllers.Pembelian
             return BadRequest(new { status = false, message = "Unapprove failed — PO not found or not in Approved state" });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpPatch("/api/purchase-order/{id}/deduction")]
         public async Task<IActionResult> ApplyDeduction(
             int id,
             [FromBody] PODeductionRequest request
         )
         {
-            // Validate: the PO must exist and its total_amount must be >= the
-            // deduction amount (Purchase Return value). This mirrors the same
-            // rule applied to Cash Refund — you cannot deduct more than the PO
-            // is worth.
             var po = await _purchaseOrderUsecase.GetPurchaseOrderById(id);
 
             if (po == null)
@@ -172,8 +181,10 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpDelete("/api/purchase-order/{id}")]
-        public async Task<IActionResult> DeletePurchaseOrder(int id)        {
+        public async Task<IActionResult> DeletePurchaseOrder(int id)
+        {
             var result = await _purchaseOrderUsecase
                 .DeletePurchaseOrder(id);
 
@@ -191,6 +202,81 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 status = false,
                 message = "Failed Delete Data"
             });
+        }
+
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpGet("/api/purchase-order/pending-approval")]
+        public async Task<IActionResult> GetPendingApproval()
+        {
+            var result = await _purchaseOrderUsecase
+                .GetPurchaseOrdersByStatus("Waiting for Approval");
+
+            if (result == null || result.Count == 0)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    data = new List<object>(),
+                    message = "No Purchase Orders pending approval"
+                });
+            }
+
+            return Ok(new
+            {
+                status = true,
+                data = result
+            });
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpGet("/api/purchase-order/approved")]
+        public async Task<IActionResult> GetApproved()
+        {
+            var result = await _purchaseOrderUsecase
+                .GetApprovedAndCompletedPurchaseOrders();
+
+            if (result == null || result.Count == 0)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    data = new List<object>(),
+                    message = "No Approved Purchase Orders found"
+                });
+            }
+
+            return Ok(new
+            {
+                status = true,
+                data = result
+            });
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpPatch("/api/purchase-order/{id}/approve")]
+        public async Task<IActionResult> ApprovePurchaseOrder(int id)
+        {
+            var (success, message) = await _purchaseOrderUsecase
+                .ApprovePurchaseOrder(id);
+
+            if (success)
+                return Ok(new { status = true, message });
+
+            return BadRequest(new { status = false, message });
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpPatch("/api/purchase-order/{id}/reject")]
+        public async Task<IActionResult> RejectPurchaseOrder(int id)
+        {
+            var (success, message) = await _purchaseOrderUsecase
+                .RejectPurchaseOrder(id);
+
+            if (success)
+                return Ok(new { status = true, message });
+
+            return BadRequest(new { status = false, message });
         }
     }
 }

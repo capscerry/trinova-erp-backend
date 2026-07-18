@@ -5,7 +5,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
 {
     [Route("api/purchasing/dashboard")]
     [ApiController]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
     public class PurchasingDashboardController : ControllerBase
     {
         private readonly IPurchasingDashboardUsecase _purchasingDashboardUsecase;

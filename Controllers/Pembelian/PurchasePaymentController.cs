@@ -6,7 +6,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
     public class PurchasePaymentController
         : ControllerBase
     {
@@ -114,6 +114,14 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 {
                     status = true,
                     message = "Purchase Payment updated successfully"
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
                 });
             }
             catch (Exception ex)

@@ -6,7 +6,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
     public class PurchaseOrderDetailController : ControllerBase
     {
         private readonly IPurchaseOrderDetailUsecase _purchaseOrderDetailUsecase;

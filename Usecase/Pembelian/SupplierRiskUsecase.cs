@@ -10,66 +10,20 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface ISupplierRiskUsecase
     {
-        /// <summary>
-        /// Aggregates live ERP metrics for a single supplier, maps them to the
-        /// FastAPI feature schema, and calls POST /predict/supplier-risk.
-        /// </summary>
         Task<SupplierRiskPredictResponse> PredictSupplierRisk(int supplierId);
-
-        /// <summary>
-        /// Aggregates live ERP data for ALL active suppliers and calls
-        /// POST /predict/all-suppliers to get raw XGBoost ML scores.
-        /// Returns ML results only — no ranking applied yet.
-        /// </summary>
         Task<BatchPredictResponse> PredictAllSuppliers();
-
-        /// <summary>
-        /// Takes a list of ML-scored suppliers (from PredictAllSuppliers) and
-        /// calls POST /rank/ahp-topsis to rank them by AHP-TOPSIS.
-        /// Pass a custom ahpMatrix (5×5 row-major) to override server defaults.
-        /// </summary>
         Task<RankResponse> RankWithAhpTopsis(
             List<SupplierPredictResult> mlResults,
             List<List<double>>?         ahpMatrix = null);
-
-        /// <summary>
-        /// Convenience end-to-end method:
-        ///   1. Train XGBoost on historical CSV data (bundled dataset).
-        ///   2. Batch-predict all active ERP suppliers via the freshly trained model.
-        ///   3. Rank the ML results with AHP-TOPSIS.
-        /// Returns both the raw ML batch and the ranked output so the caller can
-        /// display ML results first and the ranking second.
-        /// </summary>
         Task<SupplierRiskFullEvaluationResult> TrainAndEvaluateAll(
             bool appendErpToHistorical = true,
             List<List<double>>? ahpMatrix = null);
 
-        /// <summary>
-        /// Aggregates live ERP data for ALL active suppliers, maps to FastAPI
-        /// training rows, and calls POST /train/from-rows to retrain the model.
-        /// </summary>
         Task<SupplierRiskTrainResponse> TrainFromErpData(bool appendToExisting = true);
-
-        /// <summary>
-        /// Forwards a raw CSV file (multipart) to POST /train/from-csv-upload.
-        /// The CSV must contain the columns:
-        /// supplier_price, lead_time_days, claim_rate, on_time_rate, order_frequency, late_delivery
-        /// </summary>
         Task<SupplierRiskTrainResponse> TrainFromCsvUpload(Stream csvStream, string fileName);
-
-        /// <summary>
-        /// Triggers retraining using the bundled CSV on the FastAPI server's disk.
-        /// Optionally pass a custom server-side path.
-        /// </summary>
         Task<SupplierRiskTrainResponse> TrainFromServerCsv(string? csvPath = null);
     }
 
-    /// <summary>
-    /// Combined result of TrainAndEvaluateAll:
-    ///   - train_result   : XGBoost training metrics
-    ///   - ml_results     : raw per-supplier ML scores (shown first in UI)
-    ///   - ranked_results : AHP-TOPSIS ranking applied on top of ml_results
-    /// </summary>
     public class SupplierRiskFullEvaluationResult
     {
         public SupplierRiskTrainResponse train_result   { get; set; } = new();
@@ -97,8 +51,6 @@ namespace trinova_erp_backend.Usecase.Pembelian
             _httpClientFactory = httpClientFactory;
             _dbConfig          = dbConfig.Value;
         }
-
-        // ── Predict ───────────────────────────────────────────────────────────
 
         public async Task<SupplierRiskPredictResponse> PredictSupplierRisk(int supplierId)
         {
