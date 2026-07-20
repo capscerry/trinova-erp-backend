@@ -71,8 +71,25 @@ namespace trinova_erp_backend.Services
                 RefId = data.RefId,
                 RefNumber = data.RefNumber,
                 UserId = actor.UserId,
-                UserName = actor.UserName
+                UserName = actor.UserName,
+                IpAddress = ResolveIpAddress()
             });
+        }
+
+        private string? ResolveIpAddress()
+        {
+            var context = _httpContextAccessor.HttpContext;
+            if (context == null) return null;
+
+            // Behind a reverse proxy/load balancer the real client IP is in
+            // X-Forwarded-For (first entry); fall back to the socket IP.
+            var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(forwardedFor))
+            {
+                return forwardedFor.Split(',')[0].Trim();
+            }
+
+            return context.Connection.RemoteIpAddress?.ToString();
         }
 
         private ActivityActor ResolveActor()

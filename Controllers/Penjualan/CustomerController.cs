@@ -83,12 +83,13 @@ namespace trinova_erp_backend.Controllers.Penjualan
         public async Task<IActionResult> GetAllCategory()
         {
             var result = await _customerCategoryUsecase.GetAllCategory();
-            if(result == null || result.Count == 0)
+            if (result == null || result.Count == 0)
             {
-                return BadRequest(new
-                {   
-                    status = false,
-                    data = "No Category Found"
+                return Ok(new
+                {
+                    status = true,
+                    data = new List<object>(),
+                    message = "No Category Found"
                 });
             }
             return Ok(new

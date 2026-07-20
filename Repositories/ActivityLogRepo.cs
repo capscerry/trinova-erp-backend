@@ -34,7 +34,8 @@ namespace trinova_erp_backend.Repositories
                     RefId,
                     RefNumber,
                     UserId,
-                    UserName
+                    UserName,
+                    IpAddress
                 )
                 VALUES
                 (
@@ -46,7 +47,8 @@ namespace trinova_erp_backend.Repositories
                     @RefId,
                     @RefNumber,
                     @UserId,
-                    @UserName
+                    @UserName,
+                    @IpAddress
                 );";
 
             using var connection = new SqlConnection(_connectionString);
@@ -67,6 +69,7 @@ namespace trinova_erp_backend.Repositories
                     RefNumber,
                     UserId,
                     UserName,
+                    IpAddress,
                     CreatedAt
                 FROM ActivityLogs
                 WHERE Module = 'security'
