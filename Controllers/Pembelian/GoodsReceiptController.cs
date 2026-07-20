@@ -92,6 +92,56 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        /// <summary>
+        /// Returns only Goods Receipts that have at least one detail line
+        /// with remaining_qty &gt; 0. This is the list the Purchase Return
+        /// creation modal must use — exhausted GRs are excluded entirely.
+        /// </summary>
+        [HttpGet("/api/goods-receipt/for-purchase-return")]
+        public async Task<IActionResult> GetAllAvailableForReturn()
+        {
+            var result = await _goodsReceiptUsecase
+                .GetAllAvailableForReturn();
+
+            return Ok(new
+            {
+                status = true,
+                data = result
+            });
+        }
+
+        /// <summary>
+        /// Updates a Goods Receipt header (receipt_number, receipt_date,
+        /// received_by, status).  Fixes the 405 that was triggered when the
+        /// frontend called PUT /goods-receipt/{id} and found no matching route.
+        /// </summary>
+        [HttpPut("/api/goods-receipt/{id}")]
+        public async Task<IActionResult> UpdateGoodsReceipt(
+            int id,
+            [FromBody] GoodsReceipt goodsReceipt
+        )
+        {
+            goodsReceipt.goods_receipt_id = id;
+
+            var result = await _goodsReceiptUsecase
+                .UpdateGoodsReceipt(goodsReceipt);
+
+            if (!result)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = "Update Failed"
+                });
+            }
+
+            return Ok(new
+            {
+                status = true,
+                message = "Goods Receipt updated successfully"
+            });
+        }
+
         [HttpDelete("/api/goods-receipt/{id}")]
         public async Task<IActionResult> DeleteGoodsReceipt(int id)
         {

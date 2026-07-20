@@ -13,6 +13,12 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
         Task<List<GoodsReceipt>> GetAllWithoutInvoice();
 
+        /// <summary>
+        /// Returns only GRs that have at least one detail line with
+        /// remaining_qty &gt; 0. Used by the Purchase Return creation modal.
+        /// </summary>
+        Task<List<GoodsReceipt>> GetAllAvailableForReturn();
+
         Task<bool> UpdateGoodsReceipt(GoodsReceipt model);
 
         Task<bool> DeleteGoodsReceipt(int id);
@@ -73,6 +79,11 @@ namespace trinova_erp_backend.Usecase.Pembelian
         public async Task<List<GoodsReceipt>> GetAllWithoutInvoice()
         {
             return await _goodsReceiptRepo.GetAllWithoutInvoice();
+        }
+
+        public async Task<List<GoodsReceipt>> GetAllAvailableForReturn()
+        {
+            return await _goodsReceiptRepo.GetAllAvailableForReturn();
         }
 
         public async Task<bool> UpdateGoodsReceipt(GoodsReceipt model)

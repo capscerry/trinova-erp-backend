@@ -1,36 +1,22 @@
 namespace trinova_erp_backend.Models.DTO
 {
-    // ─── Predict ────────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Sent to POST /predict/supplier-risk on the FastAPI service.
-    /// Field names match the FastAPI SupplierInput Pydantic model exactly.
+    /// Request body sent to POST /predict/supplier-risk on the FastAPI service.
+    /// Field names match FastAPI's SupplierInput schema.
     /// </summary>
     public class SupplierRiskPredictRequest
     {
-        /// <summary>Optional — echoed back in the response for traceability.</summary>
-        public int? supplier_id      { get; set; }
+        /// <summary>Optional — for traceability only, not used as a feature.</summary>
+        public int?   supplier_id      { get; set; }
 
-        /// <summary>Unit price or contract value in local currency (> 0).</summary>
-        public double supplier_price  { get; set; }
-
-        /// <summary>Agreed lead time in calendar days (>= 1).</summary>
-        public int    lead_time_days  { get; set; }
-
-        /// <summary>Historical claim / defect rate (0.0 – 1.0).</summary>
-        public double claim_rate      { get; set; }
-
-        /// <summary>Historical on-time delivery rate (0.0 – 1.0).</summary>
-        public double on_time_rate    { get; set; }
-
-        /// <summary>Number of orders placed with this supplier per year.</summary>
-        public int    order_frequency { get; set; }
+        public double supplier_price   { get; set; }
+        public int    lead_time_days   { get; set; }
+        public double claim_rate       { get; set; }
+        public double on_time_rate     { get; set; }
+        public int    order_frequency  { get; set; }
     }
 
-    /// <summary>
-    /// Response from POST /predict/supplier-risk.
-    /// Matches FastAPI's SupplierRiskResponse schema.
-    /// </summary>
     public class SupplierRiskPredictResponse
     {
         /// <summary>Echoed from the request when supplied.</summary>

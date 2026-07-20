@@ -28,6 +28,13 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
         Task<List<GoodsReceiptDetail>> GetReturnDetails(int purchaseReturnId);
 
+        /// <summary>
+        /// Returns GR detail lines (with product_name, quantity, remaining_qty)
+        /// for only lines where remaining_qty &gt; 0.
+        /// Used by the Purchase Return creation modal.
+        /// </summary>
+        Task<List<GoodsReceiptDetail>> GetAvailableReturnDetails(int goodsReceiptId);
+
         Task<bool> UpdatePurchaseReturn(
             int id,
             string status,
@@ -116,6 +123,40 @@ namespace trinova_erp_backend.Usecase.Pembelian
                     );
             }
 
+            // ── Remaining-qty validation ────────────────────────────────
+            // Parse the line items that will be returned so we can validate
+            // each one against the current remaining_qty in the GR detail.
+            var returnItems = ParseReturnItems(model.transaction_detail);
+
+            if (returnItems.Count > 0)
+            {
+                var lines = returnItems
+                    .Select(i => (i.product_id, i.qty_return));
+
+                string? validationError = await _goodsReceiptDetailRepo
+                    .ValidateRemainingQty(model.goods_receipt_id, lines);
+
+                if (validationError != null)
+                    throw new Exception(validationError);
+            }
+            else
+            {
+                // Legacy / no item-level JSON: validate every GR line in full
+                var grDetails = await _goodsReceiptDetailRepo
+                    .GetDetailsByGoodsReceiptId(model.goods_receipt_id);
+
+                foreach (var line in grDetails)
+                {
+                    if (line.remaining_qty <= 0)
+                        throw new Exception(
+                            $"The requested return quantity exceeds the remaining quantity " +
+                            $"available in this Goods Receipt (product ID {line.product_id} " +
+                            $"has 0 remaining)."
+                        );
+                }
+            }
+            // ── End validation ──────────────────────────────────────────
+
             model.purchase_return_number =
                 await _purchaseReturnRepo.GenerateReturnNumber();
 
@@ -123,8 +164,6 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
             if (returnId > 0)
             {
-                var returnItems = ParseReturnItems(model.transaction_detail);
-
                 if (returnItems.Count > 0)
                 {
                     // Precise path: deduct only the actually-returned quantities
@@ -136,7 +175,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 }
                 else
                 {
-                    // Legacy fallback: no item-level data, deduct every GR line
+                    // Legacy fallback: deduct every GR line
                     var grDetails = await _goodsReceiptDetailRepo
                         .GetDetailsByGoodsReceiptId(model.goods_receipt_id);
 
@@ -184,6 +223,61 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
             return await _goodsReceiptDetailRepo
                 .GetDetailsByGoodsReceiptIdWithProductName(pr.goods_receipt_id);
+        }
+
+        /// <summary>
+        /// Returns only GR detail lines where remaining_qty &gt; 0 for the
+        /// given goods_receipt_id. Used by the Purchase Return creation form
+        /// so exhausted lines never appear in the product selection UI.
+        /// </summary>
+        public async Task<List<GoodsReceiptDetail>> GetAvailableReturnDetails(int goodsReceiptId)
+        {
+            return await _goodsReceiptDetailRepo
+                .GetAvailableDetailsByGoodsReceiptId(goodsReceiptId);
+        }
+
+        /// <summary>
+        /// Reduces remaining_qty for every returned line in a purchase return.
+        /// Uses the item-level JSON when available; falls back to full GR lines.
+        /// Throws if any line cannot be reduced (race-condition guard).
+        /// </summary>
+        private async Task ReduceRemainingQtyForReturn(PurchaseReturn pr)
+        {
+            var returnItems = ParseReturnItems(pr.transaction_detail);
+
+            if (returnItems.Count > 0)
+            {
+                foreach (var item in returnItems)
+                {
+                    bool ok = await _goodsReceiptDetailRepo
+                        .ReduceRemainingQty(pr.goods_receipt_id, item.product_id, item.qty_return);
+
+                    if (!ok)
+                        throw new Exception(
+                            $"The requested return quantity for product ID {item.product_id} " +
+                            "exceeds the remaining quantity available in this Goods Receipt. " +
+                            "Another user may have already processed a return for this item."
+                        );
+                }
+            }
+            else
+            {
+                // Legacy path: no item-level JSON, reduce every GR line by its full quantity
+                var grDetails = await _goodsReceiptDetailRepo
+                    .GetDetailsByGoodsReceiptId(pr.goods_receipt_id);
+
+                foreach (var line in grDetails)
+                {
+                    bool ok = await _goodsReceiptDetailRepo
+                        .ReduceRemainingQty(pr.goods_receipt_id, line.product_id, line.quantity);
+
+                    if (!ok)
+                        throw new Exception(
+                            $"The requested return quantity for product ID {line.product_id} " +
+                            "exceeds the remaining quantity available in this Goods Receipt."
+                        );
+                }
+            }
         }
 
         public async Task<bool> UpdatePurchaseReturn(
@@ -239,9 +333,19 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 string notesFe =
                     string.IsNullOrWhiteSpace(notes) ? condFe : notes;
 
-                return await _purchaseReturnRepo.UpdatePurchaseReturn(
+                bool updated = await _purchaseReturnRepo.UpdatePurchaseReturn(
                     id, status, notesFe, condFe
                 );
+
+                if (updated)
+                {
+                    await ReduceRemainingQtyForReturn(pr);
+                    await _goodsReceiptRepo.UpdateGoodsReceiptStatus(
+                        pr.goods_receipt_id, "Returned"
+                    );
+                }
+
+                return updated;
             }
 
             if (status == "Closed" &&
@@ -282,13 +386,34 @@ namespace trinova_erp_backend.Usecase.Pembelian
                         ? generatedCondition
                         : notes;
 
-                return await _purchaseReturnRepo.UpdatePurchaseReturn(
+                bool updated = await _purchaseReturnRepo.UpdatePurchaseReturn(
                     id, status, generatedNotes, generatedCondition
                 );
+
+                if (updated)
+                {
+                    await ReduceRemainingQtyForReturn(pr);
+                    await _goodsReceiptRepo.UpdateGoodsReceiptStatus(
+                        pr.goods_receipt_id, "Returned"
+                    );
+                }
+
+                return updated;
             }
-            return await _purchaseReturnRepo.UpdatePurchaseReturn(
+
+            bool returnUpdated = await _purchaseReturnRepo.UpdatePurchaseReturn(
                 id, status, notes, closingCondition
             );
+
+            if (returnUpdated && status == "Closed")
+            {
+                await ReduceRemainingQtyForReturn(pr);
+                await _goodsReceiptRepo.UpdateGoodsReceiptStatus(
+                    pr.goods_receipt_id, "Returned"
+                );
+            }
+
+            return returnUpdated;
         }
 
         public async Task<bool> DeletePurchaseReturn(int id)
