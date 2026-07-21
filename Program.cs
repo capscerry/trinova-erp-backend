@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
@@ -38,6 +39,24 @@ builder.Services.Configure<JwtSettings>(options =>
 
 builder.Services.AddApplicationServices();
 builder.Services.AddMemoryCache();
+
+// File-upload hardening (defense-in-depth): cap the multipart body size that
+// Kestrel/ASP.NET Core will buffer before an IFormFile is even populated.
+// FileUploadSecurity.ValidateExcel/ValidateCsv enforce the same ceiling
+// explicitly per-endpoint (returning a friendly 413), but this stops an
+// oversized request body from being read into memory/disk in the first place.
+var maxUploadBytes = builder.Configuration.GetValue<long>(
+    "FileUploadSecurity:MaxRequestBodyBytes", 15 * 1024 * 1024);
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = maxUploadBytes;
+});
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = maxUploadBytes;
+});
 
 // Named HttpClient for the XGBoost FastAPI service.
 // Base URL is read from appsettings.json -> ExternalServices:XGBoostApiUrl
