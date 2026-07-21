@@ -289,3 +289,8 @@ C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\refint\trinova-erp
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.pdb
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.genruntimeconfig.cache
 C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\ref\trinova-erp-backend.dll
+C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Migrations\MigrationRunner\bin\Debug\net8.0\MigrationRunner.deps.json
+C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Migrations\MigrationRunner\bin\Debug\net8.0\MigrationRunner.runtimeconfig.json
+C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Migrations\MigrationRunner\obj\Debug\net8.0\MigrationRunner.sourcelink.json
+C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Migrations\MigrationRunner\obj\MigrationRunner.csproj.nuget.dgspec.json
+C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Migrations\MigrationRunner\obj\project.assets.json
