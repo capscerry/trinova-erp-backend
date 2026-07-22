@@ -190,8 +190,19 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
             await EnsureSuccessAsync(response, "train/from-rows");
 
-            return await response.Content.ReadFromJsonAsync<SupplierRiskTrainResponse>(_jsonOpts)
-                   ?? throw new InvalidOperationException("FastAPI returned an empty train response.");
+            var json = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine("========== RAW JSON FROM FASTAPI ==========");
+            Console.WriteLine(json);
+            Console.WriteLine("===========================================");
+
+            var result = JsonSerializer.Deserialize<SupplierRiskTrainResponse>(json, _jsonOpts);
+
+            Console.WriteLine("STD ACC = " + result?.cv_results?.std_accuracy);
+            Console.WriteLine("STD PREC = " + result?.cv_results?.std_precision);
+
+            return result
+                ?? throw new InvalidOperationException("FastAPI returned an empty train response.");
         }
 
         // ── Train from CSV upload ─────────────────────────────────────────────

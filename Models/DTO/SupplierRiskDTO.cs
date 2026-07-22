@@ -72,29 +72,29 @@ namespace trinova_erp_backend.Models.DTO
     /// <summary>
     /// One split's evaluation metrics — matches FastAPI's SplitMetrics Pydantic model.
     /// </summary>
-    public class SupplierRiskSplitMetrics
-    {
-        public double log_loss { get; set; }
-        public double mse      { get; set; }
-        public double mae      { get; set; }
-        public double r2       { get; set; }
-        public double accuracy { get; set; }
-        public double auc_roc  { get; set; }
-    }
+public class SupplierRiskSplitMetrics
+{
+    public double accuracy  { get; set; }
+    public double precision { get; set; }
+    public double recall    { get; set; }
+    public double f1_score  { get; set; }
+    public double auc_roc   { get; set; }
+    public double log_loss  { get; set; }
+}
 
     /// <summary>
     /// Metrics for a single TimeSeriesSplit CV fold — matches FastAPI's FoldMetrics model.
     /// </summary>
-    public class SupplierRiskFoldMetrics
-    {
-        public int    fold     { get; set; }
-        public double log_loss { get; set; }
-        public double mse      { get; set; }
-        public double mae      { get; set; }
-        public double r2       { get; set; }
-        public double accuracy { get; set; }
-        public double auc_roc  { get; set; }
-    }
+public class SupplierRiskFoldMetrics
+{
+    public int    fold      { get; set; }
+    public double accuracy  { get; set; }
+    public double precision { get; set; }
+    public double recall    { get; set; }
+    public double f1_score  { get; set; }
+    public double auc_roc   { get; set; }
+    public double log_loss  { get; set; }
+}
 
     /// <summary>
     /// Aggregated TimeSeriesSplit cross-validation results — matches FastAPI's CVResults model.
@@ -103,28 +103,23 @@ namespace trinova_erp_backend.Models.DTO
     /// Each fold expands forward in time so validation rows always come after training
     /// rows, preventing any future-data leakage.
     /// </summary>
-    public class SupplierRiskCVResults
-    {
-        public List<SupplierRiskFoldMetrics> fold_metrics  { get; set; } = new();
+public class SupplierRiskCVResults
+{
+    public List<SupplierRiskFoldMetrics> fold_metrics { get; set; } = new();
 
-        /// <summary>Mean log-loss across all folds. Null when CV was skipped.</summary>
-        public double? avg_log_loss  { get; set; }
-
-        /// <summary>Mean MSE across all folds.</summary>
-        public double? avg_mse       { get; set; }
-
-        /// <summary>Mean MAE across all folds.</summary>
-        public double? avg_mae       { get; set; }
-
-        /// <summary>Mean R² across all folds.</summary>
-        public double? avg_r2        { get; set; }
-
-        /// <summary>Mean accuracy across all folds.</summary>
-        public double? avg_accuracy  { get; set; }
-
-        /// <summary>Mean AUC-ROC across all folds.</summary>
-        public double? avg_auc_roc   { get; set; }
-    }
+    public double? avg_accuracy  { get; set; }
+    public double? avg_precision { get; set; }
+    public double? avg_recall    { get; set; }
+    public double? avg_f1_score  { get; set; }
+    public double? avg_auc_roc   { get; set; }
+    public double? avg_log_loss  { get; set; }
+    public double? std_accuracy { get; set; }
+    public double? std_precision { get; set; }
+    public double? std_recall { get; set; }
+    public double? std_f1_score { get; set; }
+    public double? std_auc_roc { get; set; }
+    public double? std_log_loss { get; set; }
+}
 
     /// <summary>
     /// Response returned by all /train* endpoints on the FastAPI service.

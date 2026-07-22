@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj": {}
+    "/Users/agil/trinova-erp-backend/trinova-erp-backend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj": {
+    "/Users/agil/trinova-erp-backend/trinova-erp-backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
+        "projectUniqueName": "/Users/agil/trinova-erp-backend/trinova-erp-backend.csproj",
         "projectName": "trinova-erp-backend",
-        "projectPath": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
-        "packagesPath": "C:\\Users\\Davina\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\obj\\",
+        "projectPath": "/Users/agil/trinova-erp-backend/trinova-erp-backend.csproj",
+        "packagesPath": "/Users/agil/.nuget/packages/",
+        "outputPath": "/Users/agil/trinova-erp-backend/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Davina\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/Users/agil/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -32,7 +32,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -100,7 +106,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.128/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
