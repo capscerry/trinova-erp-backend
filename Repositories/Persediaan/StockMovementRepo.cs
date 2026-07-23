@@ -73,17 +73,12 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@movement_date", movement.movement_date ?? DateTime.Now);
             command.Parameters.AddWithValue("@created_by", movement.created_by ?? "");
             command.Parameters.AddWithValue("@created_at", movement.created_at ?? DateTime.Now);
-<<<<<<< HEAD
             command.Parameters.AddWithValue("@source_warehouse_id", movement.source_warehouse_id);
             command.Parameters.AddWithValue("@destination_warehouse_id", movement.destination_warehouse_id ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@status", movement.status ?? "CREATED");
             command.Parameters.AddWithValue("@processed_at", movement.processed_at ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@completed_at", movement.completed_at ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@canceled_at", movement.canceled_at ?? (object)DBNull.Value);
-=======
-            command.Parameters.AddWithValue("@source_warehouse_id", (object?)movement.source_warehouse_id ?? DBNull.Value);
-            command.Parameters.AddWithValue("@destination_warehouse_id", (object?)movement.destination_warehouse_id ?? DBNull.Value);
->>>>>>> origin/development-update-2
 
             await connection.OpenAsync();
 
@@ -100,9 +95,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
             }
         }
 
-<<<<<<< HEAD
-        public async Task<List<StockMovement>> GetByMovementTypeAsync(string movementType)
-=======
         // Same insert as InsertAsync, but runs on the caller's connection
         // and transaction so it's committed/rolled back atomically with
         // whatever stock change it's auditing (e.g. DO deduct).
@@ -123,7 +115,11 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 created_by,
                 created_at,
                 source_warehouse_id,
-                destination_warehouse_id
+                destination_warehouse_id,
+                status,
+                processed_at,
+                completed_at,
+                canceled_at
             )
             VALUES
             (
@@ -136,7 +132,11 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 @created_by,
                 @created_at,
                 @source_warehouse_id,
-                @destination_warehouse_id
+                @destination_warehouse_id,
+                @status,
+                @processed_at,
+                @completed_at,
+                @canceled_at
             )";
 
             using var command = new SqlCommand(query, connection, transaction);
@@ -158,7 +158,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
         public async Task<List<StockMovement>>
             GetByMovementTypeAsync(
                 string movementType)
->>>>>>> origin/development-update-2
         {
             const string query = @"
             SELECT
