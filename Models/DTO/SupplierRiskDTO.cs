@@ -270,6 +270,51 @@ public class SupplierRiskCVResults
         public List<RankedSupplierResult>       ranked_suppliers  { get; set; } = new();
     }
 
+    // ─── Recommendation profiles (single source of truth) ────────────────────────
+
+    /// <summary>
+    /// The top-ranked supplier for a single purchasing profile, derived entirely
+    /// from the AHP-TOPSIS ranked_suppliers list — no additional calculation.
+    /// </summary>
+    public class SupplierRecommendationProfile
+    {
+        /// <summary>Profile name: "Balanced", "High Urgency", "Budget Priority", or "Quality Focus".</summary>
+        public string  profile        { get; set; } = string.Empty;
+
+        public int?    supplier_id    { get; set; }
+        public string? supplier_name  { get; set; }
+
+        /// <summary>TOPSIS score from the ranked result (0 – 1).</summary>
+        public double  topsis_score   { get; set; }
+
+        /// <summary>Rank position within this profile's ordered list.</summary>
+        public int     topsis_rank    { get; set; }
+
+        public double  on_time_rate   { get; set; }
+        public double  claim_rate     { get; set; }
+        public int     lead_time_days { get; set; }
+        public double  supplier_price { get; set; }
+        public int     order_frequency { get; set; }
+        public string  risk_level     { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// The complete unified recommendation dataset returned by
+    /// GET /api/supplier-risk/recommendation.
+    /// Every purchasing screen must consume this object as-is.
+    /// </summary>
+    public class SupplierRecommendationResult
+    {
+        /// <summary>Full AHP-TOPSIS ranked list — the authoritative supplier ordering.</summary>
+        public RankResponse                          ranking     { get; set; } = new();
+
+        /// <summary>
+        /// Per-profile best suppliers derived purely from ranked_suppliers.
+        /// Keys: "Balanced", "High Urgency", "Budget Priority", "Quality Focus".
+        /// </summary>
+        public Dictionary<string, SupplierRecommendationProfile> profiles { get; set; } = new();
+    }
+
     // ─── ERP aggregation (internal) ──────────────────────────────────────────────
 
     /// <summary>
