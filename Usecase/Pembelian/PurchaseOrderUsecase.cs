@@ -11,13 +11,21 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
         Task<List<PurchaseOrder>> GetAllPurchaseOrder();
 
+        Task<List<PurchaseOrder>> GetPurchaseOrdersByStatus(string status);
+
+        Task<List<PurchaseOrder>> GetApprovedAndCompletedPurchaseOrders();
+
         Task<PurchaseOrder?> GetPurchaseOrderById(int id);
 
         Task<bool> UpdatePurchaseOrder(PurchaseOrder model);
 
         Task<bool> DeletePurchaseOrder(int id);
 
+        Task<(bool success, string message)> RequestApproval(int id);
+
         Task<(bool success, string message)> ApprovePurchaseOrder(int id);
+
+        Task<(bool success, string message)> RejectPurchaseOrder(int id);
 
         Task<bool> UnapprovePurchaseOrder(int id);
     }
@@ -70,6 +78,16 @@ namespace trinova_erp_backend.Usecase.Pembelian
             return await _purchaseOrderRepo.GetAllPurchaseOrder();
         }
 
+        public async Task<List<PurchaseOrder>> GetPurchaseOrdersByStatus(string status)
+        {
+            return await _purchaseOrderRepo.GetPurchaseOrdersByStatus(status);
+        }
+
+        public async Task<List<PurchaseOrder>> GetApprovedAndCompletedPurchaseOrders()
+        {
+            return await _purchaseOrderRepo.GetApprovedAndCompletedPurchaseOrders();
+        }
+
         public async Task<PurchaseOrder?> GetPurchaseOrderById(int id)
         {
             return await _purchaseOrderRepo.GetPurchaseOrderById(id);
@@ -97,16 +115,33 @@ namespace trinova_erp_backend.Usecase.Pembelian
             return await _purchaseOrderRepo.DeletePurchaseOrder(id);
         }
 
-        // ─── APPROVE ──────────────────────────────────────────────────────
-        // Transitions Draft → Approved and hard-reserves supplier stock for
-        // every detail line that has a matching supplier_products row.
-        //
-        // Three outcomes per line (DeductStockResult):
-        //   Deducted        — row found, stock sufficient, decremented.
-        //   InsufficientStock — row found but available_stock < quantity → block & rollback.
-        //   RowNotFound     — no supplier_products row for (product_id, supplier_id)
-        //                     → skip silently (product may belong to a different
-        //                       supplier catalogue entry; stock guard doesn't apply).
+        // ─── REQUEST APPROVAL ─────────────────────────────────────────────
+        // Transitions Draft → Waiting for Approval.
+        // Allows the requester to submit the PO for manager review.
+
+        public async Task<(bool success, string message)> RequestApproval(int id)
+        {
+            var po = await _purchaseOrderRepo.GetPurchaseOrderById(id);
+
+            if (po == null)
+                return (false, "Purchase Order not found");
+
+            if (po.status != "Draft")
+                return (false, $"Cannot request approval: Purchase Order is currently '{po.status}'. Only Draft POs can be submitted for approval.");
+
+            var details =
+                await _purchaseOrderDetailRepo.GetDetailsByPurchaseOrderId(id);
+
+            if (details.Count == 0)
+                return (false, $"Cannot request approval: Purchase Order (id={id}) has no detail lines.");
+
+            po.status = "Waiting for Approval";
+            var updated = await _purchaseOrderRepo.UpdatePurchaseOrder(po);
+
+            return updated
+                ? (true, "Purchase Order submitted for approval")
+                : (false, "Failed to update Purchase Order status");
+        }
 
         public async Task<(bool success, string message)> ApprovePurchaseOrder(int id)
         {
@@ -120,6 +155,9 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
             if (po.status == "Completed")
                 return (false, "Purchase Order is already completed");
+
+            if (po.status != "Draft" && po.status != "Waiting for Approval")
+                return (false, $"Cannot approve: Purchase Order is currently '{po.status}'");
 
             var details =
                 await _purchaseOrderDetailRepo.GetDetailsByPurchaseOrderId(id);
@@ -139,18 +177,13 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 switch (result)
                 {
                     case DeductStockResult.Deducted:
-                        // Stock decremented — track for potential rollback.
                         deducted.Add((line.product_id, line.quantity));
                         break;
 
                     case DeductStockResult.RowNotFound:
-                        // No supplier_products row for this (product, supplier) pair.
-                        // This is not an error — the product may be catalogued under a
-                        // different supplier or added manually. Skip stock guard.
                         break;
 
                     case DeductStockResult.InsufficientStock:
-                        // Row exists but stock is too low — roll back and reject.
                         foreach (var (pid, qty) in deducted)
                             await _supplierProductRepo
                                 .RestoreStock(pid, po.supplier_id, qty);
@@ -165,6 +198,24 @@ namespace trinova_erp_backend.Usecase.Pembelian
             await _purchaseOrderRepo.UpdatePurchaseOrder(po);
 
             return (true, "Purchase Order approved and stock reserved");
+        }
+
+        public async Task<(bool success, string message)> RejectPurchaseOrder(int id)
+        {
+            var po = await _purchaseOrderRepo.GetPurchaseOrderById(id);
+
+            if (po == null)
+                return (false, "Purchase Order not found");
+
+            if (po.status != "Waiting for Approval")
+                return (false, $"Cannot reject: Purchase Order is currently '{po.status}'. Only POs awaiting approval can be rejected.");
+
+            po.status = "Draft";
+            var updated = await _purchaseOrderRepo.UpdatePurchaseOrder(po);
+
+            return updated
+                ? (true, "Purchase Order rejected and returned to Draft")
+                : (false, "Failed to update Purchase Order status");
         }
 
         // ─── UNAPPROVE (undo reservation) ────────────────────────────────

@@ -10,7 +10,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
 
     [ApiController]
 
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
     public class SupplierController
         : ControllerBase
     {

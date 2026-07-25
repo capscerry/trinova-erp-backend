@@ -113,6 +113,41 @@ namespace trinova_erp_backend.Controllers.Pembelian
         }
 
         /// <summary>
+        /// Returns only the GR detail lines where remaining_qty &gt; 0 for the
+        /// given goods_receipt_id.  The Purchase Return creation form calls
+        /// this to populate its product selection table, ensuring the user
+        /// only sees items that can still be returned.
+        ///
+        /// Each line carries:
+        ///   product_name   — display name
+        ///   quantity       — original received qty (read-only reference)
+        ///   remaining_qty  — maximum the user may enter as Return Qty
+        /// </summary>
+        [HttpGet("/api/purchase-return/gr/{grId}/available-details")]
+        public async Task<IActionResult> GetAvailableReturnDetails(int grId)
+        {
+            try
+            {
+                var result = await _purchaseReturnUsecase
+                    .GetAvailableReturnDetails(grId);
+
+                return Ok(new
+                {
+                    status = true,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
         /// Returns all unpaid / partially-paid invoices for the supplier linked
         /// to this purchase return. The supplier is resolved internally via the
         /// return's goods_receipt_id -> purchase_order -> supplier_id chain,

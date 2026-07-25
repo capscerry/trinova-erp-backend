@@ -10,66 +10,27 @@ namespace trinova_erp_backend.Usecase.Pembelian
 {
     public interface ISupplierRiskUsecase
     {
-        /// <summary>
-        /// Aggregates live ERP metrics for a single supplier, maps them to the
-        /// FastAPI feature schema, and calls POST /predict/supplier-risk.
-        /// </summary>
         Task<SupplierRiskPredictResponse> PredictSupplierRisk(int supplierId);
-
-        /// <summary>
-        /// Aggregates live ERP data for ALL active suppliers and calls
-        /// POST /predict/all-suppliers to get raw XGBoost ML scores.
-        /// Returns ML results only — no ranking applied yet.
-        /// </summary>
         Task<BatchPredictResponse> PredictAllSuppliers();
-
-        /// <summary>
-        /// Takes a list of ML-scored suppliers (from PredictAllSuppliers) and
-        /// calls POST /rank/ahp-topsis to rank them by AHP-TOPSIS.
-        /// Pass a custom ahpMatrix (5×5 row-major) to override server defaults.
-        /// </summary>
         Task<RankResponse> RankWithAhpTopsis(
             List<SupplierPredictResult> mlResults,
             List<List<double>>?         ahpMatrix = null);
-
-        /// <summary>
-        /// Convenience end-to-end method:
-        ///   1. Train XGBoost on historical CSV data (bundled dataset).
-        ///   2. Batch-predict all active ERP suppliers via the freshly trained model.
-        ///   3. Rank the ML results with AHP-TOPSIS.
-        /// Returns both the raw ML batch and the ranked output so the caller can
-        /// display ML results first and the ranking second.
-        /// </summary>
         Task<SupplierRiskFullEvaluationResult> TrainAndEvaluateAll(
             bool appendErpToHistorical = true,
             List<List<double>>? ahpMatrix = null);
 
         /// <summary>
-        /// Aggregates live ERP data for ALL active suppliers, maps to FastAPI
-        /// training rows, and calls POST /train/from-rows to retrain the model.
+        /// Single source of truth for all purchasing recommendation screens.
+        /// Runs batch ML predict + AHP-TOPSIS (no retrain) and derives the four
+        /// purchasing profiles from the same ranked result.
         /// </summary>
+        Task<SupplierRecommendationResult> GetRecommendation(List<List<double>>? ahpMatrix = null);
+
         Task<SupplierRiskTrainResponse> TrainFromErpData(bool appendToExisting = true);
-
-        /// <summary>
-        /// Forwards a raw CSV file (multipart) to POST /train/from-csv-upload.
-        /// The CSV must contain the columns:
-        /// supplier_price, lead_time_days, claim_rate, on_time_rate, order_frequency, late_delivery
-        /// </summary>
         Task<SupplierRiskTrainResponse> TrainFromCsvUpload(Stream csvStream, string fileName);
-
-        /// <summary>
-        /// Triggers retraining using the bundled CSV on the FastAPI server's disk.
-        /// Optionally pass a custom server-side path.
-        /// </summary>
         Task<SupplierRiskTrainResponse> TrainFromServerCsv(string? csvPath = null);
     }
 
-    /// <summary>
-    /// Combined result of TrainAndEvaluateAll:
-    ///   - train_result   : XGBoost training metrics
-    ///   - ml_results     : raw per-supplier ML scores (shown first in UI)
-    ///   - ranked_results : AHP-TOPSIS ranking applied on top of ml_results
-    /// </summary>
     public class SupplierRiskFullEvaluationResult
     {
         public SupplierRiskTrainResponse train_result   { get; set; } = new();
@@ -97,8 +58,6 @@ namespace trinova_erp_backend.Usecase.Pembelian
             _httpClientFactory = httpClientFactory;
             _dbConfig          = dbConfig.Value;
         }
-
-        // ── Predict ───────────────────────────────────────────────────────────
 
         public async Task<SupplierRiskPredictResponse> PredictSupplierRisk(int supplierId)
         {
@@ -204,6 +163,85 @@ namespace trinova_erp_backend.Usecase.Pembelian
             };
         }
 
+        // ── Single source of truth: batch predict → rank → derive profiles ────────
+
+        /// <summary>
+        /// Runs batch ML predict then AHP-TOPSIS (no retrain).
+        /// Derives the four purchasing-profile recommendations entirely from the
+        /// ranked list — no independent scoring, no separate sorting.
+        ///
+        /// Profile selection logic (all read from the same topsis_rank-ordered list):
+        ///   Balanced       — rank 1 overall (highest composite TOPSIS score)
+        ///   High Urgency   — lowest lead_time_days among top-3 ranked suppliers
+        ///   Budget Priority — lowest supplier_price among top-3 ranked suppliers
+        ///   Quality Focus  — highest on_time_rate among top-3 ranked suppliers
+        ///
+        /// When fewer than 3 suppliers exist, the selection pool is all suppliers.
+        /// </summary>
+        public async Task<SupplierRecommendationResult> GetRecommendation(
+            List<List<double>>? ahpMatrix = null)
+        {
+            // Step 1 — ML batch predict
+            var mlBatch = await PredictAllSuppliers();
+
+            // Step 2 — AHP-TOPSIS ranking (this is the single authoritative evaluation)
+            var ranked = await RankWithAhpTopsis(mlBatch.results, ahpMatrix);
+
+            // Step 3 — derive profiles from the already-ranked list, no new math
+            var profiles = new Dictionary<string, SupplierRecommendationProfile>();
+
+            var allRanked = ranked.ranked_suppliers
+                .OrderBy(s => s.topsis_rank)
+                .ToList();
+
+            int poolSize = Math.Max(allRanked.Count, 1);
+            int top      = Math.Min(3, poolSize);
+            var topPool  = allRanked.Take(top).ToList();
+
+            // Balanced — best overall composite TOPSIS score (rank 1)
+            var balanced = allRanked.FirstOrDefault();
+            if (balanced is not null)
+                profiles["Balanced"] = ToProfile("Balanced", balanced);
+
+            // High Urgency — fastest delivery (lowest lead_time_days) within top-3
+            var urgency = topPool.OrderBy(s => s.lead_time_days).ThenBy(s => s.topsis_rank).FirstOrDefault();
+            if (urgency is not null)
+                profiles["High Urgency"] = ToProfile("High Urgency", urgency);
+
+            // Budget Priority — lowest price within top-3
+            var budget = topPool.OrderBy(s => s.supplier_price).ThenBy(s => s.topsis_rank).FirstOrDefault();
+            if (budget is not null)
+                profiles["Budget Priority"] = ToProfile("Budget Priority", budget);
+
+            // Quality Focus — highest on_time_rate within top-3
+            var quality = topPool.OrderByDescending(s => s.on_time_rate).ThenBy(s => s.topsis_rank).FirstOrDefault();
+            if (quality is not null)
+                profiles["Quality Focus"] = ToProfile("Quality Focus", quality);
+
+            return new SupplierRecommendationResult
+            {
+                ranking  = ranked,
+                profiles = profiles
+            };
+        }
+
+        /// Maps a RankedSupplierResult to a SupplierRecommendationProfile without recalculating anything.
+        private static SupplierRecommendationProfile ToProfile(
+            string profileName, RankedSupplierResult s) => new()
+        {
+            profile         = profileName,
+            supplier_id     = s.supplier_id,
+            supplier_name   = s.supplier_name,
+            topsis_score    = s.topsis_score,
+            topsis_rank     = s.topsis_rank,
+            on_time_rate    = s.on_time_rate,
+            claim_rate      = s.claim_rate,
+            lead_time_days  = s.lead_time_days,
+            supplier_price  = s.supplier_price,
+            order_frequency = s.order_frequency,
+            risk_level      = s.risk_level
+        };
+
         // ── Train from live ERP data ──────────────────────────────────────────
 
         public async Task<SupplierRiskTrainResponse> TrainFromErpData(bool appendToExisting = true)
@@ -238,8 +276,19 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
             await EnsureSuccessAsync(response, "train/from-rows");
 
-            return await response.Content.ReadFromJsonAsync<SupplierRiskTrainResponse>(_jsonOpts)
-                   ?? throw new InvalidOperationException("FastAPI returned an empty train response.");
+            var json = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine("========== RAW JSON FROM FASTAPI ==========");
+            Console.WriteLine(json);
+            Console.WriteLine("===========================================");
+
+            var result = JsonSerializer.Deserialize<SupplierRiskTrainResponse>(json, _jsonOpts);
+
+            Console.WriteLine("STD ACC = " + result?.cv_results?.std_accuracy);
+            Console.WriteLine("STD PREC = " + result?.cv_results?.std_precision);
+
+            return result
+                ?? throw new InvalidOperationException("FastAPI returned an empty train response.");
         }
 
         // ── Train from CSV upload ─────────────────────────────────────────────

@@ -117,35 +117,43 @@ builder.Services
             },
             OnChallenge = async context =>
             {
-                var logger = context.HttpContext.RequestServices.GetService<IActivityLogService>();
-                if (logger != null)
+                try
                 {
-                    await logger.LogAsync(new ActivityLogCreate
+                    var logger = context.HttpContext.RequestServices.GetService<IActivityLogService>();
+                    if (logger != null)
                     {
-                        Module = "security",
-                        ActivityType = "authentication_required",
-                        Title = "Authentication required",
-                        Description = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}",
-                        RefTable = "api_endpoint",
-                        RefNumber = context.HttpContext.Request.Path
-                    });
+                        await logger.LogAsync(new ActivityLogCreate
+                        {
+                            Module = "security",
+                            ActivityType = "authentication_required",
+                            Title = "Authentication required",
+                            Description = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}",
+                            RefTable = "api_endpoint",
+                            RefNumber = context.HttpContext.Request.Path
+                        });
+                    }
                 }
+                catch { /* Never crash the request pipeline over a logging failure */ }
             },
             OnForbidden = async context =>
             {
-                var logger = context.HttpContext.RequestServices.GetService<IActivityLogService>();
-                if (logger != null)
+                try
                 {
-                    await logger.LogAsync(new ActivityLogCreate
+                    var logger = context.HttpContext.RequestServices.GetService<IActivityLogService>();
+                    if (logger != null)
                     {
-                        Module = "security",
-                        ActivityType = "unauthorized_access",
-                        Title = "Unauthorized access attempt",
-                        Description = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}",
-                        RefTable = "api_endpoint",
-                        RefNumber = context.HttpContext.Request.Path
-                    });
+                        await logger.LogAsync(new ActivityLogCreate
+                        {
+                            Module = "security",
+                            ActivityType = "unauthorized_access",
+                            Title = "Unauthorized access attempt",
+                            Description = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}",
+                            RefTable = "api_endpoint",
+                            RefNumber = context.HttpContext.Request.Path
+                        });
+                    }
                 }
+                catch { /* Never crash the request pipeline over a logging failure */ }
             }
         };
     });

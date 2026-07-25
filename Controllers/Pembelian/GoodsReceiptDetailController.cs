@@ -6,7 +6,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
 {
     [ApiController]
     [Route("api/goods-receipt-detail")]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
     public class GoodsReceiptDetailController : ControllerBase
     {
         private readonly IGoodsReceiptDetailUsecase _goodsReceiptDetailUsecase;
