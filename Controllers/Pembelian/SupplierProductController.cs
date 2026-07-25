@@ -6,6 +6,9 @@ using System.Data;
 
 using trinova_erp_backend.Models;
 
+using trinova_erp_backend.Security;
+using trinova_erp_backend.Services;
+
 using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
@@ -28,13 +31,20 @@ namespace trinova_erp_backend.Controllers.Pembelian
             ISupplierProductUsecase
                 _supplierProductUsecase;
 
+        private readonly IConfiguration _configuration;
+        private readonly IActivityLogService _activityLogService;
+
         public SupplierProductController(
             ISupplierProductUsecase
-                supplierProductUsecase
+                supplierProductUsecase,
+            IConfiguration configuration,
+            IActivityLogService activityLogService
         )
         {
             _supplierProductUsecase =
                 supplierProductUsecase;
+            _configuration = configuration;
+            _activityLogService = activityLogService;
         }
 
         // ─── RESTORE STOCK ─────────────────────
@@ -129,17 +139,40 @@ namespace trinova_erp_backend.Controllers.Pembelian
         {
             try
             {
-                if (
-                    file == null
-                    || file.Length == 0
-                )
+                var maxBytes =
+                    _configuration.GetValue<long>(
+                        "FileUploadSecurity:MaxExcelSizeBytes",
+                        10 * 1024 * 1024
+                    );
+
+                var validation =
+                    FileUploadSecurity.ValidateExcel(
+                        file,
+                        maxBytes
+                    );
+
+                if (!validation.IsValid)
                 {
-                    return BadRequest(
+                    await _activityLogService.LogAsync(
+                        new ActivityLogCreate
+                        {
+                            Module = "security",
+                            ActivityType = "file_upload_rejected",
+                            Title = $"Supplier catalog upload rejected: {validation.ErrorMessage}",
+                            Description =
+                                $"Supplier={supplierId}, FileName={file?.FileName}, " +
+                                $"Size={file?.Length}, ContentType={file?.ContentType}",
+                            RefTable = "master_supplier",
+                            RefId = supplierId
+                        }
+                    );
+
+                    return StatusCode(
+                        validation.StatusCode,
                         new
                         {
                             status = false,
-                            message =
-                                "File not found"
+                            message = validation.ErrorMessage
                         }
                     );
                 }

@@ -1,17 +1,34 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using trinova_erp_backend.Models;
 using trinova_erp_backend.Models.DTO;
+using trinova_erp_backend.Security;
+using trinova_erp_backend.Services;
 using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
 {
     [ApiController]
+    // NOTE: this controller previously had no [Authorize] attribute at all,
+    // so any authenticated user of ANY role (Sales, Warehouse, etc.) could
+    // retrain the supplier-risk ML model. Scoped to Admin/Purchasing to match
+    // SupplierProductController's convention — this is a broken-access-control
+    // fix, not just a file-upload hardening change.
+    [Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian")]
     public class SupplierRiskController : ControllerBase
     {
         private readonly ISupplierRiskUsecase _supplierRiskUsecase;
+        private readonly IConfiguration _configuration;
+        private readonly IActivityLogService _activityLogService;
 
-        public SupplierRiskController(ISupplierRiskUsecase supplierRiskUsecase)
+        public SupplierRiskController(
+            ISupplierRiskUsecase supplierRiskUsecase,
+            IConfiguration configuration,
+            IActivityLogService activityLogService)
         {
             _supplierRiskUsecase = supplierRiskUsecase;
+            _configuration = configuration;
+            _activityLogService = activityLogService;
         }
 
         // ── Predict ───────────────────────────────────────────────────────────
@@ -339,11 +356,23 @@ namespace trinova_erp_backend.Controllers.Pembelian
         [HttpPost("/api/supplier-risk/train/from-csv-upload")]
         public async Task<IActionResult> TrainFromCsvUpload(IFormFile file)
         {
-            if (file == null || file.Length == 0)
-                return BadRequest(new { status = false, message = "A CSV file is required." });
+            var maxBytes = _configuration.GetValue<long>(
+                "FileUploadSecurity:MaxCsvSizeBytes", 10 * 1024 * 1024);
 
-            if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
-                return BadRequest(new { status = false, message = "Only .csv files are accepted." });
+            var validation = FileUploadSecurity.ValidateCsv(file, maxBytes);
+            if (!validation.IsValid)
+            {
+                await _activityLogService.LogAsync(new ActivityLogCreate
+                {
+                    Module = "security",
+                    ActivityType = "file_upload_rejected",
+                    Title = $"Supplier-risk CSV upload rejected: {validation.ErrorMessage}",
+                    Description = $"FileName={file?.FileName}, Size={file?.Length}, ContentType={file?.ContentType}",
+                    RefTable = "supplier_risk_model"
+                });
+
+                return StatusCode(validation.StatusCode, new { status = false, message = validation.ErrorMessage });
+            }
 
             try
             {
