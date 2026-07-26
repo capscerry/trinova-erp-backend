@@ -1,5 +1,4 @@
 using DotNetEnv;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -15,46 +14,98 @@ using trinova_erp_backend.Repositories.Persediaan;
 using trinova_erp_backend.Services;
 using trinova_erp_backend.Usecase.Persediaan;
 
-Env.Load();
-
-Console.WriteLine($"PORT = {Environment.GetEnvironmentVariable("PORT")}");
-Console.WriteLine($"ASPNETCORE_URLS = {Environment.GetEnvironmentVariable("ASPNETCORE_URLS")}");
-
-Console.WriteLine(Env.GetString("SQL_CONNECTION_STRING_DEV"));
+// ── 1. Load .env only when it exists (local dev only) ────────────────────────
+//      Railway injects variables directly into the process environment;
+//      a missing .env file must never crash the container.
+if (File.Exists(".env"))
+{
+    Env.Load();
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ── 2. Centralise configuration: IConfiguration first, Env as fallback ───────
+//      Railway sets env-vars that ASP.NET Core's default IConfiguration provider
+//      already exposes, so builder.Configuration["KEY"] is the authoritative
+//      source.  Env.GetString is kept only as a fallback for local .env usage.
+var configuration = builder.Configuration;
+
+var connectionString =
+    configuration["SQL_CONNECTION_STRING_DEV"]
+    ?? Env.GetString("SQL_CONNECTION_STRING_DEV");
+
+var jwtSecret =
+    configuration["JWT_SECRET_KEY"]
+    ?? Env.GetString("JWT_SECRET_KEY");
+
+var jwtIssuer =
+    configuration["JWT_ISSUER"]
+    ?? Env.GetString("JWT_ISSUER");
+
+var jwtAudience =
+    configuration["JWT_AUDIENCE"]
+    ?? Env.GetString("JWT_AUDIENCE");
+
+var jwtExpireRaw =
+    configuration["JWT_EXPIRE_MINUTES"]
+    ?? Env.GetString("JWT_EXPIRE_MINUTES");
+
+var xgboostUrl =
+    configuration["ExternalServices:XGBoostApiUrl"]
+    ?? Env.GetString("XGBOOST_API_URL")
+    ?? "http://127.0.0.1:8000";
+
+// ── 3. Validate required configuration at startup ─────────────────────────────
+//      Fail fast with a clear message instead of a cryptic NullReferenceException
+//      or Encoding.GetBytes crash later.
+var missingKeys = new List<string>();
+if (string.IsNullOrWhiteSpace(connectionString)) missingKeys.Add("SQL_CONNECTION_STRING_DEV");
+if (string.IsNullOrWhiteSpace(jwtSecret))        missingKeys.Add("JWT_SECRET_KEY");
+if (string.IsNullOrWhiteSpace(jwtIssuer))        missingKeys.Add("JWT_ISSUER");
+if (string.IsNullOrWhiteSpace(jwtAudience))      missingKeys.Add("JWT_AUDIENCE");
+
+if (missingKeys.Count > 0)
+{
+    throw new InvalidOperationException(
+        $"Missing configuration: {string.Join(", ", missingKeys)}. " +
+        "Set these as Railway environment variables (or in .env for local dev).");
+}
+
+// ── 9. Startup diagnostics – presence only, never print secret values ─────────
 var port = Environment.GetEnvironmentVariable("PORT");
 
+Console.WriteLine($"Environment  : {builder.Environment.EnvironmentName}");
+Console.WriteLine($"PORT         : {(string.IsNullOrEmpty(port) ? "(not set – Kestrel default)" : port)}");
+Console.WriteLine($"SQL Loaded   : {!string.IsNullOrWhiteSpace(connectionString)}");
+Console.WriteLine($"JWT Loaded   : {!string.IsNullOrWhiteSpace(jwtSecret)}");
+Console.WriteLine($"XGBoost URL  : {xgboostUrl}");
+
+// ── PORT binding (Railway sets PORT) ─────────────────────────────────────────
 if (!string.IsNullOrEmpty(port))
 {
     builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 }
 
+// ── Service registrations ─────────────────────────────────────────────────────
+
 builder.Services.Configure<DatabaseConnection>(options =>
 {
-    options.SQLServer = Env.GetString("SQL_CONNECTION_STRING_DEV");
+    options.SQLServer = connectionString;
 });
-
 
 builder.Services.Configure<JwtSettings>(options =>
 {
-    options.Secret = Env.GetString("JWT_SECRET_KEY");
-    options.Issuer = Env.GetString("JWT_ISSUER");
-    options.Audience = Env.GetString("JWT_AUDIENCE");
-    options.ExpirationMinutes = int.TryParse(Env.GetString("JWT_EXPIRE_MINUTES", "60"), out var exp) ? exp : 60;
+    options.Secret             = jwtSecret!;
+    options.Issuer             = jwtIssuer!;
+    options.Audience           = jwtAudience!;
+    options.ExpirationMinutes  = int.TryParse(jwtExpireRaw, out var exp) ? exp : 60;
 });
-
-
 
 builder.Services.AddApplicationServices();
 builder.Services.AddMemoryCache();
 
-// File-upload hardening (defense-in-depth): cap the multipart body size that
-// Kestrel/ASP.NET Core will buffer before an IFormFile is even populated.
-// FileUploadSecurity.ValidateExcel/ValidateCsv enforce the same ceiling
-// explicitly per-endpoint (returning a friendly 413), but this stops an
-// oversized request body from being read into memory/disk in the first place.
+// File-upload hardening: cap multipart body size before IFormFile is populated.
+// FileUploadSecurity.ValidateExcel/ValidateCsv enforce the same ceiling per-endpoint.
 var maxUploadBytes = builder.Configuration.GetValue<long>(
     "FileUploadSecurity:MaxRequestBodyBytes", 15 * 1024 * 1024);
 
@@ -68,39 +119,59 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Limits.MaxRequestBodySize = maxUploadBytes;
 });
 
-// Named HttpClient for the XGBoost FastAPI service.
-// Base URL is read from appsettings.json -> ExternalServices:XGBoostApiUrl
+// Named HttpClient for the XGBoost FastAPI service (config-driven, not hardcoded).
 builder.Services.AddHttpClient("XGBoost", (serviceProvider, client) =>
 {
-    var config  = serviceProvider.GetRequiredService<IConfiguration>();
-    var baseUrl = config["ExternalServices:XGBoostApiUrl"] ?? "http://localhost:8000";
-    client.BaseAddress = new Uri(baseUrl);
+    client.BaseAddress = new Uri(xgboostUrl);
     client.Timeout     = TimeSpan.FromSeconds(60);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// ── 8. ForecastClient – use the same config-driven URL ───────────────────────
+builder.Services.AddHttpClient<ForecastClient>(client =>
+{
+    client.BaseAddress = new Uri(xgboostUrl);
+});
+
+builder.Services.AddScoped<MasterProductSubcategoryRepo>();
+builder.Services.AddScoped<MasterProductSubcategoryUsecase>();
+builder.Services.AddScoped<StockMovementRepo>();
+builder.Services.AddScoped<StockTransferUsecase>();
+builder.Services.AddScoped<OrderFulfillmentUsecase>();
+builder.Services.AddScoped<DemandForecastUsecase>();
+builder.Services.AddScoped<PurchaseRequisitionDetailRepo>();
+builder.Services.AddScoped<InventoryDashboardUsecase>();
+
+// ── Single call to AddControllers ────────────────────────────────────────────
 builder.Services.AddControllers();
 
-var jwtSecret = Env.GetString("JWT_SECRET_KEY");
-var jwtIssuer = Env.GetString("JWT_ISSUER");
-var jwtAudience = Env.GetString("JWT_AUDIENCE");
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowCors", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
+// ── JWT authentication ────────────────────────────────────────────────────────
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
-        options.SaveToken = true;
+        options.SaveToken            = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-            ValidateIssuer = true,
-            ValidIssuer = jwtIssuer,
-            ValidateAudience = true,
-            ValidAudience = jwtAudience,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
+            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret!)),
+            ValidateIssuer           = true,
+            ValidIssuer              = jwtIssuer,
+            ValidateAudience         = true,
+            ValidAudience            = jwtAudience,
+            ValidateLifetime         = true,
+            ClockSkew                = TimeSpan.Zero
         };
         options.Events = new JwtBearerEvents
         {
@@ -115,7 +186,7 @@ builder.Services
                     return;
                 }
 
-                var connectionString = Env.GetString("SQL_CONNECTION_STRING_DEV");
+                // Use the centralised connectionString variable, not Env.GetString.
                 await using var connection = new SqlConnection(connectionString);
                 await connection.OpenAsync();
 
@@ -131,13 +202,13 @@ builder.Services
                     {
                         await logger.LogAsync(new ActivityLogCreate
                         {
-                            Module = "security",
+                            Module       = "security",
                             ActivityType = "inactive_user_token_rejected",
-                            Title = "Inactive user token rejected",
-                            Description = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}",
-                            RefTable = "master_user",
-                            RefId = userId,
-                            RefNumber = context.HttpContext.Request.Path
+                            Title        = "Inactive user token rejected",
+                            Description  = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}",
+                            RefTable     = "master_user",
+                            RefId        = userId,
+                            RefNumber    = context.HttpContext.Request.Path
                         });
                     }
 
@@ -153,12 +224,12 @@ builder.Services
                     {
                         await logger.LogAsync(new ActivityLogCreate
                         {
-                            Module = "security",
+                            Module       = "security",
                             ActivityType = "authentication_required",
-                            Title = "Authentication required",
-                            Description = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}",
-                            RefTable = "api_endpoint",
-                            RefNumber = context.HttpContext.Request.Path
+                            Title        = "Authentication required",
+                            Description  = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}",
+                            RefTable     = "api_endpoint",
+                            RefNumber    = context.HttpContext.Request.Path
                         });
                     }
                 }
@@ -173,12 +244,12 @@ builder.Services
                     {
                         await logger.LogAsync(new ActivityLogCreate
                         {
-                            Module = "security",
+                            Module       = "security",
                             ActivityType = "unauthorized_access",
-                            Title = "Unauthorized access attempt",
-                            Description = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}",
-                            RefTable = "api_endpoint",
-                            RefNumber = context.HttpContext.Request.Path
+                            Title        = "Unauthorized access attempt",
+                            Description  = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}",
+                            RefTable     = "api_endpoint",
+                            RefNumber    = context.HttpContext.Request.Path
                         });
                     }
                 }
@@ -193,43 +264,21 @@ builder.Services.AddAuthorization(options =>
         .RequireAuthenticatedUser()
         .Build();
 });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<MasterProductSubcategoryRepo>();
-builder.Services.AddScoped<MasterProductSubcategoryUsecase>();
-builder.Services.AddScoped<StockMovementRepo>();
-builder.Services.AddScoped<StockTransferUsecase>();
-builder.Services.AddScoped<OrderFulfillmentUsecase>();
-builder.Services.AddHttpClient<ForecastClient>(client =>{client.BaseAddress = new Uri("http://127.0.0.1:8000");});
-builder.Services.AddScoped<DemandForecastUsecase>();
-builder.Services.AddScoped<PurchaseRequisitionDetailRepo>();
-builder.Services.AddScoped<StockTransactionRepo>();
-builder.Services.AddScoped<StockTransferUsecase>();
-builder.Services.AddScoped<InventoryDashboardUsecase>();
-builder.Services.AddScoped<InventoryStockRepo>();
-builder.Services.AddScoped<MasterProductRepo>();
-builder.Services.AddControllers();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowCors", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
 
 var app = builder.Build();
 
-//await EnsureSalesStatusColumnsAsync(Env.GetString("SQL_CONNECTION_STRING_DEV"));
+// ── 5. Swagger always enabled (accessible on Railway) ────────────────────────
+app.UseSwagger();
+app.UseSwaggerUI();
 
-if (app.Environment.IsDevelopment())
+// ── 6. HTTPS redirection disabled in Production (Railway terminates TLS) ─────
+if (!app.Environment.IsProduction())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseHttpsRedirection();
 }
-
-app.UseHttpsRedirection();
 
 app.UseCors("AllowCors");
 
@@ -239,46 +288,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-//static async Task EnsureSalesStatusColumnsAsync(string? connectionString)
-//{
-//    if (string.IsNullOrWhiteSpace(connectionString))
-//        return;
-
-//    var targets = new[]
-//    {
-//        ("sales_quotation", "status", "update_date"),
-//        ("sales_order", "status", "updated_at"),
-//        ("uang_muka", "status", "updated_at"),
-//        ("delivery_order_header", "status", "updated_at"),
-//        ("sales_invoice", "status", "updated_at"),
-//        ("sales_receipt", "status", "updated_at")
-//    };
-
-//    await using var connection = new SqlConnection(connectionString);
-//    await connection.OpenAsync();
-
-//    foreach (var (table, statusColumn, updatedAtColumn) in targets)
-//    {
-//        await using (var statusCommand = connection.CreateCommand())
-//        {
-//            statusCommand.CommandText = $@"
-//                IF COL_LENGTH('{table}', '{statusColumn}') IS NULL
-//                BEGIN
-//                    ALTER TABLE {table}
-//                    ADD {statusColumn} VARCHAR(30) NOT NULL
-//                    CONSTRAINT DF_{table}_{statusColumn} DEFAULT 'Draft'
-//                END";
-//            await statusCommand.ExecuteNonQueryAsync();
-//        }
-
-//        await using var updatedAtCommand = connection.CreateCommand();
-//        updatedAtCommand.CommandText = $@"
-//            IF COL_LENGTH('{table}', '{updatedAtColumn}') IS NULL
-//            BEGIN
-//                ALTER TABLE {table}
-//                ADD {updatedAtColumn} DATETIME NULL
-//            END";
-//        await updatedAtCommand.ExecuteNonQueryAsync();
-//    }
-//}
