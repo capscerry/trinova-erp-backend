@@ -4,14 +4,17 @@ WORKDIR /src
 COPY . .
 
 RUN dotnet restore trinova-erp-backend.csproj
-RUN dotnet publish trinova-erp-backend.csproj -c Release -o /app/publish
+RUN dotnet publish trinova-erp-backend.csproj \
+    -c Release \
+    -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
 WORKDIR /app
+
 COPY --from=build /app/publish .
 
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_URLS=http://0.0.0.0:$PORT
 
 EXPOSE 8080
 
