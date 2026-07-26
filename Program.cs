@@ -17,9 +17,19 @@ using trinova_erp_backend.Usecase.Persediaan;
 
 Env.Load();
 
+Console.WriteLine($"PORT = {Environment.GetEnvironmentVariable("PORT")}");
+Console.WriteLine($"ASPNETCORE_URLS = {Environment.GetEnvironmentVariable("ASPNETCORE_URLS")}");
+
 Console.WriteLine(Env.GetString("SQL_CONNECTION_STRING_DEV"));
 
 var builder = WebApplication.CreateBuilder(args);
+
+var port = Environment.GetEnvironmentVariable("PORT");
+
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
 
 builder.Services.Configure<DatabaseConnection>(options =>
 {
