@@ -14,7 +14,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
     // retrain the supplier-risk ML model. Scoped to Admin/Purchasing to match
     // SupplierProductController's convention — this is a broken-access-control
     // fix, not just a file-upload hardening change.
-    [Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian")]
+    [Authorize(Roles = Roles.PurchasingAccess)]
     public class SupplierRiskController : ControllerBase
     {
         private readonly ISupplierRiskUsecase _supplierRiskUsecase;

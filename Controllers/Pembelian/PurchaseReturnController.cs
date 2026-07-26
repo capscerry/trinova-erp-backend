@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using trinova_erp_backend.Models;
+using trinova_erp_backend.Security;
 using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
@@ -22,6 +24,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
 
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = Roles.PurchasingAccess)]
     public class PurchaseReturnController : ControllerBase
     {
         private readonly IPurchaseReturnUsecase _purchaseReturnUsecase;
