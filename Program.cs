@@ -30,20 +30,34 @@ var builder = WebApplication.CreateBuilder(args);
 //      source.  Env.GetString is kept only as a fallback for local .env usage.
 var configuration = builder.Configuration;
 
+Console.WriteLine("===== RAW ENVIRONMENT =====");
+
+Console.WriteLine($"SQL_CONNECTION_STRING_DEV = {Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING_DEV")}");
+Console.WriteLine($"JWT_SECRET_KEY            = {Environment.GetEnvironmentVariable("JWT_SECRET_KEY")}");
+Console.WriteLine($"JWT_ISSUER                = {Environment.GetEnvironmentVariable("JWT_ISSUER")}");
+Console.WriteLine($"JWT_AUDIENCE              = {Environment.GetEnvironmentVariable("JWT_AUDIENCE")}");
+Console.WriteLine($"JWT_EXPIRE_MINUTES        = {Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES")}");
+
+Console.WriteLine("===========================");
+
 var connectionString =
-    configuration["SQL_CONNECTION_STRING_DEV"]
+    Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING_DEV")
+    ?? configuration["SQL_CONNECTION_STRING_DEV"]
     ?? Env.GetString("SQL_CONNECTION_STRING_DEV");
 
 var jwtSecret =
-    configuration["JWT_SECRET_KEY"]
+    Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
+    ?? configuration["JWT_SECRET_KEY"]
     ?? Env.GetString("JWT_SECRET_KEY");
 
 var jwtIssuer =
-    configuration["JWT_ISSUER"]
+    Environment.GetEnvironmentVariable("JWT_ISSUER")
+    ?? configuration["JWT_ISSUER"]
     ?? Env.GetString("JWT_ISSUER");
 
 var jwtAudience =
-    configuration["JWT_AUDIENCE"]
+    Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+    ?? configuration["JWT_AUDIENCE"]
     ?? Env.GetString("JWT_AUDIENCE");
 
 var jwtExpireRaw =
