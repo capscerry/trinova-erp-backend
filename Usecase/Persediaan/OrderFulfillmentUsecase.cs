@@ -65,9 +65,44 @@ namespace trinova_erp_backend.Usecase.Persediaan
                     created_at = DateTime.Now,
                     created_by = request.created_by,
                     source_warehouse_id = request.warehouse_id,
-                    reference_number = referenceNo
+                    reference_number = referenceNo,
+
+                    status = "PROCESSED",
+                    processed_at = DateTime.Now
                 }
             );
+        }
+
+        public async Task CompleteAsync(int movementId)
+        {
+            var movement =
+                await _movementRepo.GetByIdAsync(movementId);
+
+            if (movement == null)
+                throw new Exception("Stock movement not found");
+
+            if (movement.status != "PROCESSED")
+                throw new Exception("Only processed movements can be completed");
+
+            await _movementRepo.UpdateStatusAsync(
+                movementId,
+                "COMPLETED");
+        }
+
+        public async Task CancelAsync(int movementId)
+        {
+            var movement =
+                await _movementRepo.GetByIdAsync(movementId);
+
+            if (movement == null)
+                throw new Exception("Stock movement not found");
+
+            if (movement.status != "PROCESSED")
+                throw new Exception("Only processed movements can be canceled");
+
+            await _movementRepo.UpdateStatusAsync(
+                movementId,
+                "CANCELED");
         }
 
         public async Task<List<StockMovement>>
