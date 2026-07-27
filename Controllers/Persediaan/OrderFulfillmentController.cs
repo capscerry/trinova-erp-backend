@@ -40,5 +40,29 @@ namespace trinova_erp_backend.Controllers.Persediaan
                 await _usecase.GetAllAsync()
             );
         }
+
+        [HttpPut("{movementId}/complete")]
+        public async Task<IActionResult> Complete(int movementId)
+        {
+            await _usecase.CompleteAsync(movementId);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Order fulfillment completed successfully."
+            });
+        }
+
+        [HttpPut("{movementId}/cancel")]
+        public async Task<IActionResult> Cancel(int movementId)
+        {
+            await _usecase.CancelAsync(movementId);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Order fulfillment canceled successfully."
+            });
+        }
     }
 }

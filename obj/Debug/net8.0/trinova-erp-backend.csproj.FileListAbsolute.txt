@@ -1,743 +1,297 @@
 <<<<<<< HEAD
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\appsettings.Development.json
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\appsettings.json
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.staticwebassets.endpoints.json
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.exe
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.deps.json
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.runtimeconfig.json
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.pdb
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Azure.Core.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Azure.Identity.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\BCrypt-Net-Next.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Dapper.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\DotNetEnv.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.DataSet.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Humanizer.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.Workspaces.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Design.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.SqlServer.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Identity.Client.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.OpenApi.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Mono.TextTemplating.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Superpower.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.CodeDom.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.Composition.AttributedModel.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.Composition.Convention.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.Composition.Hosting.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.Composition.Runtime.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.Composition.TypedParts.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.Drawing.Common.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.Memory.Data.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.Runtime.Caching.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.Security.Permissions.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\System.Windows.Extensions.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\runtimes\unix\lib\net6.0\System.Drawing.Common.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
-C:\Viko\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.csproj.AssemblyReference.cache
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\rpswa.dswa.cache.json
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.GeneratedMSBuildEditorConfig.editorconfig
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.AssemblyInfoInputs.cache
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.AssemblyInfo.cs
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.csproj.CoreCompileInputs.cache
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cs
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cache
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.sourcelink.json
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\rjimswa.dswa.cache.json
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\scopedcss\bundle\trinova-erp-backend.styles.css
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.json
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.json.cache
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.development.json
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\swae.build.ex.cache
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-.B3CAAC3E.Up2Date
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.dll
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\refint\trinova-erp-backend.dll
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.pdb
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.genruntimeconfig.cache
-C:\Viko\trinova-erp-backend\obj\Debug\net8.0\ref\trinova-erp-backend.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\appsettings.Development.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\appsettings.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.staticwebassets.endpoints.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.exe
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.deps.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.runtimeconfig.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.pdb
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Azure.Core.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Azure.Identity.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\BCrypt-Net-Next.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Dapper.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\DotNetEnv.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.DataSet.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Humanizer.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.Workspaces.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Design.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.SqlServer.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Identity.Client.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.OpenApi.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Mono.TextTemplating.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Superpower.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.CodeDom.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.Composition.AttributedModel.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.Composition.Convention.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.Composition.Hosting.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.Composition.Runtime.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.Composition.TypedParts.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.Drawing.Common.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.Memory.Data.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.Runtime.Caching.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.Security.Permissions.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\System.Windows.Extensions.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.CSharp.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\runtimes\unix\lib\net6.0\System.Drawing.Common.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.csproj.AssemblyReference.cache
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\rpswa.dswa.cache.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.GeneratedMSBuildEditorConfig.editorconfig
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.AssemblyInfoInputs.cache
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.AssemblyInfo.cs
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.csproj.CoreCompileInputs.cache
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cs
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cache
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.sourcelink.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\rjimswa.dswa.cache.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\scopedcss\bundle\trinova-erp-backend.styles.css
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.json.cache
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.development.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-.B3CAAC3E.Up2Date
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\refint\trinova-erp-backend.dll
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.pdb
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.genruntimeconfig.cache
+C:\VIKO\Capstone Trinova\trinova-erp-backend\obj\Debug\net8.0\ref\trinova-erp-backend.dll
 =======
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.csproj.AssemblyReference.cache
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.GeneratedMSBuildEditorConfig.editorconfig
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.AssemblyInfoInputs.cache
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.AssemblyInfo.cs
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.csproj.CoreCompileInputs.cache
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cs
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cache
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.sourcelink.json
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Azure.Core.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Azure.Identity.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/BCrypt-Net-Next.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Dapper.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/DotNetEnv.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ExcelDataReader.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ExcelDataReader.DataSet.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Humanizer.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Bcl.AsyncInterfaces.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.CodeAnalysis.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.CodeAnalysis.CSharp.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.CodeAnalysis.CSharp.Workspaces.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.CodeAnalysis.Workspaces.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Data.SqlClient.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Design.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Relational.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.SqlServer.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Extensions.DependencyModel.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Identity.Client.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Identity.Client.Extensions.Msal.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Abstractions.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.JsonWebTokens.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Logging.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Tokens.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.OpenApi.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.SqlServer.Server.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Win32.SystemEvents.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Mono.TextTemplating.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Superpower.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Swashbuckle.AspNetCore.Swagger.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerGen.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerUI.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.CodeDom.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.Composition.AttributedModel.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.Composition.Convention.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.Composition.Hosting.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.Composition.Runtime.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.Composition.TypedParts.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.Configuration.ConfigurationManager.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.Drawing.Common.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.IdentityModel.Tokens.Jwt.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.Memory.Data.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.Runtime.Caching.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.Security.Cryptography.ProtectedData.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.Security.Permissions.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/System.Windows.Extensions.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/cs/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/de/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/es/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/fr/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/it/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ja/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ko/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/pl/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/pt-BR/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ru/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/cs/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/de/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/es/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/fr/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/it/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ja/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ko/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/pl/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/pt-BR/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ru/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.CSharp.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/cs/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/de/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/es/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/fr/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/it/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ja/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ko/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/pl/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/pt-BR/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ru/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/cs/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/de/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/es/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/fr/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/it/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ja/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ko/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/pl/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/pt-BR/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/ru/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.resources.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/runtimes/unix/lib/net6.0/Microsoft.Data.SqlClient.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/Microsoft.Data.SqlClient.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/runtimes/win-arm/native/Microsoft.Data.SqlClient.SNI.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/runtimes/win-arm64/native/Microsoft.Data.SqlClient.SNI.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/runtimes/win-x64/native/Microsoft.Data.SqlClient.SNI.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/runtimes/win-x86/native/Microsoft.Data.SqlClient.SNI.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/Microsoft.Win32.SystemEvents.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/runtimes/unix/lib/net6.0/System.Drawing.Common.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Drawing.Common.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Runtime.Caching.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Security.Cryptography.ProtectedData.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Windows.Extensions.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.build.json
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.development.json
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/staticwebassets/msbuild.trinova-erp-backend.Microsoft.AspNetCore.StaticWebAssets.props
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/staticwebassets/msbuild.build.trinova-erp-backend.props
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.trinova-erp-backend.props
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.trinova-erp-backend.props
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.pack.json
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/scopedcss/bundle/trinova-erp-backend.styles.css
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/refint/trinova-erp-backend.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.pdb
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/appsettings.Development.json
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/appsettings.json
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.exe
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.deps.json
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.runtimeconfig.json
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.dll
-c:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.pdb
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.csproj.CopyComplete
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.genruntimeconfig.cache
-c:/Users/Davina/Desktop/trinova-erp-backend/obj/Debug/net8.0/ref/trinova-erp-backend.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/appsettings.Development.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/appsettings.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.staticwebassets.endpoints.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.exe
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.deps.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.runtimeconfig.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.pdb
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Azure.Core.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Azure.Identity.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/BCrypt-Net-Next.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Dapper.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/DotNetEnv.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ExcelDataReader.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ExcelDataReader.DataSet.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Humanizer.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Bcl.AsyncInterfaces.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.CodeAnalysis.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.CodeAnalysis.CSharp.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.CodeAnalysis.CSharp.Workspaces.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.CodeAnalysis.Workspaces.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Data.SqlClient.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Design.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Relational.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.SqlServer.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Extensions.DependencyModel.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Identity.Client.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Identity.Client.Extensions.Msal.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Abstractions.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.JsonWebTokens.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Logging.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Tokens.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.OpenApi.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.SqlServer.Server.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Win32.SystemEvents.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Mono.TextTemplating.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Superpower.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Swashbuckle.AspNetCore.Swagger.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerGen.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerUI.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.CodeDom.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.Composition.AttributedModel.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.Composition.Convention.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.Composition.Hosting.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.Composition.Runtime.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.Composition.TypedParts.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.Configuration.ConfigurationManager.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.Drawing.Common.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.IdentityModel.Tokens.Jwt.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.Memory.Data.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.Runtime.Caching.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.Security.Cryptography.ProtectedData.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.Security.Permissions.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/System.Windows.Extensions.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/cs/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/de/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/es/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/fr/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/it/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ja/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ko/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/pl/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/pt-BR/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ru/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/cs/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/de/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/es/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/fr/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/it/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ja/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ko/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/pl/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/pt-BR/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ru/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.CSharp.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/cs/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/de/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/es/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/fr/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/it/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ja/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ko/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/pl/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/pt-BR/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ru/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/cs/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/de/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/es/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/fr/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/it/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ja/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ko/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/pl/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/pt-BR/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/ru/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/runtimes/unix/lib/net6.0/Microsoft.Data.SqlClient.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/Microsoft.Data.SqlClient.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/runtimes/win-arm/native/Microsoft.Data.SqlClient.SNI.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/runtimes/win-arm64/native/Microsoft.Data.SqlClient.SNI.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/runtimes/win-x64/native/Microsoft.Data.SqlClient.SNI.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/runtimes/win-x86/native/Microsoft.Data.SqlClient.SNI.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/Microsoft.Win32.SystemEvents.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/runtimes/unix/lib/net6.0/System.Drawing.Common.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Drawing.Common.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Runtime.Caching.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Security.Cryptography.ProtectedData.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Windows.Extensions.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.csproj.AssemblyReference.cache
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/rpswa.dswa.cache.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.GeneratedMSBuildEditorConfig.editorconfig
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.AssemblyInfoInputs.cache
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.AssemblyInfo.cs
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.csproj.CoreCompileInputs.cache
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cs
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cache
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.sourcelink.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/rjimswa.dswa.cache.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/rjsmrazor.dswa.cache.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/rjsmcshtml.dswa.cache.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/scopedcss/bundle/trinova-erp-backend.styles.css
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.build.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.build.json.cache
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.development.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.build.endpoints.json
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.upToDateCheck.txt
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-.B3CAAC3E.Up2Date
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/refint/trinova-erp-backend.dll
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.pdb
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.genruntimeconfig.cache
-C:/VIKO/Capstone Trinova/trinova-erp-backend/obj/Debug/net8.0/ref/trinova-erp-backend.dll
-C:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Migrations/MigrationRunner/bin/Debug/net8.0/MigrationRunner.deps.json
-C:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Migrations/MigrationRunner/bin/Debug/net8.0/MigrationRunner.runtimeconfig.json
-C:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Migrations/MigrationRunner/obj/Debug/net8.0/MigrationRunner.sourcelink.json
-C:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Migrations/MigrationRunner/obj/MigrationRunner.csproj.nuget.dgspec.json
-C:/Users/Davina/Desktop/trinova-erp-backend/bin/Debug/net8.0/Migrations/MigrationRunner/obj/project.assets.json
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/appsettings.Development.json
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/appsettings.json
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.staticwebassets.endpoints.json
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.deps.json
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.runtimeconfig.json
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/trinova-erp-backend.pdb
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Azure.Core.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Azure.Identity.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/BCrypt-Net-Next.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Dapper.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/DotNetEnv.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ExcelDataReader.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ExcelDataReader.DataSet.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Humanizer.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Bcl.AsyncInterfaces.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.CodeAnalysis.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.CodeAnalysis.CSharp.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.CodeAnalysis.CSharp.Workspaces.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.CodeAnalysis.Workspaces.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Data.SqlClient.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Design.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Relational.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.SqlServer.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Extensions.DependencyModel.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Identity.Client.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Identity.Client.Extensions.Msal.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Abstractions.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.JsonWebTokens.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Logging.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.IdentityModel.Tokens.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.OpenApi.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.SqlServer.Server.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Microsoft.Win32.SystemEvents.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Mono.TextTemplating.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Superpower.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Swashbuckle.AspNetCore.Swagger.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerGen.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerUI.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.CodeDom.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.Composition.AttributedModel.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.Composition.Convention.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.Composition.Hosting.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.Composition.Runtime.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.Composition.TypedParts.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.Configuration.ConfigurationManager.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.Drawing.Common.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.IdentityModel.Tokens.Jwt.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.Memory.Data.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.Runtime.Caching.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.Security.Cryptography.ProtectedData.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.Security.Permissions.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/System.Windows.Extensions.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/cs/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/de/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/es/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/fr/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/it/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ja/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ko/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/pl/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/pt-BR/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ru/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/cs/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/de/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/es/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/fr/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/it/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ja/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ko/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/pl/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/pt-BR/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ru/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.CSharp.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/cs/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/de/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/es/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/fr/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/it/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ja/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ko/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/pl/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/pt-BR/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ru/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/cs/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/de/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/es/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/fr/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/it/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ja/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ko/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/pl/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/pt-BR/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/ru/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.resources.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/runtimes/unix/lib/net6.0/Microsoft.Data.SqlClient.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/Microsoft.Data.SqlClient.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/runtimes/win-arm/native/Microsoft.Data.SqlClient.SNI.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/runtimes/win-arm64/native/Microsoft.Data.SqlClient.SNI.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/runtimes/win-x64/native/Microsoft.Data.SqlClient.SNI.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/runtimes/win-x86/native/Microsoft.Data.SqlClient.SNI.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/Microsoft.Win32.SystemEvents.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/runtimes/unix/lib/net6.0/System.Drawing.Common.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Drawing.Common.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Runtime.Caching.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Security.Cryptography.ProtectedData.dll
-/Users/agil/trinova-erp-backend/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Windows.Extensions.dll
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.csproj.AssemblyReference.cache
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/rpswa.dswa.cache.json
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.GeneratedMSBuildEditorConfig.editorconfig
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.AssemblyInfoInputs.cache
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.AssemblyInfo.cs
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.csproj.CoreCompileInputs.cache
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cs
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cache
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.sourcelink.json
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/rjimswa.dswa.cache.json
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/rjsmrazor.dswa.cache.json
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/rjsmcshtml.dswa.cache.json
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/scopedcss/bundle/trinova-erp-backend.styles.css
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.build.json
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.build.json.cache
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.development.json
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/staticwebassets.build.endpoints.json
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/swae.build.ex.cache
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/trinova-.B3CAAC3E.Up2Date
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.dll
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/refint/trinova-erp-backend.dll
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.pdb
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/trinova-erp-backend.genruntimeconfig.cache
-/Users/agil/trinova-erp-backend/obj/Debug/net8.0/ref/trinova-erp-backend.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\appsettings.Development.json
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\appsettings.json
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Migrations\MigrationRunner\bin\Debug\net8.0\MigrationRunner.deps.json
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Migrations\MigrationRunner\bin\Debug\net8.0\MigrationRunner.runtimeconfig.json
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Migrations\MigrationRunner\obj\Debug\net8.0\MigrationRunner.sourcelink.json
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Migrations\MigrationRunner\obj\MigrationRunner.csproj.nuget.dgspec.json
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Migrations\MigrationRunner\obj\project.assets.json
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.exe
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.deps.json
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.runtimeconfig.json
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.pdb
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Azure.Core.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Azure.Identity.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\BCrypt-Net-Next.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Dapper.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\DotNetEnv.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.DataSet.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Humanizer.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.Workspaces.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Design.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.SqlServer.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Identity.Client.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.OpenApi.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Mono.TextTemplating.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Superpower.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.CodeDom.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.Composition.AttributedModel.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.Composition.Convention.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.Composition.Hosting.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.Composition.Runtime.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.Composition.TypedParts.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.Drawing.Common.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.Memory.Data.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.Runtime.Caching.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.Security.Permissions.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\System.Windows.Extensions.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.CSharp.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.resources.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\runtimes\unix\lib\net6.0\System.Drawing.Common.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.csproj.AssemblyReference.cache
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.AssemblyInfoInputs.cache
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.AssemblyInfo.cs
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.csproj.CoreCompileInputs.cache
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cs
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cache
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.sourcelink.json
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.json
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.development.json
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\staticwebassets\msbuild.trinova-erp-backend.Microsoft.AspNetCore.StaticWebAssets.props
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\staticwebassets\msbuild.build.trinova-erp-backend.props
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.trinova-erp-backend.props
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.trinova-erp-backend.props
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.pack.json
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\scopedcss\bundle\trinova-erp-backend.styles.css
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.csproj.CopyComplete
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\refint\trinova-erp-backend.dll
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.pdb
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.genruntimeconfig.cache
-C:\Users\Davina\Desktop\trinova-erp-backend\obj\Debug\net8.0\ref\trinova-erp-backend.dll
->>>>>>> purchase-update-2
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\appsettings.Development.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\appsettings.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.staticwebassets.endpoints.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.exe
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.deps.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.runtimeconfig.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\trinova-erp-backend.pdb
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Azure.Core.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Azure.Identity.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\BCrypt-Net-Next.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Dapper.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\DotNetEnv.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ExcelDataReader.DataSet.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Humanizer.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.CodeAnalysis.Workspaces.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Design.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.SqlServer.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Identity.Client.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.OpenApi.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Mono.TextTemplating.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Superpower.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.CodeDom.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.Composition.AttributedModel.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.Composition.Convention.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.Composition.Hosting.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.Composition.Runtime.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.Composition.TypedParts.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.Drawing.Common.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.Memory.Data.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.Runtime.Caching.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.Security.Permissions.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.Windows.Extensions.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.CSharp.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\fr\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\it\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ja\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ko\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\pl\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\pt-BR\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ru\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.resources.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\runtimes\unix\lib\net6.0\System.Drawing.Common.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.csproj.AssemblyReference.cache
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\rpswa.dswa.cache.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.GeneratedMSBuildEditorConfig.editorconfig
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.AssemblyInfoInputs.cache
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.AssemblyInfo.cs
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.csproj.CoreCompileInputs.cache
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cs
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.MvcApplicationPartsAssemblyInfo.cache
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.sourcelink.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\rjimswa.dswa.cache.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\scopedcss\bundle\trinova-erp-backend.styles.css
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.json.cache
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.development.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\swae.build.ex.cache
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-.B3CAAC3E.Up2Date
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\refint\trinova-erp-backend.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.pdb
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.genruntimeconfig.cache
+D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\ref\trinova-erp-backend.dll
+>>>>>>> dev-update-2-devita
