@@ -327,6 +327,22 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             await command.ExecuteReaderAsync()
                     )
                     {
+                        // Performance: cache ordinal positions once before the
+                        // read loop. GetOrdinal does a linear string scan — calling
+                        // it per-row on 11 columns wastes CPU for large catalogs.
+                        // Mapping behaviour and returned model are unchanged.
+                        int ord_supplier_product_id = reader.GetOrdinal("supplier_product_id");
+                        int ord_supplier_id         = reader.GetOrdinal("supplier_id");
+                        int ord_product_id          = reader.GetOrdinal("product_id");
+                        int ord_supplier_price      = reader.GetOrdinal("supplier_price");
+                        int ord_available_stock     = reader.GetOrdinal("available_stock");
+                        int ord_lead_time_days      = reader.GetOrdinal("lead_time_days");
+                        int ord_is_available        = reader.GetOrdinal("is_available");
+                        int ord_created_at          = reader.GetOrdinal("created_at");
+                        int ord_product_name        = reader.GetOrdinal("product_name");
+                        int ord_supplier_name       = reader.GetOrdinal("supplier_name");
+                        int ord_uom_id              = reader.GetOrdinal("uom_id");
+
                         while (
                             await reader.ReadAsync()
                         )
@@ -335,70 +351,70 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 new SupplierProduct()
                                 {
                                     supplier_product_id =
-                                        reader["supplier_product_id"] != DBNull.Value
+                                        reader[ord_supplier_product_id] != DBNull.Value
                                         ? Convert.ToInt32(
-                                            reader["supplier_product_id"]
+                                            reader[ord_supplier_product_id]
                                         )
                                         : 0,
 
                                     supplier_id =
-                                        reader["supplier_id"] != DBNull.Value
+                                        reader[ord_supplier_id] != DBNull.Value
                                         ? Convert.ToInt32(
-                                            reader["supplier_id"]
+                                            reader[ord_supplier_id]
                                         )
                                         : 0,
 
                                     product_id =
-                                        reader["product_id"] != DBNull.Value
+                                        reader[ord_product_id] != DBNull.Value
                                         ? Convert.ToInt32(
-                                            reader["product_id"]
+                                            reader[ord_product_id]
                                         )
                                         : 0,
 
                                     supplier_price =
-                                        reader["supplier_price"] != DBNull.Value
+                                        reader[ord_supplier_price] != DBNull.Value
                                         ? Convert.ToDecimal(
-                                            reader["supplier_price"]
+                                            reader[ord_supplier_price]
                                         )
                                         : 0,
 
                                     available_stock =
-                                        reader["available_stock"] != DBNull.Value
+                                        reader[ord_available_stock] != DBNull.Value
                                         ? Convert.ToInt32(
-                                            reader["available_stock"]
+                                            reader[ord_available_stock]
                                         )
                                         : 0,
 
                                     lead_time_days =
-                                        reader["lead_time_days"] != DBNull.Value
+                                        reader[ord_lead_time_days] != DBNull.Value
                                         ? Convert.ToInt32(
-                                            reader["lead_time_days"]
+                                            reader[ord_lead_time_days]
                                         )
                                         : 0,
 
                                     is_available =
-                                        reader["is_available"] != DBNull.Value
+                                        reader[ord_is_available] != DBNull.Value
                                         && Convert.ToBoolean(
-                                            reader["is_available"]
+                                            reader[ord_is_available]
                                         ),
 
                                     created_at =
-                                        reader["created_at"] != DBNull.Value
+                                        reader[ord_created_at] != DBNull.Value
                                         ? Convert.ToDateTime(
-                                            reader["created_at"]
+                                            reader[ord_created_at]
                                         )
                                         : DateTime.Now,
 
                                     product_name =
-                                        reader["product_name"]?.ToString(),
+                                        reader[ord_product_name]?.ToString(),
 
                                     supplier_name =
-                                        reader["supplier_name"]?.ToString(),
+                                        reader[ord_supplier_name]?.ToString(),
 
                                     uom_id =
-                                        reader["uom_id"] != DBNull.Value
+                                        reader[ord_uom_id] != DBNull.Value
                                         ? Convert.ToInt32(
-                                            reader["uom_id"]
+                                            reader[ord_uom_id]
                                         )
                                         : 0
                                 };
@@ -478,6 +494,21 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             await command.ExecuteReaderAsync()
                     )
                     {
+                        // Performance: same ordinal-caching pattern as GetAllSupplierProduct.
+                        // GetOrdinal is called once per query, not once per row.
+                        // Mapping behaviour and returned model are unchanged.
+                        int ord_supplier_product_id = reader.GetOrdinal("supplier_product_id");
+                        int ord_supplier_id         = reader.GetOrdinal("supplier_id");
+                        int ord_product_id          = reader.GetOrdinal("product_id");
+                        int ord_supplier_price      = reader.GetOrdinal("supplier_price");
+                        int ord_available_stock     = reader.GetOrdinal("available_stock");
+                        int ord_lead_time_days      = reader.GetOrdinal("lead_time_days");
+                        int ord_is_available        = reader.GetOrdinal("is_available");
+                        int ord_created_at          = reader.GetOrdinal("created_at");
+                        int ord_product_name        = reader.GetOrdinal("product_name");
+                        int ord_supplier_name       = reader.GetOrdinal("supplier_name");
+                        int ord_uom_id              = reader.GetOrdinal("uom_id");
+
                         while (
                             await reader.ReadAsync()
                         )
@@ -486,70 +517,70 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 new SupplierProduct()
                                 {
                                     supplier_product_id =
-                                        reader["supplier_product_id"] != DBNull.Value
+                                        reader[ord_supplier_product_id] != DBNull.Value
                                         ? Convert.ToInt32(
-                                            reader["supplier_product_id"]
+                                            reader[ord_supplier_product_id]
                                         )
                                         : 0,
 
                                     supplier_id =
-                                        reader["supplier_id"] != DBNull.Value
+                                        reader[ord_supplier_id] != DBNull.Value
                                         ? Convert.ToInt32(
-                                            reader["supplier_id"]
+                                            reader[ord_supplier_id]
                                         )
                                         : 0,
 
                                     product_id =
-                                        reader["product_id"] != DBNull.Value
+                                        reader[ord_product_id] != DBNull.Value
                                         ? Convert.ToInt32(
-                                            reader["product_id"]
+                                            reader[ord_product_id]
                                         )
                                         : 0,
 
                                     supplier_price =
-                                        reader["supplier_price"] != DBNull.Value
+                                        reader[ord_supplier_price] != DBNull.Value
                                         ? Convert.ToDecimal(
-                                            reader["supplier_price"]
+                                            reader[ord_supplier_price]
                                         )
                                         : 0,
 
                                     available_stock =
-                                        reader["available_stock"] != DBNull.Value
+                                        reader[ord_available_stock] != DBNull.Value
                                         ? Convert.ToInt32(
-                                            reader["available_stock"]
+                                            reader[ord_available_stock]
                                         )
                                         : 0,
 
                                     lead_time_days =
-                                        reader["lead_time_days"] != DBNull.Value
+                                        reader[ord_lead_time_days] != DBNull.Value
                                         ? Convert.ToInt32(
-                                            reader["lead_time_days"]
+                                            reader[ord_lead_time_days]
                                         )
                                         : 0,
 
                                     is_available =
-                                        reader["is_available"] != DBNull.Value
+                                        reader[ord_is_available] != DBNull.Value
                                         && Convert.ToBoolean(
-                                            reader["is_available"]
+                                            reader[ord_is_available]
                                         ),
 
                                     created_at =
-                                        reader["created_at"] != DBNull.Value
+                                        reader[ord_created_at] != DBNull.Value
                                         ? Convert.ToDateTime(
-                                            reader["created_at"]
+                                            reader[ord_created_at]
                                         )
                                         : DateTime.Now,
 
                                     product_name =
-                                        reader["product_name"]?.ToString(),
+                                        reader[ord_product_name]?.ToString(),
 
                                     supplier_name =
-                                        reader["supplier_name"]?.ToString(),
+                                        reader[ord_supplier_name]?.ToString(),
 
                                     uom_id =
-                                        reader["uom_id"] != DBNull.Value
+                                        reader[ord_uom_id] != DBNull.Value
                                         ? Convert.ToInt32(
-                                            reader["uom_id"]
+                                            reader[ord_uom_id]
                                         )
                                         : 0
                                 };

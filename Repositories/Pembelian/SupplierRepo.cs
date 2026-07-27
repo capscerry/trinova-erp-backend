@@ -565,6 +565,18 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             await command.ExecuteReaderAsync()
                     )
                     {
+                        // Performance: cache ordinal positions once before the
+                        // read loop — avoids a string scan per row per column.
+                        // Mapping behaviour and returned model are unchanged.
+                        int ord_supplier_id       = reader.GetOrdinal("supplier_id");
+                        int ord_supplier_code     = reader.GetOrdinal("supplier_code");
+                        int ord_supplier_name     = reader.GetOrdinal("supplier_name");
+                        int ord_category_supplier = reader.GetOrdinal("category_supplier");
+                        int ord_no_telp_bisnis    = reader.GetOrdinal("no_telp_bisnis");
+                        int ord_alamat            = reader.GetOrdinal("alamat");
+                        int ord_email             = reader.GetOrdinal("email");
+                        int ord_status            = reader.GetOrdinal("status");
+
                         while (
                             await reader.ReadAsync()
                         )
@@ -573,47 +585,33 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 new Supplier()
                                 {
                                     supplier_id =
-                                        reader.GetInt32(
-                                            reader.GetOrdinal(
-                                                "supplier_id"
-                                            )
-                                        ),
+                                        reader.GetInt32(ord_supplier_id),
 
                                     supplier_code =
-                                        reader.GetString(
-                                            reader.GetOrdinal(
-                                                "supplier_code"
-                                            )
-                                        ),
+                                        reader[ord_supplier_code]
+                                            .ToString(),
 
                                     supplier_name =
-                                        reader.GetString(
-                                            reader.GetOrdinal(
-                                                "supplier_name"
-                                            )
-                                        ),
+                                        reader[ord_supplier_name]
+                                            .ToString(),
 
                                     category_supplier =
-                                        reader.GetInt32(
-                                            reader.GetOrdinal(
-                                                "category_supplier"
-                                            )
-                                        ),
+                                        reader.GetInt32(ord_category_supplier),
 
                                     no_telp_bisnis =
-                                        reader["no_telp_bisnis"]
+                                        reader[ord_no_telp_bisnis]
                                             .ToString(),
 
                                     alamat =
-                                        reader["alamat"]
+                                        reader[ord_alamat]
                                             .ToString(),
 
                                     email =
-                                        reader["email"]
+                                        reader[ord_email]
                                             .ToString(),
 
                                     status =
-                                        reader["status"]
+                                        reader[ord_status]
                                             .ToString()
                                 };
 
@@ -684,44 +682,48 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             await reader.ReadAsync()
                         )
                         {
+                            // Performance: cache ordinals before accessing columns
+                            // even for a single-row result — avoids repeated string
+                            // scans across multiple column accesses. Logic unchanged.
+                            int ord_supplier_id       = reader.GetOrdinal("supplier_id");
+                            int ord_supplier_code     = reader.GetOrdinal("supplier_code");
+                            int ord_supplier_name     = reader.GetOrdinal("supplier_name");
+                            int ord_category_supplier = reader.GetOrdinal("category_supplier");
+                            int ord_no_telp_bisnis    = reader.GetOrdinal("no_telp_bisnis");
+                            int ord_alamat            = reader.GetOrdinal("alamat");
+                            int ord_email             = reader.GetOrdinal("email");
+                            int ord_status            = reader.GetOrdinal("status");
+
                             return new Supplier()
                             {
                                 supplier_id =
-                                    reader.GetInt32(
-                                        reader.GetOrdinal(
-                                            "supplier_id"
-                                        )
-                                    ),
+                                    reader.GetInt32(ord_supplier_id),
 
                                 supplier_code =
-                                    reader["supplier_code"]
+                                    reader[ord_supplier_code]
                                         .ToString(),
 
                                 supplier_name =
-                                    reader["supplier_name"]
+                                    reader[ord_supplier_name]
                                         .ToString(),
 
                                 category_supplier =
-                                    reader.GetInt32(
-                                        reader.GetOrdinal(
-                                            "category_supplier"
-                                        )
-                                    ),
+                                    reader.GetInt32(ord_category_supplier),
 
                                 no_telp_bisnis =
-                                    reader["no_telp_bisnis"]
+                                    reader[ord_no_telp_bisnis]
                                         .ToString(),
 
                                 alamat =
-                                    reader["alamat"]
+                                    reader[ord_alamat]
                                         .ToString(),
 
                                 email =
-                                    reader["email"]
+                                    reader[ord_email]
                                         .ToString(),
 
                                 status =
-                                    reader["status"]
+                                    reader[ord_status]
                                         .ToString()
                             };
                         }

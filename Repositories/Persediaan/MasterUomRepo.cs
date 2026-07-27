@@ -37,17 +37,20 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
                     using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
+                        // Performance: cache ordinals once before the loop — avoids
+                        // a linear string scan on every row for every column access.
+                        // Mapping behaviour and returned model are unchanged.
+                        int ord_uom_id   = reader.GetOrdinal("uom_id");
+                        int ord_uom_code = reader.GetOrdinal("uom_code");
+                        int ord_uom_name = reader.GetOrdinal("uom_name");
+
                         while (await reader.ReadAsync())
                         {
                             var uom = new MasterUom()
                             {
-                                uom_id = reader.GetInt32(
-                                    reader.GetOrdinal("uom_id")
-                                ),
-
-                                uom_code = reader["uom_code"].ToString(),
-
-                                uom_name = reader["uom_name"].ToString()
+                                uom_id   = reader.GetInt32(ord_uom_id),
+                                uom_code = reader[ord_uom_code].ToString(),
+                                uom_name = reader[ord_uom_name].ToString()
                             };
 
                             response.Add(uom);

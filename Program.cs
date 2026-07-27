@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
@@ -30,15 +31,19 @@ var builder = WebApplication.CreateBuilder(args);
 //      source.  Env.GetString is kept only as a fallback for local .env usage.
 var configuration = builder.Configuration;
 
-Console.WriteLine("===== RAW ENVIRONMENT =====");
-
-Console.WriteLine($"SQL_CONNECTION_STRING_DEV = {Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING_DEV")}");
-Console.WriteLine($"JWT_SECRET_KEY            = {Environment.GetEnvironmentVariable("JWT_SECRET_KEY")}");
-Console.WriteLine($"JWT_ISSUER                = {Environment.GetEnvironmentVariable("JWT_ISSUER")}");
-Console.WriteLine($"JWT_AUDIENCE              = {Environment.GetEnvironmentVariable("JWT_AUDIENCE")}");
-Console.WriteLine($"JWT_EXPIRE_MINUTES        = {Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES")}");
-
-Console.WriteLine("===========================");
+// Performance: Raw environment dump is restricted to Development only.
+// In Production (Railway) this would print on every cold start and expose
+// variable names to container logs unnecessarily. Validation still runs below.
+if (builder.Environment.IsDevelopment())
+{
+    Console.WriteLine("===== RAW ENVIRONMENT =====");
+    Console.WriteLine($"SQL_CONNECTION_STRING_DEV = {Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING_DEV")}");
+    Console.WriteLine($"JWT_SECRET_KEY            = {Environment.GetEnvironmentVariable("JWT_SECRET_KEY")}");
+    Console.WriteLine($"JWT_ISSUER                = {Environment.GetEnvironmentVariable("JWT_ISSUER")}");
+    Console.WriteLine($"JWT_AUDIENCE              = {Environment.GetEnvironmentVariable("JWT_AUDIENCE")}");
+    Console.WriteLine($"JWT_EXPIRE_MINUTES        = {Environment.GetEnvironmentVariable("JWT_EXPIRE_MINUTES")}");
+    Console.WriteLine("===========================");
+}
 
 var connectionString =
     Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING_DEV")
@@ -88,11 +93,18 @@ if (missingKeys.Count > 0)
 // ── 9. Startup diagnostics – presence only, never print secret values ─────────
 var port = Environment.GetEnvironmentVariable("PORT");
 
-Console.WriteLine($"Environment  : {builder.Environment.EnvironmentName}");
-Console.WriteLine($"PORT         : {(string.IsNullOrEmpty(port) ? "(not set – Kestrel default)" : port)}");
-Console.WriteLine($"SQL Loaded   : {!string.IsNullOrWhiteSpace(connectionString)}");
-Console.WriteLine($"JWT Loaded   : {!string.IsNullOrWhiteSpace(jwtSecret)}");
-Console.WriteLine($"XGBoost URL  : {xgboostUrl}");
+// Performance: Restrict startup diagnostics to Development only.
+// Railway cold-starts do not need this console output. Validation above still
+// runs unconditionally — only the informational output is gated. Business logic
+// and configuration loading are completely unchanged.
+if (builder.Environment.IsDevelopment())
+{
+    Console.WriteLine($"Environment  : {builder.Environment.EnvironmentName}");
+    Console.WriteLine($"PORT         : {(string.IsNullOrEmpty(port) ? "(not set – Kestrel default)" : port)}");
+    Console.WriteLine($"SQL Loaded   : {!string.IsNullOrWhiteSpace(connectionString)}");
+    Console.WriteLine($"JWT Loaded   : {!string.IsNullOrWhiteSpace(jwtSecret)}");
+    Console.WriteLine($"XGBoost URL  : {xgboostUrl}");
+}
 
 // ── PORT binding (Railway sets PORT) ─────────────────────────────────────────
 if (!string.IsNullOrEmpty(port))
@@ -118,6 +130,24 @@ builder.Services.Configure<JwtSettings>(options =>
 builder.Services.AddApplicationServices();
 builder.Services.AddMemoryCache();
 
+// ── Performance: Response Compression ────────────────────────────────────────
+// Reduces response payload sizes for JSON API responses, lowering bandwidth
+// and improving client-perceived latency, especially on Railway's public edge.
+// EnableForHttps is required because Railway terminates TLS upstream and the
+// app itself runs on plain HTTP inside the container. Business logic unchanged.
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/json" });
+});
+
+// ── Performance: Response Caching ────────────────────────────────────────────
+// Registers the caching infrastructure so [ResponseCache] attributes on
+// individual endpoints can be applied safely. No endpoint is cached by default;
+// this only enables opt-in caching per-action. Business logic unchanged.
+builder.Services.AddResponseCaching();
+
 // File-upload hardening: cap multipart body size before IFormFile is populated.
 // FileUploadSecurity.ValidateExcel/ValidateCsv enforce the same ceiling per-endpoint.
 var maxUploadBytes = builder.Configuration.GetValue<long>(
@@ -134,6 +164,8 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 // Named HttpClient for the XGBoost FastAPI service (config-driven, not hardcoded).
+// Performance: Uses IHttpClientFactory to reuse socket connections, preventing
+// socket exhaustion under load. Timeout is kept at 60 s for ML inference calls.
 builder.Services.AddHttpClient("XGBoost", (serviceProvider, client) =>
 {
     client.BaseAddress = new Uri(xgboostUrl);
@@ -142,9 +174,13 @@ builder.Services.AddHttpClient("XGBoost", (serviceProvider, client) =>
 });
 
 // ── 8. ForecastClient – use the same config-driven URL ───────────────────────
+// Performance: Typed HttpClient via IHttpClientFactory for proper connection
+// pooling. Explicit 30 s timeout added — previously inherited the default
+// 100 s which is excessive for a forecast call. BaseAddress preserved.
 builder.Services.AddHttpClient<ForecastClient>(client =>
 {
     client.BaseAddress = new Uri(xgboostUrl);
+    client.Timeout     = TimeSpan.FromSeconds(30);
 });
 
 builder.Services.AddScoped<MasterProductSubcategoryRepo>();
@@ -288,6 +324,11 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+// ── Performance: Response Compression middleware ──────────────────────────────
+// Must be registered before any middleware that writes response bodies so that
+// the compressor can wrap the response stream. Does not affect response content.
+app.UseResponseCompression();
+
 // ── 6. HTTPS redirection disabled in Production (Railway terminates TLS) ─────
 if (!app.Environment.IsProduction())
 {
@@ -295,6 +336,12 @@ if (!app.Environment.IsProduction())
 }
 
 app.UseCors("AllowCors");
+
+// ── Performance: Response Caching middleware ──────────────────────────────────
+// Must come after UseCors and before UseAuthentication so the cache key
+// includes any Vary headers. No endpoint is cached unless explicitly decorated
+// with [ResponseCache]. Business logic and auth flow unchanged.
+app.UseResponseCaching();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -259,130 +259,93 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 using SqlDataReader reader =
                     await command.ExecuteReaderAsync();
 
+                // Performance: cache ordinal positions once before the read loop.
+                // This method joins 4 tables and maps 13+ columns — calling
+                // GetOrdinal inside the loop (string scan per column per row)
+                // accumulates significant CPU overhead for large product lists.
+                // SQL query and returned model are completely unchanged.
+                int ord_product_id          = reader.GetOrdinal("product_id");
+                int ord_product_name        = reader.GetOrdinal("product_name");
+                int ord_product_code        = reader.GetOrdinal("product_code");
+                int ord_uom_id              = reader.GetOrdinal("uom_id");
+                int ord_category_id         = reader.GetOrdinal("category_id");
+                int ord_subcategory_id      = reader.GetOrdinal("subcategory_id");
+                int ord_created_at          = reader.GetOrdinal("created_at");
+                int ord_updated_at          = reader.GetOrdinal("updated_at");
+                int ord_uom_code            = reader.GetOrdinal("uom_code");
+                int ord_uom_name            = reader.GetOrdinal("uom_name");
+                int ord_category_name       = reader.GetOrdinal("category_name");
+                int ord_subcategory_code    = reader.GetOrdinal("subcategory_code");
+                int ord_subcategory_name    = reader.GetOrdinal("subcategory_name");
+                int ord_subcategory_active  = reader.GetOrdinal("subcategory_is_active");
+
                 while (await reader.ReadAsync())
                 {
                     response.Add(
                         new MasterProduct
                         {
                             product_id =
-                                reader.GetInt32(
-                                    reader.GetOrdinal(
-                                        "product_id"
-                                    )
-                                ),
+                                reader.GetInt32(ord_product_id),
 
                             product_name =
-                                reader["product_name"]
+                                reader[ord_product_name]
                                     ?.ToString(),
 
                             product_code =
-                                reader["product_code"]
+                                reader[ord_product_code]
                                     ?.ToString(),
 
                             uom_id =
-                                reader.GetInt32(
-                                    reader.GetOrdinal(
-                                        "uom_id"
-                                    )
-                                ),
+                                reader.GetInt32(ord_uom_id),
 
                             category_id =
-                                reader.GetInt32(
-                                    reader.GetOrdinal(
-                                        "category_id"
-                                    )
-                                ),
+                                reader.GetInt32(ord_category_id),
 
                             subcategory_id =
-                                reader.GetInt32(
-                                    reader.GetOrdinal(
-                                        "subcategory_id"
-                                    )
-                                ),
+                                reader.GetInt32(ord_subcategory_id),
 
                             created_at =
-                                reader["created_at"]
-                                    == DBNull.Value
-                                    ? null
-                                    : Convert.ToDateTime(
-                                        reader["created_at"]
-                                    ),
+                                reader[ord_created_at] == DBNull.Value
+                                ? null
+                                : Convert.ToDateTime(reader[ord_created_at]),
 
                             updated_at =
-                                reader["updated_at"]
-                                    == DBNull.Value
-                                    ? null
-                                    : Convert.ToDateTime(
-                                        reader["updated_at"]
-                                    ),
+                                reader[ord_updated_at] == DBNull.Value
+                                ? null
+                                : Convert.ToDateTime(reader[ord_updated_at]),
 
                             MasterUom =
-                                reader["uom_name"] == DBNull.Value
+                                reader[ord_uom_name] == DBNull.Value
                                 ? null
                                 : new MasterUom
                                 {
-                                    uom_id = Convert.ToInt32(
-                                        reader["uom_id"]
-                                    ),
-
-                                    uom_code =
-                                        reader["uom_code"]
-                                            ?.ToString(),
-
-                                    uom_name =
-                                        reader["uom_name"]
-                                            ?.ToString()
+                                    uom_id   = reader.GetInt32(ord_uom_id),
+                                    uom_code = reader[ord_uom_code]?.ToString(),
+                                    uom_name = reader[ord_uom_name]?.ToString()
                                 },
 
                             MasterProductCategory =
-                                reader["category_name"] == DBNull.Value
+                                reader[ord_category_name] == DBNull.Value
                                 ? null
                                 : new MasterProductCategory
                                 {
-                                    category_id =
-                                        Convert.ToInt32(
-                                            reader["category_id"]
-                                        ),
-
-                                    category_name =
-                                        reader["category_name"]
-                                            ?.ToString()
+                                    category_id   = reader.GetInt32(ord_category_id),
+                                    category_name = reader[ord_category_name]?.ToString()
                                 },
 
                             ProductSubcategory =
-                                reader["subcategory_name"] == DBNull.Value
+                                reader[ord_subcategory_name] == DBNull.Value
                                 ? null
                                 : new ProductSubcategory
                                 {
-                                    subcategory_id =
-                                        Convert.ToInt32(
-                                            reader["subcategory_id"]
-                                        ),
-
-                                    category_id =
-                                        Convert.ToInt32(
-                                            reader["category_id"]
-                                        ),
-
-                                    code =
-                                        reader["subcategory_code"]
-                                            ?.ToString()
-                                            ?? "",
-
-                                    name =
-                                        reader["subcategory_name"]
-                                            ?.ToString()
-                                            ?? "",
-
-                                    is_active =
-                                        reader["subcategory_is_active"]
-                                            != DBNull.Value
-                                        &&
-                                        Convert.ToBoolean(
-                                            reader["subcategory_is_active"]
-                                        )
-                                }          
-                        } 
+                                    subcategory_id = reader.GetInt32(ord_subcategory_id),
+                                    category_id    = reader.GetInt32(ord_category_id),
+                                    code           = reader[ord_subcategory_code]?.ToString() ?? "",
+                                    name           = reader[ord_subcategory_name]?.ToString() ?? "",
+                                    is_active      = reader[ord_subcategory_active] != DBNull.Value
+                                                     && Convert.ToBoolean(reader[ord_subcategory_active])
+                                }
+                        }
                     );
                 }
             }

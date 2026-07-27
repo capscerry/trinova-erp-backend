@@ -34,6 +34,11 @@ namespace trinova_erp_backend.Controllers.Persediaan
         }
 
         [HttpGet("/api/master-product-category")]
+        // Performance: Product category list is reference data used in dropdowns
+        // across the product management UI. Caching for 120 s reduces DB load on
+        // repeated form loads. Vary on Authorization so different auth contexts
+        // do not share cache entries. Route, response shape, and auth unchanged.
+        [ResponseCache(Duration = 120, VaryByHeader = "Authorization", Location = ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetAllMasterProductCategory()
         {
             var result = await _masterProductCategoryUsecase
