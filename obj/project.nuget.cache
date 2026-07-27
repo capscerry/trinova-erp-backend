@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "ZZb1AuhMac44B5VduTuSPic6Rz5gjZDRXFPUSLDPEb51FDhOi/CyZLNej6wh3TUnaoA/hmvJMs5y1hh3krPZxA==",
+  "dgSpecHash": "CUNh0bOkiiStKI/I14xct5Hi0xvzeE70XBaHS9XbdKa3AqwejhaTltZnK0Pyi5URbJTrMEJxygsplILmcgjlkA==",
   "success": true,
   "projectFilePath": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
   "expectedPackageFiles": [
@@ -157,7 +157,8 @@
     "C:\\Users\\Davina\\.nuget\\packages\\system.threading.timer\\4.3.0\\system.threading.timer.4.3.0.nupkg.sha512",
     "C:\\Users\\Davina\\.nuget\\packages\\system.windows.extensions\\6.0.0\\system.windows.extensions.6.0.0.nupkg.sha512",
     "C:\\Users\\Davina\\.nuget\\packages\\system.xml.readerwriter\\4.3.0\\system.xml.readerwriter.4.3.0.nupkg.sha512",
-    "C:\\Users\\Davina\\.nuget\\packages\\system.xml.xdocument\\4.3.0\\system.xml.xdocument.4.3.0.nupkg.sha512"
+    "C:\\Users\\Davina\\.nuget\\packages\\system.xml.xdocument\\4.3.0\\system.xml.xdocument.4.3.0.nupkg.sha512",
+    "C:\\Users\\Davina\\.nuget\\packages\\microsoft.netcore.app.crossgen2.win-x64\\8.0.28\\microsoft.netcore.app.crossgen2.win-x64.8.0.28.nupkg.sha512"
   ],
   "logs": []
 }
