@@ -361,15 +361,36 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
             if (header.SalesOrderId.HasValue && header.SalesOrderId.Value > 0)
             {
-                const string updateSalesOrderQuery = @"
-                    UPDATE sales_order
-                    SET status = 'Invoiced'
-                    WHERE order_id = @SalesOrderId;";
-
-                await connection.ExecuteAsync(
-                    updateSalesOrderQuery,
+                // Cek dulu apakah SO ini sudah ditagih PENUH (total semua invoice aktif
+                // >= subtotal SO) sebelum menandai "Invoiced" — supaya SO yang baru
+                // ditagih sebagian (partial invoice) tidak salah dianggap sudah lunas
+                // ditagih semua.
+                const string soSubtotalQuery = "SELECT subtotal FROM sales_order WHERE order_id = @SalesOrderId;";
+                var soSubtotal = await connection.ExecuteScalarAsync<decimal>(
+                    soSubtotalQuery,
                     new { SalesOrderId = header.SalesOrderId.Value },
                     transaction);
+
+                const string invoicedSubtotalQuery = @"
+                    SELECT ISNULL(SUM(subtotal), 0) FROM sales_invoice
+                    WHERE sales_order_id = @SalesOrderId AND status <> 'Cancelled';";
+                var invoicedSubtotal = await connection.ExecuteScalarAsync<decimal>(
+                    invoicedSubtotalQuery,
+                    new { SalesOrderId = header.SalesOrderId.Value },
+                    transaction);
+
+                if (invoicedSubtotal >= soSubtotal)
+                {
+                    const string updateSalesOrderQuery = @"
+                        UPDATE sales_order
+                        SET status = 'Invoiced'
+                        WHERE order_id = @SalesOrderId;";
+
+                    await connection.ExecuteAsync(
+                        updateSalesOrderQuery,
+                        new { SalesOrderId = header.SalesOrderId.Value },
+                        transaction);
+                }
             }
         }
     }
