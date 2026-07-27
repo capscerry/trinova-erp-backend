@@ -38,6 +38,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 created_at,
                 source_warehouse_id,
                 destination_warehouse_id,
+                status,
                 processed_at,
                 completed_at,
                 canceled_at
@@ -54,6 +55,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 @created_at,
                 @source_warehouse_id,
                 @destination_warehouse_id,
+                @status,
                 @processed_at,
                 @completed_at,
                 @canceled_at
@@ -115,7 +117,11 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 created_by,
                 created_at,
                 source_warehouse_id,
-                destination_warehouse_id
+                destination_warehouse_id,
+                status,
+                processed_at,
+                completed_at,
+                canceled_at
             )
             VALUES
             (
@@ -128,7 +134,11 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 @created_by,
                 @created_at,
                 @source_warehouse_id,
-                @destination_warehouse_id
+                @destination_warehouse_id,
+                @status,
+                @processed_at,
+                @completed_at,
+                @canceled_at
             )";
 
             using var command = new SqlCommand(query, connection, transaction);
@@ -143,11 +153,14 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@created_at", movement.created_at ?? DateTime.Now);
             command.Parameters.AddWithValue("@source_warehouse_id", (object?)movement.source_warehouse_id ?? DBNull.Value);
             command.Parameters.AddWithValue("@destination_warehouse_id", (object?)movement.destination_warehouse_id ?? DBNull.Value);
+            command.Parameters.AddWithValue("@status", movement.status ?? "PROCESSED");
 
             await command.ExecuteNonQueryAsync();
         }
 
-        public async Task<List<StockMovement>> GetByMovementTypeAsync(string movementType)
+        public async Task<List<StockMovement>>
+            GetByMovementTypeAsync(
+                string movementType)
         {
             const string query = @"
             SELECT
