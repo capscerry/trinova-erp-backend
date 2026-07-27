@@ -16,6 +16,13 @@ namespace trinova_erp_backend.Repositories.Pembelian
         Task<bool> UpdatePurchaseReturn(int id, string status, string notes, string closingCondition);
 
         Task<bool> DeletePurchaseReturn(int id);
+
+        /// <summary>
+        /// Returns true when an open (non-Closed, non-Cancelled) Purchase Return
+        /// already exists for the given goods_receipt_id.
+        /// Used to prevent duplicate return submissions from rapid clicking.
+        /// </summary>
+        Task<bool> IsActiveReturnExist(int goodsReceiptId);
     }
 
     public class PurchaseReturnRepo : IPurchaseReturnRepo
@@ -229,6 +236,36 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 int result = await command.ExecuteNonQueryAsync();
                 return result > 0;
             }
+        }
+
+        // IS ACTIVE RETURN EXIST FOR GR
+        public async Task<bool> IsActiveReturnExist(int goodsReceiptId)
+        {
+            // An "active" return is one that hasn't been Closed or Cancelled yet.
+            // Blocking a second open return prevents rapid double-click duplicates
+            // while still allowing new returns once a previous one is resolved.
+            const string query = @"
+                SELECT COUNT(*)
+                FROM purchase_return
+                WHERE goods_receipt_id = @goods_receipt_id
+                  AND status NOT IN ('Closed', 'Cancelled')";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            await connection.OpenAsync();
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            command.Parameters.AddWithValue(
+                "@goods_receipt_id", goodsReceiptId);
+
+            int count =
+                Convert.ToInt32(
+                    await command.ExecuteScalarAsync());
+
+            return count > 0;
         }
 
         // DELETE

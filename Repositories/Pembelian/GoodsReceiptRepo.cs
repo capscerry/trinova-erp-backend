@@ -29,6 +29,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
         Task<bool> UpdateGoodsReceiptStatus(int id, string status);
 
         Task<bool> DeleteGoodsReceipt(int id);
+
+        /// <summary>
+        /// Returns true when a Goods Receipt already exists for the given
+        /// purchase_order_id.  Used to prevent duplicate GR creation.
+        /// </summary>
+        Task<bool> IsGoodsReceiptExist(int purchaseOrderId);
     }
 
     public class GoodsReceiptRepo : IGoodsReceiptRepo
@@ -126,6 +132,22 @@ namespace trinova_erp_backend.Repositories.Pembelian
             {
                 return 0;
             }
+        }
+
+        // IS GR EXIST FOR PO
+        public async Task<bool> IsGoodsReceiptExist(int purchaseOrderId)
+        {
+            const string query = @"
+                SELECT COUNT(*)
+                FROM goods_receipt
+                WHERE purchase_order_id = @purchase_order_id";
+
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            using SqlCommand command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@purchase_order_id", purchaseOrderId);
+            int count = Convert.ToInt32(await command.ExecuteScalarAsync());
+            return count > 0;
         }
 
         // UPDATE

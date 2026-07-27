@@ -69,8 +69,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
             if (isExist)
             {
-                throw new Exception(
-                    "Invoice already exists for this Goods Receipt"
+                throw new InvalidOperationException(
+                    "Purchase Invoice already exists for this Goods Receipt."
                 );
             }
 

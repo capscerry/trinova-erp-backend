@@ -64,6 +64,14 @@ namespace trinova_erp_backend.Controllers.Pembelian
                     purchase_return_id = id
                 });
             }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 return BadRequest(new

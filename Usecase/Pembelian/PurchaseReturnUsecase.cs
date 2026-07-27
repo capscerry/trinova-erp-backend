@@ -106,6 +106,19 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
         public async Task<int> InsertPurchaseReturn(PurchaseReturn model)
         {
+            // Duplicate-submission guard: reject if an open return already exists
+            // for this Goods Receipt (same GR submitted twice by rapid clicking).
+            bool activeReturnExists =
+                await _purchaseReturnRepo
+                    .IsActiveReturnExist(model.goods_receipt_id);
+
+            if (activeReturnExists)
+            {
+                throw new InvalidOperationException(
+                    "An active Purchase Return already exists for this Goods Receipt."
+                );
+            }
+
             if (!string.IsNullOrWhiteSpace(model.settlement_option) &&
                 model.settlement_option.Equals("Cash Refund", StringComparison.OrdinalIgnoreCase))
             {

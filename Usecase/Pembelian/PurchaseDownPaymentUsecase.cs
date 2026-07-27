@@ -70,6 +70,18 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 return 0;
             }
 
+            // Duplicate-submission guard: reject if a DP already exists for this PO
+            bool isExist =
+                await _purchaseDownPaymentRepo
+                    .IsDownPaymentExist(model.purchase_order_id);
+
+            if (isExist)
+            {
+                throw new InvalidOperationException(
+                    "Purchase Down Payment already exists for this Purchase Order."
+                );
+            }
+
             model.created_at =
                 DateTime.Now;
 

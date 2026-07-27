@@ -28,6 +28,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
         Task<bool> DeletePurchaseDownPayment(
             int id
         );
+
+        /// <summary>
+        /// Returns true when a Down Payment already exists for the given
+        /// purchase_order_id.  Used to prevent duplicate DP creation.
+        /// </summary>
+        Task<bool> IsDownPaymentExist(int purchaseOrderId);
     }
 
     public class PurchaseDownPaymentRepo
@@ -330,6 +336,32 @@ namespace trinova_erp_backend.Repositories.Pembelian
             )
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<bool>
+            IsDownPaymentExist(int purchaseOrderId)
+        {
+            const string query = @"
+                SELECT COUNT(*)
+                FROM purchase_down_payment
+                WHERE purchase_order_id = @purchase_order_id";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            await connection.OpenAsync();
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            command.Parameters.AddWithValue(
+                "@purchase_order_id", purchaseOrderId);
+
+            int count =
+                Convert.ToInt32(
+                    await command.ExecuteScalarAsync());
+
+            return count > 0;
         }
 
         public async Task<bool>

@@ -30,35 +30,46 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 PurchaseDownPayment model
             )
         {
-            var result =
-                await _purchaseDownPaymentUsecase
-                    .InsertPurchaseDownPayment(
-                        model
-                    );
-
-            if (result > 0)
+            try
             {
-                return Ok(
-                    new
+                var result =
+                    await _purchaseDownPaymentUsecase
+                        .InsertPurchaseDownPayment(
+                            model
+                        );
+
+                if (result > 0)
+                {
+                    return Ok(new
                     {
                         status = true,
-                        message =
-                            "Insert Successfully",
+                        message = "Insert Successfully",
+                        purchase_down_payment_id = result
+                    });
+                }
 
-                        purchase_down_payment_id =
-                            result
-                    }
-                );
-            }
-
-            return BadRequest(
-                new
+                return BadRequest(new
                 {
                     status = false,
-                    message =
-                        "Insert Failed"
-                }
-            );
+                    message = "Insert Failed"
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
         }
 
         [HttpGet("/api/purchase-down-payment/next-number")]

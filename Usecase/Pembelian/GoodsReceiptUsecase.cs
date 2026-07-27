@@ -45,6 +45,16 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
         public async Task<int> InsertGoodsReceipt(GoodsReceipt model)
         {
+            bool isExist = await _goodsReceiptRepo
+                .IsGoodsReceiptExist(model.purchase_order_id);
+
+            if (isExist)
+            {
+                throw new InvalidOperationException(
+                    "Goods Receipt already exists for this Purchase Order."
+                );
+            }
+
             model.created_at = DateTime.Now;
             model.status = "Received";
             model.receipt_number =

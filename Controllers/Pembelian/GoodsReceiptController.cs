@@ -23,24 +23,43 @@ namespace trinova_erp_backend.Controllers.Pembelian
             [FromBody] GoodsReceipt goodsReceipt
         )
         {
-            var goodsReceiptId =
-                await _goodsReceiptUsecase
-                    .InsertGoodsReceipt(goodsReceipt);
+            try
+            {
+                var goodsReceiptId =
+                    await _goodsReceiptUsecase
+                        .InsertGoodsReceipt(goodsReceipt);
 
-            if (goodsReceiptId <= 0)
+                if (goodsReceiptId <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        status = false,
+                        message = "Insert Failed"
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = true,
+                    goods_receipt_id = goodsReceiptId
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {
                     status = false,
-                    message = "Insert Failed"
+                    message = ex.Message
                 });
             }
-
-            return Ok(new
-            {
-                status = true,
-                goods_receipt_id = goodsReceiptId
-            });
         }
 
         [HttpGet("/api/goods-receipt/next-number")]

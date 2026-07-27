@@ -42,8 +42,29 @@ namespace trinova_erp_backend.Controllers.Pembelian
                         purchaseInvoiceId
                 });
             }
+            catch (InvalidOperationException ex)
+            {
+                // Duplicate invoice for the same Goods Receipt
+                return Conflict(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
+                // Check if the message is a known duplicate-record message
+                // thrown as a plain Exception from the usecase layer.
+                if (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase) ||
+                    ex.Message.Contains("Invoice already", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Conflict(new
+                    {
+                        status = false,
+                        message = ex.Message
+                    });
+                }
+
                 return BadRequest(new
                 {
                     status = false,
