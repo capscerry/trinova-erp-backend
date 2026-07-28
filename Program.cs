@@ -13,6 +13,8 @@ using trinova_erp_backend.Data;
 using trinova_erp_backend.Models;
 using trinova_erp_backend.Repositories.Persediaan;
 using trinova_erp_backend.Services;
+using trinova_erp_backend.Services.InventoryAI;
+using trinova_erp_backend.Services.PurchasingAI;
 using trinova_erp_backend.Usecase.Persediaan;
 
 // ── 1. Load .env only when it exists (local dev only) ────────────────────────
@@ -74,6 +76,24 @@ var xgboostUrl =
     ?? Env.GetString("XGBOOST_API_URL")
     ?? "http://127.0.0.1:8000";
 
+// Purchasing AI base URL — configurable via appsettings or environment variable.
+// Environment variable name: ExternalServices__PurchasingAIBaseUrl
+// Falls back to the XGBoost URL so existing behaviour is preserved when the
+// new key is absent (e.g. older deployments that haven't set the env var yet).
+var purchasingAIBaseUrl =
+    configuration["ExternalServices:PurchasingAIBaseUrl"]
+    ?? Environment.GetEnvironmentVariable("ExternalServices__PurchasingAIBaseUrl")
+    ?? xgboostUrl;
+
+// Inventory AI base URL — points to the demand-forecast Railway service.
+// Environment variable name: ExternalServices__InventoryAIBaseUrl
+// Falls back to the shared xgboostUrl only as a last resort so older
+// deployments without this env var don't crash at startup.
+var inventoryAIBaseUrl =
+    configuration["ExternalServices:InventoryAIBaseUrl"]
+    ?? Environment.GetEnvironmentVariable("ExternalServices__InventoryAIBaseUrl")
+    ?? "https://trinova-ai-production.up.railway.app";
+
 // ── 3. Validate required configuration at startup ─────────────────────────────
 //      Fail fast with a clear message instead of a cryptic NullReferenceException
 //      or Encoding.GetBytes crash later.
@@ -104,6 +124,8 @@ if (builder.Environment.IsDevelopment())
     Console.WriteLine($"SQL Loaded   : {!string.IsNullOrWhiteSpace(connectionString)}");
     Console.WriteLine($"JWT Loaded   : {!string.IsNullOrWhiteSpace(jwtSecret)}");
     Console.WriteLine($"XGBoost URL  : {xgboostUrl}");
+    Console.WriteLine($"Purchasing AI: {purchasingAIBaseUrl}");
+    Console.WriteLine($"Inventory AI : {inventoryAIBaseUrl}");
 }
 
 // ── PORT binding (Railway sets PORT) ─────────────────────────────────────────
@@ -173,14 +195,33 @@ builder.Services.AddHttpClient("XGBoost", (serviceProvider, client) =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
-// ── 8. ForecastClient – use the same config-driven URL ───────────────────────
-// Performance: Typed HttpClient via IHttpClientFactory for proper connection
-// pooling. Explicit 30 s timeout added — previously inherited the default
-// 100 s which is excessive for a forecast call. BaseAddress preserved.
+// ── ForecastClient — Inventory AI service (trinova-ai-production.up.railway.app) ──
+// Typed HttpClient via IHttpClientFactory for proper connection pooling.
+// BaseAddress now correctly points to InventoryAIBaseUrl, not the Purchasing AI.
+// Timeout is 30 s — InventoryAIService applies its own per-request CTS as well.
 builder.Services.AddHttpClient<ForecastClient>(client =>
 {
-    client.BaseAddress = new Uri(xgboostUrl);
+    client.BaseAddress = new Uri(inventoryAIBaseUrl);
     client.Timeout     = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+// ── IInventoryAIService — typed HttpClient for /api/inventory-ai/* endpoints ──
+// Separate registration from ForecastClient so the two consumers get independent
+// HttpClient instances with their own connection pools and lifecycle management.
+builder.Services.AddHttpClient<IInventoryAIService, InventoryAIService>(client =>
+{
+    client.BaseAddress = new Uri(inventoryAIBaseUrl);
+    client.Timeout     = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+// ── IPurchasingAIService — typed HttpClient for /api/purchasing-ai/* endpoints ─
+builder.Services.AddHttpClient<IPurchasingAIService, PurchasingAIService>(client =>
+{
+    client.BaseAddress = new Uri(purchasingAIBaseUrl);
+    client.Timeout     = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
 builder.Services.AddScoped<MasterProductSubcategoryRepo>();
