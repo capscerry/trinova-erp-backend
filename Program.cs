@@ -240,9 +240,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowCors", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy
+            .WithOrigins(
+                "http://localhost:3000",
+                "https://trinova-erp-frontend-mu.vercel.app")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -369,6 +373,38 @@ if (!app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
 }
+
+// ── Global exception handler ──────────────────────────────────────────────────
+// MUST be registered AFTER UseCors so that CORS headers written by the CORS
+// middleware survive when an unhandled exception occurs.  Without this, Kestrel
+// returns a raw 500 with no CORS headers and the browser reports a CORS error
+// even though CORS is correctly configured.
+app.UseExceptionHandler(errApp =>
+{
+    errApp.Run(async ctx =>
+    {
+        var feature = ctx.Features
+            .Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        var ex = feature?.Error;
+
+        var logger = ctx.RequestServices
+            .GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Unhandled exception on {Method} {Path}",
+            ctx.Request.Method, ctx.Request.Path);
+
+        ctx.Response.StatusCode  = StatusCodes.Status500InternalServerError;
+        ctx.Response.ContentType = "application/json";
+
+        await ctx.Response.WriteAsJsonAsync(new
+        {
+            error   = "An unexpected server error occurred.",
+            detail  = app.Environment.IsDevelopment() ? ex?.ToString() : null,
+            path    = ctx.Request.Path.Value,
+            traceId = System.Diagnostics.Activity.Current?.Id
+                      ?? ctx.TraceIdentifier
+        });
+    });
+});
 
 app.UseCors("AllowCors");
 
