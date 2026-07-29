@@ -232,6 +232,7 @@ builder.Services.AddScoped<OrderFulfillmentUsecase>();
 builder.Services.AddScoped<DemandForecastUsecase>();
 builder.Services.AddScoped<PurchaseRequisitionDetailRepo>();
 builder.Services.AddScoped<InventoryDashboardUsecase>();
+builder.Services.AddScoped<ForecastDatasetRepo>();
 
 // ── Single call to AddControllers ────────────────────────────────────────────
 builder.Services.AddControllers();

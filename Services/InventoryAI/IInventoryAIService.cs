@@ -13,12 +13,24 @@ namespace trinova_erp_backend.Services.InventoryAI
     ///   - Failures are logged and surfaced through InventoryAiApiResponse.
     ///   - Existing Inventory business logic (stock, transactions, warehouses) is
     ///     never affected by AI failures.
+    ///
+    /// API contract (new):
+    ///   POST /forecast  — body: ForecastRequest { items: [...] }
+    ///                   — response: ForecastResponse[]
+    ///
+    /// The service fetches the training dataset from SQL Server via
+    /// ForecastDatasetRepo before every AI call so the model always
+    /// receives fresh data.
     /// </summary>
     public interface IInventoryAIService
     {
         /// <summary>
-        /// Calls GET /forecast on the Railway AI service and returns the raw
-        /// forecast list. Applies optional product-ID filter and top-N cap.
+        /// Fetches the forecast dataset from SQL Server, POSTs it to
+        /// POST /forecast on the Railway AI service, and returns the
+        /// forecast list.
+        ///
+        /// Applies optional product-ID filter and top-N cap after receiving
+        /// the AI response.
         ///
         /// On failure returns a failed InventoryAiApiResponse — never throws.
         /// </summary>
@@ -29,8 +41,9 @@ namespace trinova_erp_backend.Services.InventoryAI
 
         /// <summary>
         /// Returns the forecast for a single product by ID.
-        /// Fetches the full forecast list internally and filters to the requested
-        /// product — the AI service has no per-product endpoint.
+        /// Fetches the full forecast list internally (via POST /forecast) and
+        /// filters to the requested product — the AI service has no per-product
+        /// endpoint.
         ///
         /// Returns a failed response when the product is not found.
         /// Never throws.

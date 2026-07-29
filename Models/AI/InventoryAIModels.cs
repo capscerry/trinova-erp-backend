@@ -1,12 +1,38 @@
 using System.Text.Json.Serialization;
+using trinova_erp_backend.Models.Persediaan;
 
 namespace trinova_erp_backend.Models.AI
 {
-    // ─── Forecast response — matches GET /forecast ForecastResponse schema exactly ─
+    // ─── Forecast request — matches POST /forecast ForecastRequest schema exactly ──
 
     /// <summary>
-    /// Strongly typed response from GET /forecast.
-    /// Field names match the FastAPI ForecastResponse schema discovered via /openapi.json.
+    /// Payload sent to POST /forecast on the Railway Inventory AI service.
+    ///
+    /// Python schema (FastAPI):
+    ///   class ForecastItem(BaseModel):
+    ///       product_id:   int
+    ///       product_name: str
+    ///       tahun:        int
+    ///       bulan:        int
+    ///       total_usage:  float
+    ///
+    ///   class ForecastRequest(BaseModel):
+    ///       items: List[ForecastItem]
+    ///
+    /// The items list is built from ForecastDatasetRepo.GetForecastDatasetAsync()
+    /// before every AI call so the model always trains on fresh SQL Server data.
+    /// </summary>
+    public class ForecastRequest
+    {
+        [JsonPropertyName("items")]
+        public List<ForecastDatasetItem> Items { get; set; } = new();
+    }
+
+    // ─── Forecast response — matches POST /forecast ForecastResponse schema exactly ─
+
+    /// <summary>
+    /// Strongly typed response from POST /forecast.
+    /// Field names match the FastAPI ForecastResponse schema.
     /// </summary>
     public class InventoryForecastItem
     {

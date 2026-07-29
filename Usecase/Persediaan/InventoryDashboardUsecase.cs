@@ -5,24 +5,28 @@ namespace trinova_erp_backend.Usecase.Persediaan
 {
     public class InventoryDashboardUsecase
     {
-        private readonly InventoryStockRepo _stockRepo;
-        private readonly ForecastClient _forecastClient;
-        private readonly MasterProductRepo _productRepo;
+        private readonly InventoryStockRepo  _stockRepo;
+        private readonly ForecastClient      _forecastClient;
+        private readonly MasterProductRepo   _productRepo;
+        private readonly ForecastDatasetRepo _datasetRepo;
 
         public InventoryDashboardUsecase(
-            InventoryStockRepo stockRepo,
-            ForecastClient forecastClient,
-            MasterProductRepo productRepo)
+            InventoryStockRepo  stockRepo,
+            ForecastClient      forecastClient,
+            MasterProductRepo   productRepo,
+            ForecastDatasetRepo datasetRepo)
         {
-            _stockRepo = stockRepo;
+            _stockRepo      = stockRepo;
             _forecastClient = forecastClient;
-            _productRepo = productRepo;
+            _productRepo    = productRepo;
+            _datasetRepo    = datasetRepo;
         }
 
         public async Task<InventoryDashboard> GetDashboard()
         {
-            var stocks = await _stockRepo.GetAllAsync();
-            var forecasts = await _forecastClient.GetForecast();
+            var stocks  = await _stockRepo.GetAllAsync();
+            var dataset = await _datasetRepo.GetForecastDatasetAsync();
+            var forecasts = await _forecastClient.PostForecast(dataset);
 
             if (!forecasts.Any())
             {

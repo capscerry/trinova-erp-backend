@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Net.Http.Json;
 using System.Text.Json;
+using trinova_erp_backend.Models.AI;
 using trinova_erp_backend.Models.Persediaan;
 
 namespace trinova_erp_backend.Repositories.Persediaan
@@ -8,25 +10,32 @@ namespace trinova_erp_backend.Repositories.Persediaan
     /// Low-level HTTP client for the Railway Inventory AI service.
     /// Used internally by DemandForecastUsecase and InventoryDashboardUsecase.
     ///
+    /// Updated API contract:
+    ///   POST /forecast — body: ForecastRequest { items: [...] }
+    ///                  — response: ForecastResult[]
+    ///
+    /// The caller must supply the dataset (List&lt;ForecastDatasetItem&gt;) which is
+    /// built from ForecastDatasetRepo before this method is invoked.
+    ///
     /// CRITICAL: DemandForecastUsecase and InventoryDashboardUsecase depend on this
     /// class — their signatures must never change.  This class wraps all HTTP calls
     /// with full exception handling so that Inventory business logic always receives
     /// either a valid list or an empty list, and never throws.
     ///
-    /// The new IInventoryAIService (Services/InventoryAI/) handles the public-facing
+    /// The IInventoryAIService (Services/InventoryAI/) handles the public-facing
     /// API endpoints (/api/inventory-ai/*) independently of this class.
     /// </summary>
     public class ForecastClient
     {
-        private readonly HttpClient                 _httpClient;
-        private readonly ILogger<ForecastClient>    _logger;
+        private readonly HttpClient              _httpClient;
+        private readonly ILogger<ForecastClient> _logger;
 
         private static readonly JsonSerializerOptions _jsonOpts = new()
         {
             PropertyNameCaseInsensitive = true
         };
 
-        // Retry delays for GetForecast: 1 s → 2 s → 4 s
+        // Retry delays for PostForecast: 1 s → 2 s → 4 s
         private static readonly TimeSpan[] _retryDelays =
         [
             TimeSpan.FromSeconds(1),
@@ -41,40 +50,58 @@ namespace trinova_erp_backend.Repositories.Persediaan
         }
 
         /// <summary>
-        /// Fetches the demand forecast from GET /forecast.
+        /// Sends the forecast dataset to POST /forecast and returns the AI response.
         ///
-        /// Returns an empty list when the AI service is unavailable — this keeps
-        /// InventoryDashboardUsecase and DemandForecastUsecase working normally.
+        /// The <paramref name="dataset"/> must be fetched from
+        /// <see cref="ForecastDatasetRepo.GetForecastDatasetAsync"/> by the caller
+        /// before invoking this method.
+        ///
+        /// Returns an empty list when:
+        ///   - The dataset is null or empty (no data to send).
+        ///   - The AI service is unavailable.
+        ///
+        /// This keeps DemandForecastUsecase and InventoryDashboardUsecase working
+        /// normally even when the AI service is down.
         /// Never throws; all failures are logged as warnings.
         ///
         /// Retry policy: exponential backoff, up to 3 retries (1 s, 2 s, 4 s).
         /// Timeout: 30 seconds per attempt.
         /// </summary>
-        public async Task<List<ForecastResult>> GetForecast()
+        public async Task<List<ForecastResult>> PostForecast(
+            List<ForecastDatasetItem> dataset)
         {
-            var sw = Stopwatch.StartNew();
+            if (dataset is null || dataset.Count == 0)
+            {
+                _logger.LogWarning(
+                    "Inventory AI (ForecastClient): PostForecast called with empty dataset — skipping AI call.");
+                return new List<ForecastResult>();
+            }
+
+            var payload = new ForecastRequest { Items = dataset };
+            var sw      = Stopwatch.StartNew();
 
             for (int attempt = 0; attempt <= _retryDelays.Length; attempt++)
             {
                 try
                 {
                     _logger.LogInformation(
-                        "Inventory AI (ForecastClient) → GET /forecast (attempt {Attempt})",
-                        attempt + 1);
+                        "Inventory AI (ForecastClient) → POST /forecast (attempt {Attempt}), {Count} rows",
+                        attempt + 1, dataset.Count);
 
                     using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 
-                    var response = await _httpClient.GetAsync("/forecast", cts.Token);
+                    var response = await _httpClient.PostAsJsonAsync(
+                        "/forecast", payload, _jsonOpts, cts.Token);
 
                     sw.Stop();
                     _logger.LogInformation(
-                        "Inventory AI (ForecastClient) ← /forecast | Status: {Status} | Elapsed: {Elapsed} ms",
+                        "Inventory AI (ForecastClient) ← POST /forecast | Status: {Status} | Elapsed: {Elapsed} ms",
                         (int)response.StatusCode, sw.ElapsedMilliseconds);
 
                     if (!response.IsSuccessStatusCode)
                     {
                         _logger.LogWarning(
-                            "Inventory AI (ForecastClient): /forecast returned HTTP {Status}. Elapsed: {Elapsed} ms",
+                            "Inventory AI (ForecastClient): POST /forecast returned HTTP {Status}. Elapsed: {Elapsed} ms",
                             (int)response.StatusCode, sw.ElapsedMilliseconds);
 
                         // 5xx — retry; 4xx — don't retry
@@ -88,8 +115,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                         return new List<ForecastResult>();
                     }
 
-                    var json = await response.Content.ReadAsStringAsync();
-
+                    var json   = await response.Content.ReadAsStringAsync();
                     var result = JsonSerializer.Deserialize<List<ForecastResult>>(json, _jsonOpts);
 
                     return result ?? new List<ForecastResult>();
@@ -98,7 +124,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 {
                     sw.Stop();
                     _logger.LogWarning(
-                        "Inventory AI (ForecastClient): /forecast timed out after {Elapsed} ms. Attempt {Attempt}/{Max}",
+                        "Inventory AI (ForecastClient): POST /forecast timed out after {Elapsed} ms. Attempt {Attempt}/{Max}",
                         sw.ElapsedMilliseconds, attempt + 1, _retryDelays.Length + 1);
 
                     if (attempt < _retryDelays.Length)
@@ -115,7 +141,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     sw.Stop();
                     _logger.LogWarning(
                         ex,
-                        "Inventory AI (ForecastClient): connectivity error on /forecast. Attempt {Attempt}/{Max}. Elapsed: {Elapsed} ms",
+                        "Inventory AI (ForecastClient): connectivity error on POST /forecast. Attempt {Attempt}/{Max}. Elapsed: {Elapsed} ms",
                         attempt + 1, _retryDelays.Length + 1, sw.ElapsedMilliseconds);
 
                     if (attempt < _retryDelays.Length)
@@ -132,7 +158,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     sw.Stop();
                     _logger.LogError(
                         ex,
-                        "Inventory AI (ForecastClient): unexpected error on /forecast. Elapsed: {Elapsed} ms",
+                        "Inventory AI (ForecastClient): unexpected error on POST /forecast. Elapsed: {Elapsed} ms",
                         sw.ElapsedMilliseconds);
 
                     // Non-transient — do not retry

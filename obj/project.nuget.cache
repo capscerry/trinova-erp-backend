@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "dwhQx3XbfYU4LXJQsg6uzCJKMmVhwxJAHYB5Qmc6vC6UcOJypwIXtQm7QVsanuYl1W6gSxZRuj3pWLeAtJJCdg==",
+  "dgSpecHash": "CUNh0bOkiiStKI/I14xct5Hi0xvzeE70XBaHS9XbdKa3AqwejhaTltZnK0Pyi5URbJTrMEJxygsplILmcgjlkA==",
   "success": true,
-  "projectFilePath": "c:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
+  "projectFilePath": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Davina\\.nuget\\packages\\azure.core\\1.25.0\\azure.core.1.25.0.nupkg.sha512",
     "C:\\Users\\Davina\\.nuget\\packages\\azure.identity\\1.7.0\\azure.identity.1.7.0.nupkg.sha512",

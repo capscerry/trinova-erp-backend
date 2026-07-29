@@ -1,6 +1,8 @@
 using System.Diagnostics;
+using System.Net.Http.Json;
 using System.Text.Json;
 using trinova_erp_backend.Models.AI;
+using trinova_erp_backend.Repositories.Persediaan;
 
 namespace trinova_erp_backend.Services.InventoryAI
 {
@@ -8,24 +10,30 @@ namespace trinova_erp_backend.Services.InventoryAI
     /// Handles all HTTP communication between the ASP.NET Core backend and the
     /// Railway Inventory AI service (trinova-ai-production.up.railway.app).
     ///
-    /// Discovered endpoints (from GET /openapi.json):
-    ///   GET /        — liveness probe, returns {"message": "..."}
-    ///   GET /forecast — returns ForecastResponse[]
+    /// Updated API contract:
+    ///   POST /forecast — body: ForecastRequest { items: [...] }
+    ///                  — response: ForecastResponse[]
     ///
-    /// Responsibilities:
-    ///   - HTTP communication via IHttpClientFactory (injected typed client)
-    ///   - JSON deserialisation with case-insensitive matching
-    ///   - Exponential-backoff retry for transient failures (1 s → 2 s → 4 s)
-    ///   - 30-second timeout per call
+    /// Before every AI call this service:
+    ///   1. Queries SQL Server via ForecastDatasetRepo to build the training dataset.
+    ///   2. Wraps the dataset in a ForecastRequest.
+    ///   3. POSTs the payload to the AI service.
+    ///   4. Deserialises the returned ForecastResponse[].
+    ///
+    /// Preserved behaviours:
+    ///   - Exponential-backoff retry (1 s → 2 s → 4 s, max 3 retries)
+    ///   - 30-second timeout per attempt
     ///   - Structured logging on every request and failure
     ///   - Graceful fallback — AI errors never propagate as HTTP 500
     ///   - Input validation before making network calls
+    ///   - Health check via GET /
     /// </summary>
     public class InventoryAIService : IInventoryAIService
     {
         private readonly HttpClient                  _httpClient;
         private readonly ILogger<InventoryAIService> _logger;
-        private readonly IConfiguration             _configuration;
+        private readonly IConfiguration              _configuration;
+        private readonly ForecastDatasetRepo         _datasetRepo;
 
         // Case-insensitive deserialiser to handle FastAPI camelCase/snake_case responses.
         private static readonly JsonSerializerOptions _jsonOpts = new()
@@ -47,11 +55,13 @@ namespace trinova_erp_backend.Services.InventoryAI
         public InventoryAIService(
             HttpClient                  httpClient,
             ILogger<InventoryAIService> logger,
-            IConfiguration             configuration)
+            IConfiguration              configuration,
+            ForecastDatasetRepo         datasetRepo)
         {
             _httpClient    = httpClient;
             _logger        = logger;
             _configuration = configuration;
+            _datasetRepo   = datasetRepo;
         }
 
         // ── Public interface ──────────────────────────────────────────────────────
@@ -62,7 +72,7 @@ namespace trinova_erp_backend.Services.InventoryAI
             int?              topN              = null,
             CancellationToken cancellationToken = default)
         {
-            // ── Validation (reject invalid inputs before making a network call) ──
+            // ── Input validation (reject invalid inputs before any I/O) ───────────
             if (productIdFilter is not null)
             {
                 var invalid = productIdFilter.Where(id => id <= 0).ToList();
@@ -83,15 +93,49 @@ namespace trinova_erp_backend.Services.InventoryAI
                     $"topN must be between 1 and {MaxTopN}.");
             }
 
-            // ── Fetch from AI ─────────────────────────────────────────────────────
-            var result = await GetAsync<List<InventoryForecastItem>>("/forecast", cancellationToken);
+            // ── Build dataset from SQL Server ─────────────────────────────────────
+            ForecastRequest payload;
+            try
+            {
+                _logger.LogInformation(
+                    "Inventory AI: querying SQL Server for forecast dataset via ForecastDatasetRepo.");
+
+                var dataset = await _datasetRepo.GetForecastDatasetAsync();
+
+                if (dataset.Count == 0)
+                {
+                    _logger.LogWarning(
+                        "Inventory AI: forecast dataset is empty — no OUT transactions found in stock_transaction.");
+
+                    return InventoryAiApiResponse<List<InventoryForecastItem>>.Fail(
+                        "No stock usage data available to generate a forecast.");
+                }
+
+                payload = new ForecastRequest { Items = dataset };
+
+                _logger.LogInformation(
+                    "Inventory AI: dataset built. {Count} rows will be sent to POST /forecast.",
+                    dataset.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Inventory AI: failed to retrieve forecast dataset from SQL Server.");
+
+                return InventoryAiApiResponse<List<InventoryForecastItem>>.Fail(
+                    "Failed to retrieve inventory data from the database.");
+            }
+
+            // ── POST to AI service ────────────────────────────────────────────────
+            var result = await PostAsync<ForecastRequest, List<InventoryForecastItem>>(
+                "/forecast", payload, cancellationToken);
 
             if (!result.success || result.data is null)
                 return result;
 
             var items = result.data;
 
-            // ── Apply optional filter ─────────────────────────────────────────────
+            // ── Apply optional product-ID filter ──────────────────────────────────
             if (productIdFilter is { Count: > 0 })
             {
                 var filterSet = new HashSet<int>(productIdFilter);
@@ -129,8 +173,11 @@ namespace trinova_erp_backend.Services.InventoryAI
                     "Product ID must be ≥ 1.");
             }
 
-            // ── Fetch full list, then filter ──────────────────────────────────────
-            var allResult = await GetAsync<List<InventoryForecastItem>>("/forecast", cancellationToken);
+            // ── Fetch full list via POST /forecast, then filter ───────────────────
+            var allResult = await GetForecastAsync(
+                productIdFilter: null,
+                topN:            null,
+                cancellationToken);
 
             if (!allResult.success || allResult.data is null)
             {
@@ -207,11 +254,12 @@ namespace trinova_erp_backend.Services.InventoryAI
             }
         }
 
-        // ── Core HTTP GET helper with retry + timeout + logging ───────────────────
+        // ── Core HTTP POST helper with retry + timeout + logging ──────────────────
 
         /// <summary>
-        /// GETs <paramref name="endpoint"/> from the AI service and deserialises
-        /// the JSON response as <typeparamref name="TResponse"/>.
+        /// POSTs <paramref name="body"/> as JSON to <paramref name="endpoint"/> on
+        /// the AI service and deserialises the response as
+        /// <typeparamref name="TResponse"/>.
         ///
         /// Retry policy — exponential backoff, transient errors only:
         ///   Attempt 1 — immediate
@@ -223,9 +271,11 @@ namespace trinova_erp_backend.Services.InventoryAI
         /// Timeout and connectivity failures are caught and returned as a failed
         /// InventoryAiApiResponse — never re-thrown to the caller.
         /// </summary>
-        private async Task<InventoryAiApiResponse<TResponse>> GetAsync<TResponse>(
+        private async Task<InventoryAiApiResponse<TResponse>> PostAsync<TBody, TResponse>(
             string            endpoint,
+            TBody             body,
             CancellationToken cancellationToken)
+            where TBody     : class
             where TResponse : class
         {
             var sw = Stopwatch.StartNew();
@@ -235,26 +285,26 @@ namespace trinova_erp_backend.Services.InventoryAI
                 try
                 {
                     _logger.LogInformation(
-                        "Inventory AI → calling {Endpoint} (attempt {Attempt})",
+                        "Inventory AI → POST {Endpoint} (attempt {Attempt})",
                         endpoint, attempt + 1);
 
                     using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                     cts.CancelAfter(TimeSpan.FromSeconds(30));
 
-                    var response = await _httpClient.GetAsync(endpoint, cts.Token);
+                    var response = await _httpClient.PostAsJsonAsync(endpoint, body, _jsonOpts, cts.Token);
 
                     sw.Stop();
                     _logger.LogInformation(
-                        "Inventory AI ← {Endpoint} | Status: {Status} | Elapsed: {Elapsed} ms",
+                        "Inventory AI ← POST {Endpoint} | Status: {Status} | Elapsed: {Elapsed} ms",
                         endpoint, (int)response.StatusCode, sw.ElapsedMilliseconds);
 
-                    // 4xx from FastAPI — do not retry (bad request, not found, etc.)
+                    // 4xx from FastAPI — do not retry (bad request, validation error, etc.)
                     if ((int)response.StatusCode is >= 400 and < 500)
                     {
-                        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                        var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
                         _logger.LogWarning(
-                            "Inventory AI client error at {Endpoint} (HTTP {Status}): {Body}",
-                            endpoint, (int)response.StatusCode, body);
+                            "Inventory AI client error at POST {Endpoint} (HTTP {Status}): {Body}",
+                            endpoint, (int)response.StatusCode, errorBody);
 
                         return InventoryAiApiResponse<TResponse>.Fail(
                             $"Inventory AI service returned a client error: HTTP {(int)response.StatusCode}.");
@@ -263,10 +313,10 @@ namespace trinova_erp_backend.Services.InventoryAI
                     // 5xx — transient, retry
                     if (!response.IsSuccessStatusCode)
                     {
-                        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                        var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
                         _logger.LogWarning(
-                            "Inventory AI server error at {Endpoint} (HTTP {Status}): {Body}",
-                            endpoint, (int)response.StatusCode, body);
+                            "Inventory AI server error at POST {Endpoint} (HTTP {Status}): {Body}",
+                            endpoint, (int)response.StatusCode, errorBody);
 
                         if (attempt < _retryDelays.Length)
                         {
@@ -293,10 +343,10 @@ namespace trinova_erp_backend.Services.InventoryAI
                 }
                 catch (TaskCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    // Client cancelled the request — do not retry, do not log as error
+                    // Client cancelled — do not retry, do not log as error
                     sw.Stop();
                     _logger.LogInformation(
-                        "Inventory AI request to {Endpoint} was cancelled by the client.", endpoint);
+                        "Inventory AI request to POST {Endpoint} was cancelled by the client.", endpoint);
 
                     return InventoryAiApiResponse<TResponse>.Fail(
                         "Request was cancelled.");
@@ -306,7 +356,7 @@ namespace trinova_erp_backend.Services.InventoryAI
                     // Our 30-second timeout fired
                     sw.Stop();
                     _logger.LogWarning(
-                        "Inventory AI timeout at {Endpoint} after {Elapsed} ms. Attempt {Attempt}/{Max}",
+                        "Inventory AI timeout at POST {Endpoint} after {Elapsed} ms. Attempt {Attempt}/{Max}",
                         endpoint, sw.ElapsedMilliseconds, attempt + 1, _retryDelays.Length + 1);
 
                     if (attempt < _retryDelays.Length)
@@ -324,7 +374,7 @@ namespace trinova_erp_backend.Services.InventoryAI
                     sw.Stop();
                     _logger.LogWarning(
                         ex,
-                        "Inventory AI connectivity error at {Endpoint}. Attempt {Attempt}/{Max}. Elapsed: {Elapsed} ms",
+                        "Inventory AI connectivity error at POST {Endpoint}. Attempt {Attempt}/{Max}. Elapsed: {Elapsed} ms",
                         endpoint, attempt + 1, _retryDelays.Length + 1, sw.ElapsedMilliseconds);
 
                     if (attempt < _retryDelays.Length)
@@ -343,7 +393,7 @@ namespace trinova_erp_backend.Services.InventoryAI
                     // Non-transient — do not retry, never expose stack trace
                     _logger.LogError(
                         ex,
-                        "Inventory AI unexpected error at {Endpoint}. Elapsed: {Elapsed} ms",
+                        "Inventory AI unexpected error at POST {Endpoint}. Elapsed: {Elapsed} ms",
                         endpoint, sw.ElapsedMilliseconds);
 
                     return InventoryAiApiResponse<TResponse>.Fail(
