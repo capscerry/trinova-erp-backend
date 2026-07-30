@@ -373,6 +373,30 @@ builder.Services
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<MasterProductSubcategoryRepo>();
+builder.Services.AddScoped<MasterProductSubcategoryUsecase>();
+builder.Services.AddScoped<StockMovementRepo>();
+builder.Services.AddScoped<StockTransferUsecase>();
+builder.Services.AddScoped<OrderFulfillmentUsecase>();
+builder.Services.AddHttpClient<ForecastClient>(client =>{client.BaseAddress = new Uri("http://127.0.0.1:8000");});
+builder.Services.AddScoped<DemandForecastUsecase>();
+builder.Services.AddScoped<ForecastExcelExporter>();
+builder.Services.AddScoped<PurchaseRequisitionDetailRepo>();
+builder.Services.AddScoped<StockTransactionRepo>();
+builder.Services.AddScoped<StockTransferUsecase>();
+builder.Services.AddScoped<InventoryDashboardUsecase>();
+builder.Services.AddScoped<InventoryStockRepo>();
+builder.Services.AddScoped<MasterProductRepo>();
+builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowCors", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 

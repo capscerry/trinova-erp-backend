@@ -49,26 +49,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
             _logger     = logger;
         }
 
-        /// <summary>
-        /// Sends the forecast dataset to POST /forecast and returns the AI response.
-        ///
-        /// The <paramref name="dataset"/> must be fetched from
-        /// <see cref="ForecastDatasetRepo.GetForecastDatasetAsync"/> by the caller
-        /// before invoking this method.
-        ///
-        /// Returns an empty list when:
-        ///   - The dataset is null or empty (no data to send).
-        ///   - The AI service is unavailable.
-        ///
-        /// This keeps DemandForecastUsecase and InventoryDashboardUsecase working
-        /// normally even when the AI service is down.
-        /// Never throws; all failures are logged as warnings.
-        ///
-        /// Retry policy: exponential backoff, up to 3 retries (1 s, 2 s, 4 s).
-        /// Timeout: 30 seconds per attempt.
-        /// </summary>
-        public async Task<List<ForecastResult>> PostForecast(
-            List<ForecastDatasetItem> dataset)
+        public async Task<List<ForecastResult>> GetRealtimeForecast()
         {
             if (dataset is null || dataset.Count == 0)
             {
@@ -167,6 +148,35 @@ namespace trinova_erp_backend.Repositories.Persediaan
             }
 
             return new List<ForecastResult>();
+        }
+        public async Task GenerateMonthlyForecast()
+        {
+            var response = await _httpClient.PostAsync(
+                "/forecast/monthly/generate",
+                null
+            );
+
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task<List<ForecastResult>> GetLatestMonthlyForecast()
+        {
+            var response = await _httpClient.GetAsync(
+                "/forecast/monthly/latest"
+            );
+
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+
+            var result = JsonSerializer.Deserialize<List<ForecastResult>>(
+                json,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            return result ?? new List<ForecastResult>();
         }
     }
 }

@@ -20,15 +20,10 @@ namespace trinova_erp_backend.Controllers.Persediaan
             _logger  = logger;
         }
 
-        // ── CORS preflight ────────────────────────────────────────────────────
-        // When [Authorize] is on the controller, ASP.NET Core's JwtBearer
-        // middleware challenges OPTIONS preflight requests with 401 before the
-        // CORS middleware can write the Access-Control-Allow-* headers.
-        // This explicit OPTIONS handler is marked [AllowAnonymous] so that
-        // preflight succeeds and the browser receives correct CORS headers.
-        [HttpOptions]
-        [AllowAnonymous]
-        public IActionResult Preflight() => NoContent();
+        // [HttpGet]
+        // public async Task<IActionResult> GetForecast()
+        // {
+        //     var result = await _usecase.GetRealtimeForecast();
 
         [HttpGet]
         public async Task<IActionResult> GetForecast()
@@ -63,6 +58,37 @@ namespace trinova_erp_backend.Controllers.Persediaan
                     traceId = HttpContext.TraceIdentifier
                 });
             }
+        }
+
+        [HttpPost("generate")]
+        public async Task<IActionResult> GenerateMonthlyForecast()
+        {
+            await _usecase.GenerateMonthlyForecast();
+
+            return Ok(new
+            {
+                message = "Monthly forecast generated successfully."
+            });
+        }
+
+        [HttpGet("latest")]
+        public async Task<IActionResult> GetLatestForecast()
+        {
+            var result = await _usecase.GetLatestMonthlyForecast();
+
+            return Ok(result);
+        }
+
+        [HttpGet("download")]
+        public async Task<IActionResult> DownloadForecast()
+        {
+            var fileBytes = await _usecase.DownloadForecast();
+
+            return File(
+                fileBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"DemandForecast_{DateTime.Now:yyyyMMdd}.xlsx"
+            );
         }
     }
 }
