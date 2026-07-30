@@ -99,67 +99,57 @@ namespace trinova_erp_backend.Repositories.Pembelian
         public async Task<string>
             GenerateSupplierCode()
         {
-            // Find the highest numeric suffix across ALL well-formed SUP- codes,
-            // then keep incrementing until we land on a code that doesn't yet
-            // exist in the table.  This handles gaps and out-of-sequence rows
-            // left by manual inserts or failed migrations.
-            const string maxQuery = @"
-                SELECT ISNULL(
-                    (
-                        SELECT MAX(
-                            CAST(SUBSTRING(supplier_code, 5, 10) AS BIGINT)
-                        )
-                        FROM master_supplier
-                        WHERE supplier_code LIKE
-                            'SUP-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
-                    ),
-                    (
-                        SELECT MAX(supplier_id)
-                        FROM master_supplier
-                    )
-                )";
+            // Atomically increment the counter table inside a SERIALIZABLE
+            // transaction with UPDLOCK + HOLDLOCK. This guarantees that
+            // concurrent sessions queue up behind the lock — no two
+            // sessions can ever read the same counter value.
+            //
+            // Strategy:
+            // 1. Start SERIALIZABLE transaction
+            // 2. Read counter row WITH (UPDLOCK, HOLDLOCK)
+            // 3. Increment counter
+            // 4. Update counter table
+            // 5. Commit
+            // 6. Format as SUP-XXXXXXXXXX
 
-            const string existsQuery = @"
-                SELECT COUNT(1)
-                FROM master_supplier
-                WHERE supplier_code = @code";
+            const string incrementQuery = @"
+                SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+                BEGIN TRANSACTION;
+
+                DECLARE @next BIGINT;
+
+                -- Lock the counter row to prevent concurrent reads
+                SELECT @next = last_value + 1
+                FROM   dbo.supplier_code_counter WITH (UPDLOCK, HOLDLOCK)
+                WHERE  id = 1;
+
+                -- Persist the incremented value
+                UPDATE dbo.supplier_code_counter
+                SET    last_value = @next
+                WHERE  id = 1;
+
+                COMMIT TRANSACTION;
+
+                -- Return the new code
+                SELECT 'SUP-' + RIGHT('0000000000' + CAST(@next AS NVARCHAR(20)), 10);
+            ";
 
             using SqlConnection connection =
                 new SqlConnection(_connectionString);
 
             await connection.OpenAsync();
 
-            long nextNumber;
+            using var cmd = new SqlCommand(incrementQuery, connection);
+            
+            object? result = await cmd.ExecuteScalarAsync();
+            
+            if (result == null || result == DBNull.Value)
+                throw new InvalidOperationException(
+                    "Failed to generate supplier code: counter table may not be initialized. " +
+                    "Run Migrations/add_supplier_code_sequence.sql first."
+                );
 
-            using (var cmd = new SqlCommand(maxQuery, connection))
-            {
-                object? result = await cmd.ExecuteScalarAsync();
-                nextNumber = (result != null && result != DBNull.Value)
-                    ? Convert.ToInt64(result) + 1
-                    : 1;
-            }
-
-            // Advance past any codes that already exist (handles duplicates
-            // caused by manual inserts or out-of-sequence data).
-            using (var cmd = new SqlCommand(existsQuery, connection))
-            {
-                cmd.Parameters.Add("@code", System.Data.SqlDbType.NVarChar, 20);
-
-                while (true)
-                {
-                    string candidate = $"SUP-{nextNumber:D10}";
-                    cmd.Parameters["@code"].Value = candidate;
-
-                    int count = Convert.ToInt32(
-                        await cmd.ExecuteScalarAsync()
-                    );
-
-                    if (count == 0)
-                        return candidate;
-
-                    nextNumber++;
-                }
-            }
+            return result.ToString()!;
         }
 
         // ─── INSERT ─────────────────────────────
@@ -197,13 +187,35 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 Supplier model
             )
         {
-            // Always ensure a properly formatted code is stored
-            model.supplier_code = string.IsNullOrWhiteSpace(model.supplier_code)
-                ? await GenerateSupplierCode()
-                : FormatSupplierCode(model.supplier_code);
+            // If the caller provided a code, format it; otherwise generate
+            // one atomically inside the same transaction as the INSERT.
+            // This eliminates the race window — code generation + INSERT
+            // happen in a single SERIALIZABLE transaction.
+            bool needsGeneration = string.IsNullOrWhiteSpace(model.supplier_code);
 
-            const string query = @"
+            if (!needsGeneration)
+            {
+                model.supplier_code = FormatSupplierCode(model.supplier_code);
+            }
 
+            const string insertWithGeneratedCode = @"
+                SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+                BEGIN TRANSACTION;
+
+                -- Atomically increment the counter
+                DECLARE @next BIGINT;
+                SELECT @next = last_value + 1
+                FROM   dbo.supplier_code_counter WITH (UPDLOCK, HOLDLOCK)
+                WHERE  id = 1;
+
+                UPDATE dbo.supplier_code_counter
+                SET    last_value = @next
+                WHERE  id = 1;
+
+                DECLARE @generatedCode NVARCHAR(20);
+                SET @generatedCode = 'SUP-' + RIGHT('0000000000' + CAST(@next AS NVARCHAR(20)), 10);
+
+                -- Insert the supplier row with the generated code
                 INSERT INTO master_supplier
                 (
                     supplier_code,
@@ -214,7 +226,36 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     email,
                     status
                 )
+                VALUES
+                (
+                    @generatedCode,
+                    @supplier_name,
+                    @category_supplier,
+                    @no_telp_bisnis,
+                    @alamat,
+                    @email,
+                    @status
+                );
 
+                DECLARE @newId INT = CAST(SCOPE_IDENTITY() AS INT);
+
+                COMMIT TRANSACTION;
+
+                -- Return both the new ID and the generated code
+                SELECT @newId AS supplier_id, @generatedCode AS supplier_code;
+            ";
+
+            const string insertWithProvidedCode = @"
+                INSERT INTO master_supplier
+                (
+                    supplier_code,
+                    supplier_name,
+                    category_supplier,
+                    no_telp_bisnis,
+                    alamat,
+                    email,
+                    status
+                )
                 VALUES
                 (
                     @supplier_code,
@@ -226,88 +267,59 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     @status
                 );
 
-                SELECT CAST(
-                    SCOPE_IDENTITY()
-                    AS INT
-                );
+                SELECT CAST(SCOPE_IDENTITY() AS INT);
             ";
 
             try
             {
-                using (
-                    SqlConnection connection =
-                        new SqlConnection(
-                            _connectionString
-                        )
-                )
+                using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
 
-                using (
-                    SqlCommand command =
-                        new SqlCommand(
-                            query,
-                            connection
-                        )
-                )
+                if (needsGeneration)
                 {
-                    await connection.OpenAsync();
+                    // Path 1: Generate code atomically inside the INSERT transaction
+                    using SqlCommand command = new SqlCommand(insertWithGeneratedCode, connection);
 
-                    command.Parameters.AddWithValue(
-                        "@supplier_code",
-                        model.supplier_code
-                    );
+                    command.Parameters.AddWithValue("@supplier_name", model.supplier_name);
+                    command.Parameters.AddWithValue("@category_supplier", (object?)model.category_supplier ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@no_telp_bisnis", model.no_telp_bisnis ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@alamat", model.alamat ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@email", model.email ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@status", model.status ?? (object)DBNull.Value);
 
-                    command.Parameters.AddWithValue(
-                        "@supplier_name",
-                        model.supplier_name
-                    );
-
-                    command.Parameters.AddWithValue(
-                        "@category_supplier",
-                        (object?)model.category_supplier
-                        ?? DBNull.Value
-                    );
-
-                    command.Parameters.AddWithValue(
-                        "@no_telp_bisnis",
-                        model.no_telp_bisnis
-                        ?? (object)DBNull.Value
-                    );
-
-                    command.Parameters.AddWithValue(
-                        "@alamat",
-                        model.alamat
-                        ?? (object)DBNull.Value
-                    );
-
-                    command.Parameters.AddWithValue(
-                        "@email",
-                        model.email
-                        ?? (object)DBNull.Value
-                    );
-
-                    command.Parameters.AddWithValue(
-                        "@status",
-                        model.status
-                        ?? (object)DBNull.Value
-                    );
-
-                    int newId =
-                        Convert.ToInt32(
-                            await command.ExecuteScalarAsync()
-                        );
-
-                    model.supplier_id =
-                        newId;
-
-                    return model;
+                    using SqlDataReader reader = await command.ExecuteReaderAsync();
+                    if (await reader.ReadAsync())
+                    {
+                        model.supplier_id = reader.GetInt32(0);
+                        model.supplier_code = reader.GetString(1);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Failed to insert supplier: no result returned.");
+                    }
                 }
-            }
+                else
+                {
+                    // Path 2: Caller provided a code — simple INSERT
+                    using SqlCommand command = new SqlCommand(insertWithProvidedCode, connection);
 
+                    command.Parameters.AddWithValue("@supplier_code", model.supplier_code);
+                    command.Parameters.AddWithValue("@supplier_name", model.supplier_name);
+                    command.Parameters.AddWithValue("@category_supplier", (object?)model.category_supplier ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@no_telp_bisnis", model.no_telp_bisnis ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@alamat", model.alamat ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@email", model.email ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@status", model.status ?? (object)DBNull.Value);
+
+                    int newId = Convert.ToInt32(await command.ExecuteScalarAsync());
+                    model.supplier_id = newId;
+                }
+
+                return model;
+            }
             catch (Exception ex)
             {
-                Console.WriteLine(
-                    $"[InsertSupplier] {ex.Message}"
-                );
+                Console.WriteLine($"[InsertSupplier] {ex.Message}");
                 throw;
             }
         }
