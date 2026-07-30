@@ -471,6 +471,14 @@ namespace trinova_erp_backend.Repositories.Penjualan
             }
         }
 
+        // Flow baru: pembayaran (baik langsung ke SO tanpa invoice, maupun
+        // lewat invoice) tidak lagi menyelesaikan (Completed) Sales Order --
+        // itu sekarang HANYA dipicu oleh Delivery Order ditandai diterima
+        // (lihat PengirimanPenjualanUsecase.MarkDeliveryOrderReceivedAsync).
+        // Kedua method di bawah cuma memastikan SO pindah/tetap di
+        // "Diproses" selama masih dalam tahap penagihan & pembayaran, dan
+        // sengaja TIDAK menyentuh SO yang statusnya sudah "In Delivery",
+        // "Completed", atau "Cancelled" (guard di WHERE clause).
         private static async Task UpdateSalesOrderPaymentStatus(
             int salesOrderId,
             SqlConnection connection,
@@ -485,10 +493,11 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         WHERE sales_order_id = @SalesOrderId
                           AND ISNULL(status, '') NOT IN ('Cancelled', 'Dibatalkan')
                     ) > 0
-                        THEN 'Partially Paid'
+                        THEN 'Diproses'
                     ELSE status
                 END
-                WHERE order_id = @SalesOrderId;";
+                WHERE order_id = @SalesOrderId
+                  AND status IN ('Belum Diproses', 'Diproses');";
 
             await connection.ExecuteAsync(query, new { SalesOrderId = salesOrderId }, transaction);
         }
@@ -500,18 +509,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
         {
             const string query = @"
                 UPDATE sales_order
-                SET status = CASE
-                    WHEN EXISTS (
-                        SELECT 1
-                        FROM sales_invoice
-                        WHERE sales_order_id = @SalesOrderId
-                          AND ISNULL(status, '') NOT IN ('Paid', 'Cancelled', 'Lunas', 'Dibatalkan')
-                          AND ISNULL(remaining_amount, 0) > 0
-                    )
-                        THEN 'Partially Paid'
-                    ELSE 'Completed'
-                END
-                WHERE order_id = @SalesOrderId;";
+                SET status = 'Diproses'
+                WHERE order_id = @SalesOrderId
+                  AND status IN ('Belum Diproses', 'Diproses');";
 
             await connection.ExecuteAsync(query, new { SalesOrderId = salesOrderId }, transaction);
         }

@@ -91,6 +91,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 sq.quotation_date    AS QuotationDate,
                 mc.customer_name     AS CustomerName,
                 mc.customer_id       AS CustomerId,
+                mc.email             AS CustomerEmail,
                 sq.address           AS Address,
                 sq.notes             AS Notes,
                 sq.subtotal          AS Subtotal,

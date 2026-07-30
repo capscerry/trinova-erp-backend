@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Models.Penjualan;
 using trinova_erp_backend.Usecase.Penjualan;
 
@@ -193,6 +194,35 @@ namespace trinova_erp_backend.Controllers.Penjualan
                     success = false,
                     message = ex.Message
                 });
+            }
+        }
+
+        [HttpPost("/api/sales-invoice/{id}/send-email")]
+        public async Task<IActionResult> SendInvoiceEmail(
+            int id,
+            [FromBody] SendQuotationEmailRequest? request)
+        {
+            try
+            {
+                await _salesInvoiceUsecase.SendInvoiceEmailAsync(id, request);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Email faktur (PDF) berhasil dikirim ke pelanggan."
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Terjadi kesalahan tak terduga: " + ex.Message });
             }
         }
 

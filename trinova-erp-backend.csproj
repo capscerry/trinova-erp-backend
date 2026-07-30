@@ -33,6 +33,7 @@
     <PackageReference Include="DotNetEnv" Version="3.2.0" />
     <PackageReference Include="ExcelDataReader" Version="3.8.0" />
     <PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
+    <PackageReference Include="MailKit" Version="4.17.0" />
 
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.7" />
 
@@ -51,7 +52,6 @@
   <ItemGroup>
     <Folder Include="Controllers\Persediaan\" />
     <Folder Include="Controllers\Pembelian\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

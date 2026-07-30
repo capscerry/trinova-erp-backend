@@ -1,25 +1,31 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj": {}
+    "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\trinova-erp-backend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj": {
+    "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\trinova-erp-backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
+        "projectUniqueName": "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\trinova-erp-backend.csproj",
         "projectName": "trinova-erp-backend",
-        "projectPath": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
-        "packagesPath": "C:\\Users\\Davina\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\obj\\",
+        "projectPath": "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\trinova-erp-backend.csproj",
+        "packagesPath": "C:\\Users\\aisya\\.nuget\\packages\\",
+        "outputPath": "C:\\VIKO\\Capstone Trinova\\trinova-erp-backend\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\Davina\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\aisya\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -32,7 +38,13 @@
           "warnAsError": [
             "NU1605"
           ]
-        }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -57,6 +69,10 @@
             "ExcelDataReader.DataSet": {
               "target": "Package",
               "version": "[3.8.0, )"
+            },
+            "MailKit": {
+              "target": "Package",
+              "version": "[4.17.0, )"
             },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
@@ -95,7 +111,7 @@
           "downloadDependencies": [
             {
               "name": "Microsoft.NETCore.App.Crossgen2.win-x64",
-              "version": "[8.0.28, 8.0.28]"
+              "version": "[8.0.19, 8.0.19]"
             }
           ],
           "frameworkReferences": {
@@ -106,7 +122,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.128/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

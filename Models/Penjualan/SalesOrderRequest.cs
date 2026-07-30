@@ -24,6 +24,7 @@
         public string? Notes { get; set; }
         public int? QuotationId { get; set; }
         public string? Status { get; set; }
+        public bool IsIndent { get; set; }
 
 
     }

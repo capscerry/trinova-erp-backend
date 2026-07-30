@@ -2,10 +2,12 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
+using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Models.Penjualan;
 using trinova_erp_backend.Models.Persediaan;
 using trinova_erp_backend.Repositories.Penjualan;
 using trinova_erp_backend.Repositories.Persediaan;
+using trinova_erp_backend.Services;
 
 namespace trinova_erp_backend.Usecase.Penjualan
 {
@@ -19,6 +21,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
         Task<SalesInvoice> Update(int id, SalesInvoice model);
         Task Delete(int id);
         Task Confirm(int id);
+        Task SendInvoiceEmailAsync(int id, SendQuotationEmailRequest? request);
     }
 
     public class SalesInvoiceUsecase : ISalesInvoiceUsecase
@@ -29,6 +32,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
         private readonly StockMovementRepo _stockMovementRepo;
         private readonly string _connectionString;
         private readonly trinova_erp_backend.Services.IActivityLogService _activityLogService;
+        private readonly IEmailService _emailService;
 
         public SalesInvoiceUsecase(
             ISalesInvoiceRepo salesInvoiceRepo,
@@ -36,7 +40,8 @@ namespace trinova_erp_backend.Usecase.Penjualan
             StockTransactionRepo stockTransactionRepo,
             StockMovementRepo stockMovementRepo,
             IOptions<DatabaseConnection> options,
-            trinova_erp_backend.Services.IActivityLogService activityLogService)
+            trinova_erp_backend.Services.IActivityLogService activityLogService,
+            IEmailService emailService)
         {
             _salesInvoiceRepo = salesInvoiceRepo;
             _inventoryStockRepo = inventoryStockRepo;
@@ -44,6 +49,90 @@ namespace trinova_erp_backend.Usecase.Penjualan
             _stockMovementRepo = stockMovementRepo;
             _connectionString = options.Value.SQLServer!;
             _activityLogService = activityLogService;
+            _emailService = emailService;
+        }
+
+        public async Task SendInvoiceEmailAsync(int id, SendQuotationEmailRequest? request)
+        {
+            if (id <= 0)
+                throw new ArgumentException("Id faktur tidak valid.");
+
+            var invoice = await GetById(id);
+            if (invoice?.Header == null)
+                throw new InvalidOperationException("Faktur penjualan tidak ditemukan.");
+
+            var header = invoice.Header;
+            if (string.IsNullOrWhiteSpace(header.CustomerEmail))
+                throw new InvalidOperationException(
+                    $"Pelanggan '{header.CustomerName}' belum memiliki alamat email terdaftar. " +
+                    "Lengkapi data email pelanggan terlebih dahulu di menu Customer.");
+
+            byte[]? attachmentBytes = null;
+            if (!string.IsNullOrWhiteSpace(request?.AttachmentBase64))
+            {
+                try
+                {
+                    attachmentBytes = Convert.FromBase64String(request.AttachmentBase64);
+                }
+                catch (FormatException)
+                {
+                    throw new InvalidOperationException("Lampiran PDF tidak valid (base64 rusak).");
+                }
+            }
+
+            var htmlBody = BuildInvoiceEmailHtml(header, request?.Message);
+            var subject  = $"Faktur Penjualan {header.InvoiceNumber} — Trinova";
+            var fileName = string.IsNullOrWhiteSpace(request?.AttachmentFileName)
+                ? $"Invoice-{header.InvoiceNumber}.pdf"
+                : request.AttachmentFileName;
+
+            await _emailService.SendAsync(
+                header.CustomerEmail!,
+                header.CustomerName ?? "Pelanggan",
+                subject,
+                htmlBody,
+                attachmentBytes,
+                fileName);
+
+            await _activityLogService.LogSalesAsync(
+                "invoice_email_sent",
+                $"Invoice {header.InvoiceNumber} dikirim via email ke {header.CustomerEmail}",
+                request?.Message,
+                "sales_invoice",
+                header.Id,
+                header.InvoiceNumber);
+        }
+
+        private static string BuildInvoiceEmailHtml(SalesInvoiceHeader header, string? customMessage)
+        {
+            var messageBlock = string.IsNullOrWhiteSpace(customMessage)
+                ? ""
+                : $"<p style='color:#334155;'>{System.Net.WebUtility.HtmlEncode(customMessage)}</p>";
+
+            var statusNote = header.RemainingAmount > 0
+                ? $"<p style='margin:2px 0;color:#dc2626;'>Sisa tagihan: Rp {header.RemainingAmount:N0} (jatuh tempo {header.DueDate:dd MMMM yyyy})</p>"
+                : "<p style='margin:2px 0;color:#166534;'>Faktur ini sudah lunas.</p>";
+
+            return $@"
+                <div style='font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#1e293b;'>
+                    <div style='background:#0f172a;padding:20px 24px;border-radius:8px 8px 0 0;'>
+                        <h2 style='color:#fbbf24;margin:0;'>Trinova ERP</h2>
+                        <p style='color:#cbd5e1;margin:4px 0 0;font-size:13px;'>Faktur Penjualan / Sales Invoice</p>
+                    </div>
+                    <div style='border:1px solid #e2e8f0;border-top:none;padding:24px;border-radius:0 0 8px 8px;'>
+                        <p>Yth. Bapak/Ibu <b>{header.CustomerName}</b>,</p>
+                        {messageBlock}
+                        <p>Berikut kami lampirkan faktur penjualan <b>{header.InvoiceNumber}</b> tanggal
+                           {header.InvoiceDate:dd MMMM yyyy} dalam bentuk PDF terlampir.</p>
+                        <div style='margin-top:12px;font-size:14px;'>
+                            <p style='margin:2px 0;'>Total Tagihan: <b>Rp {header.GrandTotal:N0}</b></p>
+                            {statusNote}
+                        </div>
+                        <p style='margin-top:16px;font-size:13px;color:#334155;'>
+                            Silakan hubungi kami apabila ada pertanyaan mengenai faktur ini. Terima kasih.
+                        </p>
+                    </div>
+                </div>";
         }
 
         public async Task<List<SalesInvoiceHeader>> GetAll()
@@ -341,56 +430,31 @@ namespace trinova_erp_backend.Usecase.Penjualan
                 header.Status = "Issued";
         }
 
+        // Flow baru: Delivery Order sekarang SELALU dibuat setelah invoice
+        // (bukan sebelumnya), jadi status DO tidak lagi berubah menjadi
+        // "Invoiced" di sini -- vocabulary status DO yang baru
+        // (In Delivery/Received/Cancelled) tidak punya nilai "Invoiced" sama
+        // sekali. Untuk Sales Order, status "Invoiced"/"Partially Paid" juga
+        // sudah dipensiunkan -- begitu invoice pertama dibuat untuk SO
+        // tersebut, SO cukup pindah dari "Belum Diproses" ke "Diproses"
+        // (satu arah, tidak menimpa status yang sudah lebih maju seperti
+        // In Delivery/Completed/Cancelled kalau ada invoice susulan/koreksi).
         private static async Task UpdateRelatedDocumentStatuses(
             SalesInvoiceHeader header,
             SqlConnection connection,
             SqlTransaction transaction)
         {
-            if (header.DeliveryOrderId.HasValue && header.DeliveryOrderId.Value > 0)
-            {
-                const string updateDeliveryQuery = @"
-                    UPDATE delivery_order_header
-                    SET status = 'Invoiced'
-                    WHERE id = @DeliveryOrderId;";
-
-                await connection.ExecuteAsync(
-                    updateDeliveryQuery,
-                    new { DeliveryOrderId = header.DeliveryOrderId.Value },
-                    transaction);
-            }
-
             if (header.SalesOrderId.HasValue && header.SalesOrderId.Value > 0)
             {
-                // Cek dulu apakah SO ini sudah ditagih PENUH (total semua invoice aktif
-                // >= subtotal SO) sebelum menandai "Invoiced" — supaya SO yang baru
-                // ditagih sebagian (partial invoice) tidak salah dianggap sudah lunas
-                // ditagih semua.
-                const string soSubtotalQuery = "SELECT subtotal FROM sales_order WHERE order_id = @SalesOrderId;";
-                var soSubtotal = await connection.ExecuteScalarAsync<decimal>(
-                    soSubtotalQuery,
+                const string updateSalesOrderQuery = @"
+                    UPDATE sales_order
+                    SET status = 'Diproses'
+                    WHERE order_id = @SalesOrderId AND status = 'Belum Diproses';";
+
+                await connection.ExecuteAsync(
+                    updateSalesOrderQuery,
                     new { SalesOrderId = header.SalesOrderId.Value },
                     transaction);
-
-                const string invoicedSubtotalQuery = @"
-                    SELECT ISNULL(SUM(subtotal), 0) FROM sales_invoice
-                    WHERE sales_order_id = @SalesOrderId AND status <> 'Cancelled';";
-                var invoicedSubtotal = await connection.ExecuteScalarAsync<decimal>(
-                    invoicedSubtotalQuery,
-                    new { SalesOrderId = header.SalesOrderId.Value },
-                    transaction);
-
-                if (invoicedSubtotal >= soSubtotal)
-                {
-                    const string updateSalesOrderQuery = @"
-                        UPDATE sales_order
-                        SET status = 'Invoiced'
-                        WHERE order_id = @SalesOrderId;";
-
-                    await connection.ExecuteAsync(
-                        updateSalesOrderQuery,
-                        new { SalesOrderId = header.SalesOrderId.Value },
-                        transaction);
-                }
             }
         }
     }

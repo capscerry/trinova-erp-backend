@@ -2,6 +2,7 @@
 using trinova_erp_backend.Repositories.Penjualan;
 using trinova_erp_backend.Repositories.Persediaan;
 using trinova_erp_backend.Repositories.User;
+using trinova_erp_backend.Services;
 using trinova_erp_backend.Usecase;
 using trinova_erp_backend.Usecase.Pembelian;
 using trinova_erp_backend.Usecase.Penjualan;
@@ -97,10 +98,11 @@ namespace trinova_erp_backend.Config
             // XGBOOST / SUPPLIER RISK
             services.AddScoped<ISupplierRiskUsecase, SupplierRiskUsecase>();
 
+            services.AddScoped<IEmailService, EmailService>();
 
 
 
-            
+
             return services;
         }
     }
