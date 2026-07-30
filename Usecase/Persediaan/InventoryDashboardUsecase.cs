@@ -6,23 +6,23 @@ namespace trinova_erp_backend.Usecase.Persediaan
     public class InventoryDashboardUsecase
     {
         private readonly InventoryStockRepo _stockRepo;
-        private readonly ForecastClient _forecastClient;
+        private readonly ForecastHistoryRepository _forecastHistoryRepository;
         private readonly MasterProductRepo _productRepo;
 
         public InventoryDashboardUsecase(
             InventoryStockRepo stockRepo,
-            ForecastClient forecastClient,
+            ForecastHistoryRepository forecastHistoryRepository,
             MasterProductRepo productRepo)
         {
             _stockRepo = stockRepo;
-            _forecastClient = forecastClient;
+            _forecastHistoryRepository = forecastHistoryRepository; 
             _productRepo = productRepo;
         }
 
         public async Task<InventoryDashboard> GetDashboard()
         {
             var stocks = await _stockRepo.GetAllAsync();
-            var forecasts = await _forecastClient.GetRealtimeForecast();
+            var forecasts = await _forecastHistoryRepository.GetLatestForecast();
 
             if (!forecasts.Any())
             {
@@ -77,7 +77,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
             {
                 ForecastMonth = highestForecast.ForecastMonth,
 
-                GeneratedAt = DateTime.Parse(highestForecast.GeneratedAt),
+                GeneratedAt = highestForecast.GeneratedAt,
 
                 ForecastedProducts = forecastedProducts,
 

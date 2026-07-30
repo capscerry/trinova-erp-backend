@@ -1,5 +1,7 @@
-using System.Text.Json;
+using System.Net.Http.Json;
 using trinova_erp_backend.Models.Persediaan;
+using System.Text.Json;
+
 
 namespace trinova_erp_backend.Repositories.Persediaan
 {
@@ -12,49 +14,60 @@ namespace trinova_erp_backend.Repositories.Persediaan
             _httpClient = httpClient;
         }
 
-        public async Task<List<ForecastResult>> GetRealtimeForecast()
+        public async Task<List<ForecastResult>> GetRealtimeForecast(
+            ForecastRequest request
+        )
         {
-            var response = await _httpClient.GetAsync("/forecast");
-
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            var result = JsonSerializer.Deserialize<List<ForecastResult>>(
-                json,
+            Console.WriteLine("===== REQUEST =====");
+            Console.WriteLine(JsonSerializer.Serialize(
+                request,
                 new JsonSerializerOptions
                 {
-                    PropertyNameCaseInsensitive = true
-                });
+                    WriteIndented = true
+                }));
+            Console.WriteLine("===================");
+
+            var response =
+                await _httpClient.PostAsJsonAsync("/forecast", request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception(
+                    $"FastAPI Error {(int)response.StatusCode}: {error}"
+                );
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<
+                List<ForecastResult>
+            >();
 
             return result ?? new List<ForecastResult>();
         }
-        public async Task GenerateMonthlyForecast()
+
+        public async Task<List<ForecastResult>> GenerateMonthlyForecast(
+            ForecastRequest request
+        )
         {
-            var response = await _httpClient.PostAsync(
-                "/forecast/monthly/generate",
-                null
-            );
-
-            response.EnsureSuccessStatusCode();
-        }
-
-        public async Task<List<ForecastResult>> GetLatestMonthlyForecast()
-        {
-            var response = await _httpClient.GetAsync(
-                "/forecast/monthly/latest"
-            );
-
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            var result = JsonSerializer.Deserialize<List<ForecastResult>>(
-                json,
+            Console.WriteLine("===== REQUEST =====");
+            Console.WriteLine(JsonSerializer.Serialize(
+                request,
                 new JsonSerializerOptions
                 {
-                    PropertyNameCaseInsensitive = true
-                });
+                    WriteIndented = true
+                }));
+            Console.WriteLine("===================");
+
+            var response = await _httpClient.PostAsJsonAsync(
+                "/forecast/monthly/generate",
+                request
+            );
+
+            response.EnsureSuccessStatusCode();
+
+            var result = await response.Content.ReadFromJsonAsync<
+                List<ForecastResult>
+            >();
 
             return result ?? new List<ForecastResult>();
         }

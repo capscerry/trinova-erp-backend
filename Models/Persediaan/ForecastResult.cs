@@ -23,7 +23,7 @@ namespace trinova_erp_backend.Models.Persediaan
         public double ForecastNextMonth { get; set; }
 
         [JsonPropertyName("generated_at")]
-        public string GeneratedAt { get; set; } = string.Empty;
+        public DateTime GeneratedAt { get; set; }
 
     }
 }
