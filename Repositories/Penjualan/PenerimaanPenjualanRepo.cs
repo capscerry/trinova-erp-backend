@@ -476,7 +476,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
         // itu sekarang HANYA dipicu oleh Delivery Order ditandai diterima
         // (lihat PengirimanPenjualanUsecase.MarkDeliveryOrderReceivedAsync).
         // Kedua method di bawah cuma memastikan SO pindah/tetap di
-        // "Diproses" selama masih dalam tahap penagihan & pembayaran, dan
+        // "Processing" selama masih dalam tahap penagihan & pembayaran, dan
         // sengaja TIDAK menyentuh SO yang statusnya sudah "In Delivery",
         // "Completed", atau "Cancelled" (guard di WHERE clause).
         private static async Task UpdateSalesOrderPaymentStatus(
@@ -493,11 +493,11 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         WHERE sales_order_id = @SalesOrderId
                           AND ISNULL(status, '') NOT IN ('Cancelled', 'Dibatalkan')
                     ) > 0
-                        THEN 'Diproses'
+                        THEN 'Processing'
                     ELSE status
                 END
                 WHERE order_id = @SalesOrderId
-                  AND status IN ('Belum Diproses', 'Diproses');";
+                  AND status IN ('Draft', 'Processing');";
 
             await connection.ExecuteAsync(query, new { SalesOrderId = salesOrderId }, transaction);
         }
@@ -509,9 +509,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
         {
             const string query = @"
                 UPDATE sales_order
-                SET status = 'Diproses'
+                SET status = 'Processing'
                 WHERE order_id = @SalesOrderId
-                  AND status IN ('Belum Diproses', 'Diproses');";
+                  AND status IN ('Draft', 'Processing');";
 
             await connection.ExecuteAsync(query, new { SalesOrderId = salesOrderId }, transaction);
         }

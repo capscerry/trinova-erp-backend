@@ -436,7 +436,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
         // (In Delivery/Received/Cancelled) tidak punya nilai "Invoiced" sama
         // sekali. Untuk Sales Order, status "Invoiced"/"Partially Paid" juga
         // sudah dipensiunkan -- begitu invoice pertama dibuat untuk SO
-        // tersebut, SO cukup pindah dari "Belum Diproses" ke "Diproses"
+        // tersebut, SO cukup pindah dari "Draft" ke "Processing"
         // (satu arah, tidak menimpa status yang sudah lebih maju seperti
         // In Delivery/Completed/Cancelled kalau ada invoice susulan/koreksi).
         private static async Task UpdateRelatedDocumentStatuses(
@@ -448,8 +448,8 @@ namespace trinova_erp_backend.Usecase.Penjualan
             {
                 const string updateSalesOrderQuery = @"
                     UPDATE sales_order
-                    SET status = 'Diproses'
-                    WHERE order_id = @SalesOrderId AND status = 'Belum Diproses';";
+                    SET status = 'Processing'
+                    WHERE order_id = @SalesOrderId AND status = 'Draft';";
 
                 await connection.ExecuteAsync(
                     updateSalesOrderQuery,

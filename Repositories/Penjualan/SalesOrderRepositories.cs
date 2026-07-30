@@ -120,7 +120,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @QuotationId,
                     @TaxTotal,
                     @IsIndent,
-                    'Belum Diproses'
+                    'Draft'
                 );
 
                 SET @OrderId = CAST(SCOPE_IDENTITY() AS INT);

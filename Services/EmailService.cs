@@ -46,7 +46,15 @@ namespace trinova_erp_backend.Services
                 builder.Attachments.Add(attachmentFileName, attachmentBytes, ContentType.Parse("application/pdf"));
 
             message.Body = builder.ToMessageBody();
-            using var client = new SmtpClient();
+            using var client = new SmtpClient
+            {
+                // Default MailKit timeout adalah 100 detik -- kalau ada
+                // masalah jaringan ke Gmail SMTP, request akan menggantung
+                // lama sebelum akhirnya gagal. 15 detik cukup untuk connect+
+                // auth+kirim dalam kondisi normal, dan bikin kegagalan
+                // jaringan langsung ketahuan alih-alih terasa "loading lama".
+                Timeout = 15000,
+            };
             try
             {
                 await client.ConnectAsync(_settings.Host, _settings.Port, SecureSocketOptions.StartTls);
