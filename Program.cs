@@ -360,6 +360,64 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// ── Startup migration: ensure supplier_code_counter exists ───────────────────
+// This is the idempotent equivalent of running add_supplier_code_sequence.sql.
+// It runs once at cold-start before the app serves any traffic, so the table
+// will always exist on Azure SQL without requiring a manual database edit.
+// All statements are guarded with IF NOT EXISTS / IF EXISTS so re-running on
+// an already-migrated database is completely safe.
+try
+{
+    await using var startupConn = new SqlConnection(connectionString);
+    await startupConn.OpenAsync();
+
+    // Step 1 — create the table if it does not already exist
+    const string createTable = @"
+        IF OBJECT_ID(N'dbo.supplier_code_counter', N'U') IS NULL
+        BEGIN
+            CREATE TABLE dbo.supplier_code_counter
+            (
+                id         TINYINT NOT NULL CONSTRAINT PK_supplier_code_counter PRIMARY KEY,
+                last_value BIGINT  NOT NULL
+            );
+        END;";
+
+    await using (var cmd = new SqlCommand(createTable, startupConn))
+        await cmd.ExecuteNonQueryAsync();
+
+    // Step 2 — seed from the highest existing well-formed supplier code,
+    //          but only if no seed row exists yet (idempotent)
+    const string seedRow = @"
+        IF NOT EXISTS (SELECT 1 FROM dbo.supplier_code_counter WHERE id = 1)
+        BEGIN
+            DECLARE @seed BIGINT;
+            SELECT @seed = ISNULL(
+                (
+                    SELECT MAX(CAST(SUBSTRING(supplier_code, 5, 10) AS BIGINT))
+                    FROM   dbo.master_supplier
+                    WHERE  supplier_code LIKE
+                        'SUP-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+                ),
+                0
+            );
+            INSERT INTO dbo.supplier_code_counter (id, last_value)
+            VALUES (1, @seed);
+        END;";
+
+    await using (var cmd = new SqlCommand(seedRow, startupConn))
+        await cmd.ExecuteNonQueryAsync();
+
+    app.Logger.LogInformation("supplier_code_counter migration: OK");
+}
+catch (Exception ex)
+{
+    // Log and continue — a startup migration failure should not silently eat
+    // the real error, but we also must not crash the entire app over this.
+    app.Logger.LogError(ex, "supplier_code_counter startup migration FAILED. " +
+        "Supplier code generation will be unavailable until this is resolved. " +
+        "Run Migrations/add_supplier_code_sequence.sql manually as a fallback.");
+}
+
 // ── 5. Swagger always enabled (accessible on Railway) ────────────────────────
 app.UseSwagger();
 app.UseSwaggerUI();
