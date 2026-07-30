@@ -118,10 +118,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 created_at,
                 source_warehouse_id,
                 destination_warehouse_id,
-                status,
-                processed_at,
-                completed_at,
-                canceled_at
+                status
             )
             VALUES
             (
@@ -135,10 +132,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 @created_at,
                 @source_warehouse_id,
                 @destination_warehouse_id,
-                @status,
-                @processed_at,
-                @completed_at,
-                @canceled_at
+                @status
             )";
 
             using var command = new SqlCommand(query, connection, transaction);
