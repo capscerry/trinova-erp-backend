@@ -48,6 +48,10 @@
               "target": "Package",
               "version": "[4.2.0, )"
             },
+            "ClosedXML": {
+              "target": "Package",
+              "version": "[0.105.1, )"
+            },
             "Dapper": {
               "target": "Package",
               "version": "[2.1.72, )"

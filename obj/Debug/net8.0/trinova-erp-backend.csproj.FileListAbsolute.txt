@@ -145,3 +145,11 @@ D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\refint\trinova-erp-backend
 D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.pdb
 D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\trinova-erp-backend.genruntimeconfig.cache
 D:\C@PST0NE\CAPS\trinova-erp-backend\obj\Debug\net8.0\ref\trinova-erp-backend.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ClosedXML.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ClosedXML.Parser.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\DocumentFormat.OpenXml.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\DocumentFormat.OpenXml.Framework.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\ExcelNumberFormat.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\RBush.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\SixLabors.Fonts.dll
+D:\C@PST0NE\CAPS\trinova-erp-backend\bin\Debug\net8.0\System.IO.Packaging.dll
