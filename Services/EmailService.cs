@@ -547,7 +547,9 @@ namespace trinova_erp_backend.Services
 
                 connectSw.Start();
                 await client.ConnectAsync(
-                    smtpConnectHost, _settings.Port, SecureSocketOptions.StartTls);
+                smtpConnectHost,
+                465,
+                SecureSocketOptions.SslOnConnect);
                 connectSw.Stop();
                 tlsStarted = true;
 
