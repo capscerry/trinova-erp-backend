@@ -10,6 +10,7 @@ using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 using trinova_erp_backend.Config;
 using trinova_erp_backend.Data;
+using trinova_erp_backend.Middleware;
 using trinova_erp_backend.Models;
 using trinova_erp_backend.Repositories.Persediaan;
 using trinova_erp_backend.Services;
@@ -76,10 +77,15 @@ var xgboostUrl =
     ?? Env.GetString("XGBOOST_API_URL")
     ?? "http://127.0.0.1:8000";
 
-var smtpHost        = configuration["SMTP_HOST"]         ?? Env.GetString("SMTP_HOST")         ?? "smtp.gmail.com";
-var smtpPortRaw     = configuration["SMTP_PORT"]         ?? Env.GetString("SMTP_PORT");
-var smtpUser        = configuration["SMTP_USER"]         ?? Env.GetString("SMTP_USER");
-var smtpAppPassword = configuration["SMTP_APP_PASSWORD"] ?? Env.GetString("SMTP_APP_PASSWORD");
+var smtpHost            = configuration["SMTP_HOST"]             ?? Env.GetString("SMTP_HOST")             ?? "smtp.gmail.com";
+var smtpPortRaw         = configuration["SMTP_PORT"]             ?? Env.GetString("SMTP_PORT");
+var smtpUser            = configuration["SMTP_USER"]             ?? Env.GetString("SMTP_USER");
+var smtpAppPassword     = configuration["SMTP_APP_PASSWORD"]     ?? Env.GetString("SMTP_APP_PASSWORD");
+// SMTP_TIMEOUT_SECONDS — configurable MailKit connect/send timeout.
+// Must stay below Railway's upstream request timeout (~60 s) so the backend
+// can write a structured HTTP response before the proxy resets the HTTP/2 stream.
+// Default: 20 s.  Set SMTP_TIMEOUT_SECONDS=20 in Railway env vars.
+var smtpTimeoutRaw      = configuration["SMTP_TIMEOUT_SECONDS"]  ?? Env.GetString("SMTP_TIMEOUT_SECONDS");
 var smtpFromName    = configuration["SMTP_FROM_NAME"]    ?? Env.GetString("SMTP_FROM_NAME")    ?? "Trinova ERP";
 
 // Purchasing AI base URL — configurable via appsettings or environment variable.
@@ -157,15 +163,57 @@ builder.Services.Configure<JwtSettings>(options =>
 
 builder.Services.Configure<EmailSettings>(options =>
 {
-    options.Host        = smtpHost!;
-    options.Port        = int.TryParse(smtpPortRaw, out var p) ? p : 587;
-    options.User        = smtpUser ?? string.Empty;
-    options.AppPassword = smtpAppPassword ?? string.Empty;
-    options.FromName    = smtpFromName!;
+    options.Host               = smtpHost!;
+    options.Port               = int.TryParse(smtpPortRaw,     out var p)   ? p   : 587;
+    options.User               = smtpUser ?? string.Empty;
+    options.AppPassword        = smtpAppPassword ?? string.Empty;
+    options.FromName           = smtpFromName!;
+    // SmtpTimeoutSeconds: keep below Railway upstream timeout (60 s).
+    // Default 20 s gives the controller time to return a structured HTTP response
+    // before the proxy resets the HTTP/2 stream (ERR_HTTP2_PROTOCOL_ERROR).
+    options.SmtpTimeoutSeconds = int.TryParse(smtpTimeoutRaw,  out var tmo) ? tmo : 20;
 });
 
 builder.Services.AddApplicationServices();
 builder.Services.AddMemoryCache();
+
+// ── Diagnostic: Request Timeout (Task 2) ─────────────────────────────────────
+// The send-email endpoint can take 20–40 s when Railway's SMTP route is slow.
+// Without a timeout guard the HTTP/2 stream hangs until Railway's proxy kills it
+// (typically at 60 s), which sends GOAWAY/RST_STREAM to the browser and produces
+// ERR_HTTP2_PROTOCOL_ERROR before the controller can write its response.
+//
+// The "send-email" policy is set to 55 s — just under Railway's 60 s limit.
+// This ensures the server still has time to write a structured JSON error body
+// even on the absolute worst case (DNS + TCP probes + MailKit timeout all stack up).
+//
+// The "default" policy (30 s) covers every other endpoint so unrelated routes are
+// also protected against runaway requests.
+//
+// Built-in to .NET 8 — no extra NuGet package required.
+builder.Services.AddRequestTimeouts(options =>
+{
+    options.DefaultPolicy = new Microsoft.AspNetCore.Http.Timeouts.RequestTimeoutPolicy
+    {
+        Timeout = TimeSpan.FromSeconds(30)
+    };
+
+    options.AddPolicy("send-email", new Microsoft.AspNetCore.Http.Timeouts.RequestTimeoutPolicy
+    {
+        Timeout = TimeSpan.FromSeconds(55),
+        // WriteTimeoutResponse writes a 504 if the controller hasn't responded yet.
+        // This prevents Railway from seeing an abrupt TCP FIN and sending RST_STREAM.
+        WriteTimeoutResponse = async ctx =>
+        {
+            ctx.Response.StatusCode  = StatusCodes.Status504GatewayTimeout;
+            ctx.Response.ContentType = "application/json";
+            await ctx.Response.WriteAsync(
+                "{\"status\":false,\"message\":" +
+                "\"Request timed out. The SMTP server did not respond in time. " +
+                "Please check the Railway deployment logs for SMTP diagnostic details.\"}");
+        }
+    });
+});
 
 // ── Performance: Response Compression ────────────────────────────────────────
 // Reduces response payload sizes for JSON API responses, lowering bandwidth
@@ -467,6 +515,12 @@ app.UseSwaggerUI();
 // the compressor can wrap the response stream. Does not affect response content.
 app.UseResponseCompression();
 
+// ── Diagnostic: Request Lifecycle Logging ────────────────────────────────────
+// Logs request start/end, HTTP protocol version, response HasStarted, and
+// RequestAborted (client disconnection) for the send-email endpoint.
+// Covers Tasks 1–4 of the HTTP/2 diagnostic prompt. No business logic changed.
+app.UseRequestLifecycleLogging();
+
 // ── 6. HTTPS redirection disabled in Production (Railway terminates TLS) ─────
 if (!app.Environment.IsProduction())
 {
@@ -515,6 +569,12 @@ app.UseResponseCaching();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ── Diagnostic: Request Timeout middleware ────────────────────────────────────
+// Must come after UseAuthorization so auth still runs within the timeout window.
+// The "send-email" policy (55 s) is applied via [RequestTimeout("send-email")]
+// on the controller action, not here globally.
+app.UseRequestTimeouts();
 
 app.MapControllers();
 

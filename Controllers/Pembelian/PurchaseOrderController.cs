@@ -89,6 +89,10 @@ namespace trinova_erp_backend.Controllers.Pembelian
 
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpPost("/api/purchase-order/{id}/send-email")]
+        // Task 2 (Diagnostic): Cap total wall-clock time at 55 s so the server can
+        // always write a structured HTTP response before Railway's 60 s upstream
+        // timeout kills the HTTP/2 stream (which would produce ERR_HTTP2_PROTOCOL_ERROR).
+        [Microsoft.AspNetCore.Http.Timeouts.RequestTimeout("send-email")]
         public async Task<IActionResult> SendPurchaseOrderEmail(int id, [FromBody] SendQuotationEmailRequest? request)
         {
             _logger.LogInformation("[SendEmail] Controller received request — PO id={Id}", id);

@@ -486,7 +486,16 @@ namespace trinova_erp_backend.Services
                     firstWorkingIpv4, _settings.Host);
             }
 
-            using var client = new SmtpClient { Timeout = 15_000 };
+            // SmtpTimeoutSeconds is configurable via SMTP_TIMEOUT_SECONDS env var (default: 20 s).
+            // Keeping it well below Railway's 60 s upstream timeout lets the controller
+            // return a structured HTTP response before the proxy resets the HTTP/2 stream.
+            int smtpTimeoutMs = Math.Max(5_000, _settings.SmtpTimeoutSeconds * 1_000);
+            _logger.LogInformation(
+                "[SMTP-DIAG] SmtpClient.Timeout = {TimeoutMs} ms ({TimeoutSec} s) " +
+                "(configured via EmailSettings.SmtpTimeoutSeconds / SMTP_TIMEOUT_SECONDS)",
+                smtpTimeoutMs, _settings.SmtpTimeoutSeconds);
+
+            using var client = new SmtpClient { Timeout = smtpTimeoutMs };
 
             var overallSw  = Stopwatch.StartNew();
             var connectSw  = new Stopwatch();
