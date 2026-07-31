@@ -314,19 +314,38 @@ namespace trinova_erp_backend.Services
             bool anyIpv4Ok  = ipv4Results.Any(r => r.Success);
             bool anyIpv6Ok  = ipv6Results.Any(r => r.Success);
 
-            if (!tcpReachable && anyIpv4Ok) tcpReachable = true;
-            if (!tcpReachable && anyIpv6Ok) tcpReachable = true;
+            // FIX: also treat the hostname test as proof of reachability.
+            // Previously tcpReachable was only set to true inside the hostname
+            // catch-success branch, but if DNS resolves to IPv6 first and IPv6
+            // times out, the hostname test fails even though the same port is
+            // reachable via IPv4.  The per-IP loop correctly records anyIpv4Ok=true
+            // in that case, so we must promote tcpReachable here.
+            // DiagnosticsController never had this gap because it evaluates
+            // reachability purely from its PerIpResults list — it never relies on
+            // a separate tcpReachable boolean that only the hostname path could set.
+            if (!tcpReachable && hostnameTcpOk) tcpReachable = true;
+            if (!tcpReachable && anyIpv4Ok)     tcpReachable = true;
+            if (!tcpReachable && anyIpv6Ok)     tcpReachable = true;
 
+            // ── Task 2 (requested): log the exact state of every reachability flag ──
             _logger.LogInformation(
-                "[SMTP-DIAG] TCP per-IP summary:\n"             +
-                "  IPv4 addresses tested : {V4Total}\n"         +
-                "  IPv4 success          : {V4Ok}\n"            +
-                "  IPv6 addresses tested : {V6Total}\n"         +
-                "  IPv6 success          : {V6Ok}\n"            +
-                "  Hostname TCP OK       : {HostOk}",
+                "[SMTP-DIAG] TCP per-IP summary:\n"                        +
+                "  resolvedAddresses.Length : {AddrCount}\n"               +
+                "  IPv4 addresses tested    : {V4Total}\n"                 +
+                "  IPv4 success             : {V4Ok}\n"                    +
+                "  IPv6 addresses tested    : {V6Total}\n"                 +
+                "  IPv6 success             : {V6Ok}\n"                    +
+                "  hostnameTcpOk            : {HostOk}\n"                  +
+                "  anyIpv4Ok                : {AnyV4}\n"                   +
+                "  anyIpv6Ok                : {AnyV6}\n"                   +
+                "  tcpReachable (final)     : {TcpReachable}",
+                resolvedAddresses.Length,
                 ipv4Results.Length, anyIpv4Ok,
                 ipv6Results.Length, anyIpv6Ok,
-                hostnameTcpOk);
+                hostnameTcpOk,
+                anyIpv4Ok,
+                anyIpv6Ok,
+                tcpReachable);
 
             // ══════════════════════════════════════════════════════════════
             // TASK 6 — TcpClient vs MailKit comparison verdict
