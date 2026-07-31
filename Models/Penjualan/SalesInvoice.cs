@@ -22,16 +22,11 @@ namespace trinova_erp_backend.Models.Penjualan
         public string Status { get; set; } = "Draft";
         /// <summary>
         /// Label tahap proforma untuk flow barang indent: "DP" (proforma 30%),
-<<<<<<< HEAD
-        /// "Final" (proforma pelunasan 70%), atau null untuk invoice reguler non-indent.
-        /// Murni label/tampilan — tidak mempengaruhi perhitungan pembayaran.
-=======
         /// "Final" (proforma pelunasan 70%), atau null untuk invoice reguler
         /// non-indent. Murni label/tampilan — tidak mempengaruhi perhitungan
         /// pembayaran atau gate pembuatan Delivery Order (yang selalu
         /// menjumlahkan subtotal semua invoice non-Cancelled terhadap
         /// subtotal SO, apa pun label-nya).
->>>>>>> viko-branch-terbaru
         /// </summary>
         public string? ProformaStage { get; set; }
         public decimal Subtotal { get; set; }
