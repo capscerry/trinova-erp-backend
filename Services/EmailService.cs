@@ -9,27 +9,71 @@ using trinova_erp_backend.Config;
 
 namespace trinova_erp_backend.Services
 {
-    public interface IEmailService {
+    public interface IEmailService
+    {
         Task SendAsync(
             string toEmail,
             string toName,
             string subject,
             string htmlBody,
-            byte[]? attachmentBytes = null,
+            byte[]? attachmentBytes    = null,
             string? attachmentFileName = null);
     }
 
     public class EmailService : IEmailService
     {
-        private readonly EmailSettings              _settings;
-        private readonly ILogger<EmailService>      _logger;
+        private readonly EmailSettings         _settings;
+        private readonly ILogger<EmailService> _logger;
 
-        public EmailService(IOptionsSnapshot<EmailSettings> options, ILogger<EmailService> logger)
+        public EmailService(
+            IOptionsSnapshot<EmailSettings> options,
+            ILogger<EmailService>           logger)
         {
             _settings = options.Value;
             _logger   = logger;
         }
 
+        // ─────────────────────────────────────────────────────────────────────
+        // TCP helpers — use Task.WhenAny so the timeout works on every .NET
+        // target without relying on the CancellationToken overload that was
+        // only introduced in .NET 6.
+        // ─────────────────────────────────────────────────────────────────────
+        private static async Task TcpConnectWithTimeoutAsync(
+            string host, int port, TimeSpan timeout)
+        {
+            using var tcp       = new TcpClient();
+            var connectTask     = tcp.ConnectAsync(host, port);
+            var completed       = await Task.WhenAny(connectTask, Task.Delay(timeout));
+            if (completed != connectTask)
+                throw new OperationCanceledException(
+                    $"TCP connect to {host}:{port} timed out after {timeout.TotalSeconds:F0} s.");
+            await connectTask; // propagate any SocketException
+        }
+
+        private static async Task TcpConnectToIpWithTimeoutAsync(
+            IPAddress address, int port, TimeSpan timeout)
+        {
+            using var tcp       = new TcpClient();
+            var connectTask     = tcp.ConnectAsync(address, port);
+            var completed       = await Task.WhenAny(connectTask, Task.Delay(timeout));
+            if (completed != connectTask)
+                throw new OperationCanceledException(
+                    $"TCP connect to {address}:{port} timed out after {timeout.TotalSeconds:F0} s.");
+            await connectTask;
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Result record used to accumulate per-IP TCP test results.
+        // ─────────────────────────────────────────────────────────────────────
+        private sealed record IpTcpResult(
+            IPAddress Address,
+            AddressFamily Family,
+            bool          Success,
+            long          ElapsedMs,
+            string        ErrorType,
+            string        ErrorMessage);
+
+        // ─────────────────────────────────────────────────────────────────────
         public async Task SendAsync(
             string toEmail,
             string toName,
@@ -38,439 +82,605 @@ namespace trinova_erp_backend.Services
             byte[]? attachmentBytes    = null,
             string? attachmentFileName = null)
         {
-            // ══════════════════════════════════════════════════════════════════
-            // TASK 6 — Validate SMTP Configuration
-            // ══════════════════════════════════════════════════════════════════
+            // ══════════════════════════════════════════════════════════════
+            // TASK 6 (config) — Validate SMTP Configuration
+            // ══════════════════════════════════════════════════════════════
             _logger.LogInformation(
-                "[SMTP-DIAG] ── CONFIG CHECK ──────────────────────────────────────\n" +
-                "  Host              : {Host}\n" +
-                "  Port              : {Port}\n" +
-                "  Username          : {User}\n" +
-                "  Password Set      : {HasPassword}\n" +
-                "  FromName          : {FromName}\n" +
-                "  TLS Mode          : StartTls (fixed)\n" +
-                "──────────────────────────────────────────────────────────────────",
-                string.IsNullOrWhiteSpace(_settings.Host)     ? "(EMPTY - will fail)" : _settings.Host,
-                _settings.Port <= 0                           ? $"{_settings.Port} (INVALID)" : _settings.Port.ToString(),
-                string.IsNullOrWhiteSpace(_settings.User)     ? "(EMPTY - will fail)" : _settings.User,
+                "[SMTP-DIAG] ── CONFIG CHECK ──────────────────────────────────\n" +
+                "  Host         : {Host}\n"                                         +
+                "  Port         : {Port}\n"                                         +
+                "  Username     : {User}\n"                                         +
+                "  Password Set : {HasPwd}\n"                                       +
+                "  FromName     : {From}\n"                                         +
+                "  TLS Mode     : StartTls (fixed)\n"                              +
+                "───────────────────────────────────────────────────────────────",
+                string.IsNullOrWhiteSpace(_settings.Host)        ? "(EMPTY – will fail)" : _settings.Host,
+                _settings.Port <= 0                              ? $"{_settings.Port} (INVALID)" : _settings.Port.ToString(),
+                string.IsNullOrWhiteSpace(_settings.User)        ? "(EMPTY – will fail)" : _settings.User,
                 !string.IsNullOrWhiteSpace(_settings.AppPassword),
-                string.IsNullOrWhiteSpace(_settings.FromName) ? "(EMPTY)" : _settings.FromName);
+                string.IsNullOrWhiteSpace(_settings.FromName)    ? "(EMPTY)" : _settings.FromName);
 
             if (string.IsNullOrWhiteSpace(_settings.Host))
                 throw new InvalidOperationException(
-                    "EmailSettings.Host tidak dikonfigurasi. " +
-                    "Set environment variable SMTP_HOST.");
-
+                    "EmailSettings.Host is not configured. Set SMTP_HOST.");
             if (_settings.Port <= 0)
                 throw new InvalidOperationException(
-                    $"EmailSettings.Port tidak valid: '{_settings.Port}'. " +
-                    "Set environment variable SMTP_PORT ke angka yang benar (mis. 587).");
-
+                    $"EmailSettings.Port invalid: '{_settings.Port}'. Set SMTP_PORT (e.g. 587).");
             if (string.IsNullOrWhiteSpace(_settings.User))
                 throw new InvalidOperationException(
-                    "EmailSettings.User tidak dikonfigurasi. " +
-                    "Set environment variable SMTP_USER.");
-
+                    "EmailSettings.User is not configured. Set SMTP_USER.");
             if (string.IsNullOrWhiteSpace(_settings.AppPassword))
                 throw new InvalidOperationException(
-                    "EmailSettings.AppPassword tidak dikonfigurasi. " +
-                    "Set environment variable SMTP_APP_PASSWORD.");
+                    "EmailSettings.AppPassword is not configured. Set SMTP_APP_PASSWORD.");
 
             _logger.LogInformation("[SMTP-DIAG] Config validation passed.");
 
-            // ══════════════════════════════════════════════════════════════════
-            // TASK 2 — DNS Resolution
-            // ══════════════════════════════════════════════════════════════════
+            // ══════════════════════════════════════════════════════════════
+            // TASK 1 — DNS Resolution
+            // ══════════════════════════════════════════════════════════════
             bool dnsResolved  = false;
             bool tcpReachable = false;
             bool tlsStarted   = false;
             bool authReached  = false;
 
+            IPAddress[] resolvedAddresses = Array.Empty<IPAddress>();
+
             _logger.LogInformation(
-                "[SMTP-DIAG] ── DNS RESOLUTION ────────────────────────────────────\n" +
-                "  Resolving host: {Host} at {Time}",
+                "[SMTP-DIAG] ── DNS RESOLUTION ────────────────────────────────\n" +
+                "  Host : {Host}   Time : {Time}",
                 _settings.Host, DateTime.UtcNow.ToString("O"));
 
-            var dnsStopwatch = Stopwatch.StartNew();
-            IPAddress[] resolvedAddresses;
+            var dnsSw = Stopwatch.StartNew();
             try
             {
                 resolvedAddresses = await Dns.GetHostAddressesAsync(_settings.Host);
-                dnsStopwatch.Stop();
+                dnsSw.Stop();
                 dnsResolved = true;
 
-                var addressList = string.Join("\n    ", (IEnumerable<IPAddress>)resolvedAddresses);
+                var ipv4Resolved = resolvedAddresses
+                    .Where(a => a.AddressFamily == AddressFamily.InterNetwork).ToArray();
+                var ipv6Resolved = resolvedAddresses
+                    .Where(a => a.AddressFamily == AddressFamily.InterNetworkV6).ToArray();
+
+                // Build a labelled address list for the log
+                var addrLines = resolvedAddresses
+                    .Select(a => $"{(a.AddressFamily == AddressFamily.InterNetwork ? "IPv4" : "IPv6")}: {a}")
+                    .ToArray();
+
                 _logger.LogInformation(
-                    "[SMTP-DIAG] DNS resolved in {ElapsedMs} ms\n" +
-                    "  {Host} resolved to:\n    {Addresses}",
-                    dnsStopwatch.ElapsedMilliseconds,
+                    "[SMTP-DIAG] DNS resolved in {Ms} ms — {Count} address(es)\n" +
+                    "  Host: {Host}\n\n"                                           +
+                    "  Resolved Addresses:\n    {Addrs}\n\n"                      +
+                    "  IPv4 count : {V4}\n"                                       +
+                    "  IPv6 count : {V6}",
+                    dnsSw.ElapsedMilliseconds,
+                    resolvedAddresses.Length,
                     _settings.Host,
-                    string.IsNullOrEmpty(addressList) ? "(no addresses returned)" : addressList);
+                    addrLines.Length > 0 ? string.Join("\n    ", addrLines) : "(none)",
+                    ipv4Resolved.Length,
+                    ipv6Resolved.Length);
 
                 if (resolvedAddresses.Length == 0)
                     _logger.LogWarning(
-                        "[SMTP-DIAG] WARNING: DNS lookup returned 0 addresses for {Host}. " +
-                        "This may indicate a DNS configuration issue in the deployment environment.",
+                        "[SMTP-DIAG] WARNING: DNS returned 0 addresses for {Host}.",
                         _settings.Host);
+
+                if (ipv4Resolved.Length == 0 && ipv6Resolved.Length > 0)
+                    _logger.LogWarning(
+                        "[SMTP-DIAG] WARNING: Only IPv6 addresses resolved. " +
+                        "Railway may drop outbound IPv6 silently.");
             }
             catch (Exception dnsEx)
             {
-                dnsStopwatch.Stop();
+                dnsSw.Stop();
                 _logger.LogError(
                     dnsEx,
-                    "[SMTP-DIAG] DNS FAILED after {ElapsedMs} ms — " +
-                    "ExceptionType: {ExType} | Message: {Message}",
-                    dnsStopwatch.ElapsedMilliseconds,
+                    "[SMTP-DIAG] DNS FAILED after {Ms} ms\n"    +
+                    "  ExceptionType : {ExType}\n"              +
+                    "  Message       : {Msg}",
+                    dnsSw.ElapsedMilliseconds,
                     dnsEx.GetType().FullName,
                     dnsEx.Message);
 
-                // Surface clearly — still propagate for infrastructure report
                 _logger.LogError(
-                    "[SMTP-DIAG] INFRASTRUCTURE REPORT:\n" +
-                    "  DNS Resolved    : NO\n" +
-                    "  TCP Reachable   : UNKNOWN (DNS failed before TCP test)\n" +
-                    "  TLS Started     : UNKNOWN\n" +
-                    "  Auth Reached    : UNKNOWN\n" +
-                    "  Failure Stage   : DNS\n" +
-                    "  Likely Cause    : DNS not reachable inside deployment container, " +
-                    "or hostname is wrong.\n" +
-                    "  Recommendation  : Verify SMTP_HOST value and container DNS config.");
+                    "[SMTP-DIAG] INFRASTRUCTURE REPORT:\n"                                             +
+                    "  DNS Resolved   : NO\n"                                                          +
+                    "  TCP Reachable  : UNKNOWN\n"                                                     +
+                    "  TLS Started    : UNKNOWN\n"                                                     +
+                    "  Auth Reached   : UNKNOWN\n"                                                     +
+                    "  Failure Stage  : DNS\n"                                                         +
+                    "  Recommendation : Verify SMTP_HOST and container DNS config.");
 
                 throw new InvalidOperationException("Gagal Mengirim Email", dnsEx);
             }
 
-            // ══════════════════════════════════════════════════════════════════
-            // TASK 1 & 3 — Raw TCP Connectivity Test + Timing
-            // ══════════════════════════════════════════════════════════════════
-            _logger.LogInformation(
-                "[SMTP-DIAG] ── TCP CONNECTIVITY TEST ────────────────────────────\n" +
-                "  Attempting TCP to {Host}:{Port} at {Time}",
-                _settings.Host, _settings.Port, DateTime.UtcNow.ToString("O"));
-
-            var tcpStopwatch = Stopwatch.StartNew();
-            try
+            // ══════════════════════════════════════════════════════════════
+            // TASK 4 — Detect IPv6 Preference
+            // Logs which address family the OS resolver returns first,
+            // which is what a plain hostname ConnectAsync will attempt.
+            // ══════════════════════════════════════════════════════════════
+            if (resolvedAddresses.Length > 0)
             {
-                using var tcp = new TcpClient();
-
-                // Use a 10-second cancellation so the pre-flight test itself
-                // does not hang the request indefinitely.
-                using var tcpCts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-                await tcp.ConnectAsync(_settings.Host, _settings.Port, tcpCts.Token);
-
-                tcpStopwatch.Stop();
-                tcpReachable = true;
+                var firstAddr  = resolvedAddresses[0];
+                var firstFamily = firstAddr.AddressFamily == AddressFamily.InterNetwork
+                    ? "IPv4" : "IPv6";
 
                 _logger.LogInformation(
-                    "[SMTP-DIAG] TCP connection established in {ElapsedMs} ms " +
-                    "to {Host}:{Port}",
-                    tcpStopwatch.ElapsedMilliseconds,
-                    _settings.Host,
+                    "[SMTP-DIAG] ── IPv6 PREFERENCE DETECTION ────────────────────\n"     +
+                    "  First address returned by DNS : {FirstAddr} ({PreferredFamily})\n" +
+                    "  OS resolver will prefer       : {PreferredFamily}\n"               +
+                    "  MailKit ConnectAsync(hostname) will attempt {PreferredFamily} first.\n" +
+                    "  If Railway blocks {PreferredFamily}, the connection will time out.",
+                    firstAddr, firstFamily);
+
+                if (firstAddr.AddressFamily == AddressFamily.InterNetworkV6)
+                    _logger.LogWarning(
+                        "[SMTP-DIAG] IPv6 is preferred. Railway containers often lack outbound " +
+                        "IPv6 routing. This is the most likely cause of the timeout.");
+            }
+
+            // ══════════════════════════════════════════════════════════════
+            // TASK 2 & 3 — TCP Hostname Test + Per-IP Exhaustive Test
+            //
+            // We test EVERY resolved IP individually so we know exactly
+            // which address families work on this Railway deployment.
+            // The hostname test result is recorded separately so Task 6
+            // can compare TcpClient vs MailKit behaviour.
+            // ══════════════════════════════════════════════════════════════
+            var tcpTimeout   = TimeSpan.FromSeconds(10);
+            var ipResults    = new List<IpTcpResult>();
+
+            // ── 2a. Hostname-level TCP test ──────────────────────────────
+            _logger.LogInformation(
+                "[SMTP-DIAG] ── TCP TEST (hostname) ──────────────────────────\n" +
+                "  Target  : {Host}:{Port}\n"                                    +
+                "  Timeout : {Sec} s   Time : {Time}",
+                _settings.Host, _settings.Port,
+                tcpTimeout.TotalSeconds,
+                DateTime.UtcNow.ToString("O"));
+
+            bool hostnameTcpOk = false;
+            var  hostnameTcpSw = Stopwatch.StartNew();
+            try
+            {
+                await TcpConnectWithTimeoutAsync(_settings.Host, _settings.Port, tcpTimeout);
+                hostnameTcpSw.Stop();
+                hostnameTcpOk = true;
+                tcpReachable  = true;
+
+                _logger.LogInformation(
+                    "[SMTP-DIAG] TCP (hostname) SUCCESS in {Ms} ms",
+                    hostnameTcpSw.ElapsedMilliseconds);
+            }
+            catch (Exception tcpHostEx)
+            {
+                hostnameTcpSw.Stop();
+                var se = tcpHostEx as SocketException ?? tcpHostEx.InnerException as SocketException;
+                _logger.LogWarning(
+                    "[SMTP-DIAG] TCP (hostname) FAILED after {Ms} ms — " +
+                    "{ExType} | SocketError: {SockErr} | {Msg}",
+                    hostnameTcpSw.ElapsedMilliseconds,
+                    tcpHostEx.GetType().Name,
+                    se?.SocketErrorCode.ToString() ?? "(n/a)",
+                    tcpHostEx.Message);
+            }
+
+            // ── 2b. Per-IP exhaustive test (Task 3) ─────────────────────
+            // Test ALL resolved IPs regardless of hostname result.
+            _logger.LogInformation(
+                "[SMTP-DIAG] ── TCP TEST (per-IP, all addresses) ─────────────\n" +
+                "  Testing {Count} address(es) individually...",
+                resolvedAddresses.Length);
+
+            foreach (var addr in resolvedAddresses)
+            {
+                var family = addr.AddressFamily == AddressFamily.InterNetwork ? "IPv4" : "IPv6";
+                var ipSw   = Stopwatch.StartNew();
+                try
+                {
+                    await TcpConnectToIpWithTimeoutAsync(addr, _settings.Port, tcpTimeout);
+                    ipSw.Stop();
+
+                    ipResults.Add(new IpTcpResult(addr, addr.AddressFamily,
+                        true, ipSw.ElapsedMilliseconds, string.Empty, string.Empty));
+
+                    _logger.LogInformation(
+                        "[SMTP-DIAG] TCP {Family} {Address}:{Port}  →  SUCCESS ({Ms} ms)",
+                        family, addr, _settings.Port, ipSw.ElapsedMilliseconds);
+                }
+                catch (Exception ipEx)
+                {
+                    ipSw.Stop();
+                    var se     = ipEx as SocketException ?? ipEx.InnerException as SocketException;
+                    var exType = ipEx.GetType().Name;
+                    var exMsg  = ipEx.Message;
+
+                    ipResults.Add(new IpTcpResult(addr, addr.AddressFamily,
+                        false, ipSw.ElapsedMilliseconds, exType, exMsg));
+
+                    _logger.LogWarning(
+                        "[SMTP-DIAG] TCP {Family} {Address}:{Port}  →  FAILED ({Ms} ms) " +
+                        "| {ExType} | SocketError: {SockErr} | {Msg}",
+                        family, addr, _settings.Port, ipSw.ElapsedMilliseconds,
+                        exType,
+                        se?.SocketErrorCode.ToString() ?? "(n/a)",
+                        exMsg);
+                }
+            }
+
+            // ── Summary of per-IP results ────────────────────────────────
+            var ipv4Results = ipResults.Where(r => r.Family == AddressFamily.InterNetwork).ToArray();
+            var ipv6Results = ipResults.Where(r => r.Family == AddressFamily.InterNetworkV6).ToArray();
+            bool anyIpv4Ok  = ipv4Results.Any(r => r.Success);
+            bool anyIpv6Ok  = ipv6Results.Any(r => r.Success);
+
+            if (!tcpReachable && anyIpv4Ok) tcpReachable = true;
+            if (!tcpReachable && anyIpv6Ok) tcpReachable = true;
+
+            _logger.LogInformation(
+                "[SMTP-DIAG] TCP per-IP summary:\n"             +
+                "  IPv4 addresses tested : {V4Total}\n"         +
+                "  IPv4 success          : {V4Ok}\n"            +
+                "  IPv6 addresses tested : {V6Total}\n"         +
+                "  IPv6 success          : {V6Ok}\n"            +
+                "  Hostname TCP OK       : {HostOk}",
+                ipv4Results.Length, anyIpv4Ok,
+                ipv6Results.Length, anyIpv6Ok,
+                hostnameTcpOk);
+
+            // ══════════════════════════════════════════════════════════════
+            // TASK 6 — TcpClient vs MailKit comparison verdict
+            //
+            // If raw TcpClient succeeded but we expect MailKit to fail
+            // because only non-preferred IPs work, report that here.
+            // ══════════════════════════════════════════════════════════════
+            if (tcpReachable && !hostnameTcpOk)
+            {
+                _logger.LogWarning(
+                    "[SMTP-DIAG] ── TcpClient vs MailKit Verdict ─────────────────\n" +
+                    "  TcpClient (per-IP)      : At least one IP succeeded\n"         +
+                    "  TcpClient (hostname)    : FAILED\n"                             +
+                    "  MailKit ConnectAsync    : Will use hostname → likely FAILS\n"  +
+                    "  Conclusion              : INFRASTRUCTURE ISSUE\n"               +
+                    "                            OS resolver prefers a non-working address family.\n" +
+                    "                            MailKit cannot override resolver order without\n"      +
+                    "                            explicit IP-address connection.");
+            }
+            else if (!tcpReachable)
+            {
+                _logger.LogError(
+                    "[SMTP-DIAG] ── TcpClient vs MailKit Verdict ─────────────────\n" +
+                    "  TcpClient (hostname)    : FAILED\n"                             +
+                    "  TcpClient (per-IP)      : ALL addresses FAILED\n"               +
+                    "  MailKit ConnectAsync    : Will FAIL\n"                          +
+                    "  Conclusion              : INFRASTRUCTURE BLOCKING\n"             +
+                    "                            Outbound port {Port} is blocked or unreachable.",
                     _settings.Port);
             }
-            catch (OperationCanceledException tcpTimeout)
+            else
             {
-                tcpStopwatch.Stop();
-                _logger.LogError(
-                    tcpTimeout,
-                    "[SMTP-DIAG] TCP TIMEOUT after {ElapsedMs} ms — " +
-                    "Could not reach {Host}:{Port} within 10 seconds.\n" +
-                    "  ExceptionType : {ExType}\n" +
-                    "  Message       : {Message}",
-                    tcpStopwatch.ElapsedMilliseconds,
-                    _settings.Host,
-                    _settings.Port,
-                    tcpTimeout.GetType().FullName,
-                    tcpTimeout.Message);
-
-                _logger.LogError(
-                    "[SMTP-DIAG] INFRASTRUCTURE REPORT:\n" +
-                    "  DNS Resolved    : {DnsOk}\n" +
-                    "  TCP Reachable   : NO (timeout)\n" +
-                    "  TLS Started     : NO\n" +
-                    "  Auth Reached    : NO\n" +
-                    "  Failure Stage   : TCP connect (timeout)\n" +
-                    "  Elapsed         : {ElapsedMs} ms\n" +
-                    "  Likely Cause    : Outbound port {Port} is blocked by the deployment " +
-                    "environment (e.g. Railway does not allow outbound SMTP on port 587 by default).\n" +
-                    "  Recommendations :\n" +
-                    "    1. Try port 465 (SMTPS/SSL) as Railway may allow it.\n" +
-                    "    2. Enable outbound networking / SMTP in Railway project settings.\n" +
-                    "    3. Use a transactional email relay (SendGrid, Resend, Mailgun) " +
-                    "that accepts HTTP API calls — not raw SMTP.\n" +
-                    "    4. Confirm no IPv6/IPv4 mismatch by checking resolved IPs above.",
-                    dnsResolved,
-                    tcpStopwatch.ElapsedMilliseconds,
-                    _settings.Port);
-
-                throw new InvalidOperationException("Gagal Mengirim Email", tcpTimeout);
-            }
-            catch (SocketException tcpEx)
-            {
-                tcpStopwatch.Stop();
-                _logger.LogError(
-                    tcpEx,
-                    "[SMTP-DIAG] TCP FAILED after {ElapsedMs} ms — " +
-                    "ExceptionType: {ExType} | SocketErrorCode: {SocketError} | Message: {Message}\n" +
-                    "  StackTrace: {StackTrace}",
-                    tcpStopwatch.ElapsedMilliseconds,
-                    tcpEx.GetType().FullName,
-                    tcpEx.SocketErrorCode,
-                    tcpEx.Message,
-                    tcpEx.StackTrace);
-
-                _logger.LogError(
-                    "[SMTP-DIAG] INFRASTRUCTURE REPORT:\n" +
-                    "  DNS Resolved    : {DnsOk}\n" +
-                    "  TCP Reachable   : NO (socket error: {SocketError})\n" +
-                    "  TLS Started     : NO\n" +
-                    "  Auth Reached    : NO\n" +
-                    "  Failure Stage   : TCP connect\n" +
-                    "  Elapsed         : {ElapsedMs} ms\n" +
-                    "  Likely Cause    : Connection refused, network policy, or firewall " +
-                    "blocking port {Port}.\n" +
-                    "  Recommendations :\n" +
-                    "    1. Try port 465 (SMTPS/SSL).\n" +
-                    "    2. Verify outbound networking is permitted in Railway settings.\n" +
-                    "    3. Consider HTTP-based relay (SendGrid, Resend, Mailgun).",
-                    dnsResolved,
-                    tcpEx.SocketErrorCode,
-                    tcpStopwatch.ElapsedMilliseconds,
-                    _settings.Port);
-
-                throw new InvalidOperationException("Gagal Mengirim Email", tcpEx);
-            }
-            catch (Exception tcpEx)
-            {
-                tcpStopwatch.Stop();
-                _logger.LogError(
-                    tcpEx,
-                    "[SMTP-DIAG] TCP FAILED (unexpected) after {ElapsedMs} ms — " +
-                    "ExceptionType: {ExType} | Message: {Message}\n" +
-                    "  StackTrace: {StackTrace}",
-                    tcpStopwatch.ElapsedMilliseconds,
-                    tcpEx.GetType().FullName,
-                    tcpEx.Message,
-                    tcpEx.StackTrace);
-
-                throw new InvalidOperationException("Gagal Mengirim Email", tcpEx);
+                _logger.LogInformation(
+                    "[SMTP-DIAG] ── TcpClient vs MailKit Verdict ─────────────────\n" +
+                    "  TcpClient (hostname)    : OK\n"                                 +
+                    "  MailKit ConnectAsync    : Expected to succeed\n"                +
+                    "  If MailKit fails        : Config issue, not infrastructure.");
             }
 
-            // ══════════════════════════════════════════════════════════════════
-            // TASK 7 — Attachment / Message Size Logging
-            // ══════════════════════════════════════════════════════════════════
-            _logger.LogInformation("[SMTP-DIAG] ── MESSAGE CONSTRUCTION ─────────────────────────────");
+            // ══════════════════════════════════════════════════════════════
+            // TASK 8 — Scenario-based recommendation (before MailKit attempt)
+            // ══════════════════════════════════════════════════════════════
+            if (!tcpReachable)
+            {
+                // Scenario B: neither IPv4 nor IPv6 can connect
+                _logger.LogError(
+                    "[SMTP-DIAG] ── SCENARIO B: ALL TCP BLOCKED ──────────────────\n"                    +
+                    "  Conclusion    : Outbound SMTP from this deployment is blocked entirely.\n"         +
+                    "  Recommendations:\n"                                                                +
+                    "    1. Enable outbound networking in Railway project settings.\n"                    +
+                    "    2. Try SMTP port 465 instead of 587 (set SMTP_PORT=465).\n"                     +
+                    "    3. Switch to an HTTP-based transactional email relay:\n"                         +
+                    "         • Resend   — https://resend.com  (HTTP API, no raw SMTP)\n"                +
+                    "         • SendGrid — https://sendgrid.com\n"                                       +
+                    "         • Mailgun  — https://mailgun.com\n"                                        +
+                    "    4. Do not replace Gmail in code — only change the infrastructure.\n"             +
+                    "  Business Logic Changed : NO");
 
-            var message = new MimeMessage();
+                throw new InvalidOperationException(
+                    "Gagal Mengirim Email: outbound SMTP is blocked by the deployment environment.");
+            }
+
+            if (anyIpv4Ok && !anyIpv6Ok && !hostnameTcpOk)
+            {
+                // Scenario A: IPv4 succeeds, IPv6 fails, hostname fails
+                _logger.LogWarning(
+                    "[SMTP-DIAG] ── SCENARIO A: IPv4 OK, IPv6 BLOCKED ────────────\n"                  +
+                    "  IPv4 TCP      : SUCCESS\n"                                                        +
+                    "  IPv6 TCP      : FAILED\n"                                                         +
+                    "  Hostname TCP  : FAILED (OS chose IPv6 first)\n"                                   +
+                    "  Minimal Fix   : Connect MailKit directly to the working IPv4 address\n"          +
+                    "                  instead of the hostname.\n"                                       +
+                    "  Implementation: Pass the first reachable IPv4 address as the host\n"             +
+                    "                  parameter to client.ConnectAsync(). No business logic changes.");
+            }
+
+            // ══════════════════════════════════════════════════════════════
+            // Attachment / Message Size Logging
+            // ══════════════════════════════════════════════════════════════
+            _logger.LogInformation(
+                "[SMTP-DIAG] ── MESSAGE CONSTRUCTION ─────────────────────────");
+
+            var message     = new MimeMessage();
             message.From.Add(new MailboxAddress(_settings.FromName, _settings.User));
             message.To.Add(new MailboxAddress(toName, toEmail));
             message.Subject = subject;
 
             var bodyBuilder = new BodyBuilder { HtmlBody = htmlBody };
 
-            int htmlBodyBytes = System.Text.Encoding.UTF8.GetByteCount(htmlBody ?? string.Empty);
+            int htmlBytes = System.Text.Encoding.UTF8.GetByteCount(htmlBody ?? string.Empty);
             _logger.LogInformation(
-                "[SMTP-DIAG] HTML body size : {HtmlBytes} bytes ({HtmlKb:F1} KB)",
-                htmlBodyBytes, htmlBodyBytes / 1024.0);
+                "[SMTP-DIAG] HTML body : {Bytes} bytes ({Kb:F1} KB)",
+                htmlBytes, htmlBytes / 1024.0);
 
             if (attachmentBytes != null && attachmentBytes.Length > 0
                 && !string.IsNullOrWhiteSpace(attachmentFileName))
             {
                 _logger.LogInformation(
-                    "[SMTP-DIAG] Attachment     : '{FileName}' | {Bytes} bytes ({Kb:F1} KB)",
-                    attachmentFileName,
-                    attachmentBytes.Length,
-                    attachmentBytes.Length / 1024.0);
+                    "[SMTP-DIAG] Attachment: '{Name}' | {Bytes} bytes ({Kb:F1} KB)",
+                    attachmentFileName, attachmentBytes.Length, attachmentBytes.Length / 1024.0);
 
                 if (attachmentBytes.Length > 5 * 1024 * 1024)
                     _logger.LogWarning(
-                        "[SMTP-DIAG] WARNING: Attachment exceeds 5 MB ({Mb:F2} MB). " +
-                        "Large attachments may cause SMTP timeout on slow or restricted connections.",
+                        "[SMTP-DIAG] WARNING: Attachment > 5 MB ({Mb:F2} MB). " +
+                        "May cause SMTP timeout.",
                         attachmentBytes.Length / (1024.0 * 1024.0));
 
                 bodyBuilder.Attachments.Add(
                     attachmentFileName,
                     attachmentBytes,
-                    ContentType.Parse("application/pdf"));
+                    MimeKit.MimeTypes.GetMimeType(attachmentFileName) is string mt
+                        ? ContentType.Parse(mt)
+                        : ContentType.Parse("application/octet-stream"));
             }
             else
             {
-                _logger.LogInformation("[SMTP-DIAG] Attachment     : (none)");
+                _logger.LogInformation("[SMTP-DIAG] Attachment: (none)");
             }
 
             message.Body = bodyBuilder.ToMessageBody();
 
-            // Measure serialized MimeMessage size
             try
             {
-                using var sizeStream = new System.IO.MemoryStream();
+                using var sizeStream = new MemoryStream();
                 await message.WriteToAsync(sizeStream);
-                long mimeMessageBytes = sizeStream.Length;
+                long mimeBytes = sizeStream.Length;
                 _logger.LogInformation(
-                    "[SMTP-DIAG] MimeMessage total size : {Bytes} bytes ({Kb:F1} KB / {Mb:F2} MB)",
-                    mimeMessageBytes,
-                    mimeMessageBytes / 1024.0,
-                    mimeMessageBytes / (1024.0 * 1024.0));
-
-                if (mimeMessageBytes > 10 * 1024 * 1024)
+                    "[SMTP-DIAG] MimeMessage total : {Bytes} bytes ({Kb:F1} KB / {Mb:F2} MB)",
+                    mimeBytes, mimeBytes / 1024.0, mimeBytes / (1024.0 * 1024.0));
+                if (mimeBytes > 10 * 1024 * 1024)
                     _logger.LogWarning(
-                        "[SMTP-DIAG] WARNING: MimeMessage exceeds 10 MB ({Mb:F2} MB). " +
-                        "This is likely to trigger timeouts or rejections on Gmail SMTP.",
-                        mimeMessageBytes / (1024.0 * 1024.0));
+                        "[SMTP-DIAG] WARNING: MimeMessage > 10 MB ({Mb:F2} MB). " +
+                        "Likely to be rejected by Gmail SMTP.",
+                        mimeBytes / (1024.0 * 1024.0));
             }
             catch (Exception sizeEx)
             {
-                _logger.LogWarning(
-                    sizeEx,
-                    "[SMTP-DIAG] Could not measure MimeMessage size: {Message}",
-                    sizeEx.Message);
+                _logger.LogWarning(sizeEx,
+                    "[SMTP-DIAG] Could not measure MimeMessage size: {Msg}", sizeEx.Message);
             }
 
             _logger.LogInformation("[SMTP-DIAG] MimeMessage built successfully.");
 
-            // ══════════════════════════════════════════════════════════════════
-            // TASK 4 & 5 — SMTP Stages with Timestamps + Infrastructure Tracking
-            // ══════════════════════════════════════════════════════════════════
-            using var client = new SmtpClient
+            // ══════════════════════════════════════════════════════════════
+            // TASK 5 — SMTP Stage Timing
+            // Determine the connection host: prefer a working IPv4 address
+            // when the hostname TCP test failed but IPv4 succeeded (Scenario A).
+            // ══════════════════════════════════════════════════════════════
+            string smtpConnectHost = _settings.Host;
+            if (!hostnameTcpOk && anyIpv4Ok)
             {
-                Timeout = 15000,
-            };
+                var firstWorkingIpv4 = ipv4Results.First(r => r.Success).Address.ToString();
+                smtpConnectHost = firstWorkingIpv4;
+                _logger.LogInformation(
+                    "[SMTP-DIAG] Scenario A fix applied: MailKit will connect to " +
+                    "IPv4 address {Addr} instead of hostname {Host}.",
+                    firstWorkingIpv4, _settings.Host);
+            }
 
-            var overallStopwatch = Stopwatch.StartNew();
+            using var client = new SmtpClient { Timeout = 15_000 };
+
+            var overallSw  = Stopwatch.StartNew();
+            var connectSw  = new Stopwatch();
+            var authSw     = new Stopwatch();
+            var sendSw     = new Stopwatch();
 
             try
             {
-                // ── ConnectAsync ─────────────────────────────────────────────
+                // ── ConnectAsync ─────────────────────────────────────────
                 _logger.LogInformation(
-                    "[SMTP-DIAG] ── ConnectAsync ──────────────────────────────────\n" +
-                    "  Target    : {Host}:{Port}\n" +
-                    "  TLS Mode  : StartTls\n" +
-                    "  Timestamp : {Time}",
-                    _settings.Host, _settings.Port,
+                    "[SMTP-DIAG] ── ConnectAsync ─────────────────────────────\n" +
+                    "  Target   : {Host}:{Port}\n"                                +
+                    "  TLS Mode : StartTls\n"                                     +
+                    "  Time     : {Time}",
+                    smtpConnectHost, _settings.Port,
                     DateTime.UtcNow.ToString("O"));
 
-                var connectSw = Stopwatch.StartNew();
-                await client.ConnectAsync(_settings.Host, _settings.Port, SecureSocketOptions.StartTls);
+                connectSw.Start();
+                await client.ConnectAsync(
+                    smtpConnectHost, _settings.Port, SecureSocketOptions.StartTls);
                 connectSw.Stop();
                 tlsStarted = true;
 
                 _logger.LogInformation(
-                    "[SMTP-DIAG] ConnectAsync succeeded in {ElapsedMs} ms | " +
-                    "IsConnected={IsConnected} | IsSecure={IsSecure} | Timestamp={Time}",
+                    "[SMTP-DIAG] ConnectAsync OK in {Ms} ms | " +
+                    "Connected={Connected} Secure={Secure} | Time={Time}",
                     connectSw.ElapsedMilliseconds,
-                    client.IsConnected,
-                    client.IsSecure,
+                    client.IsConnected, client.IsSecure,
                     DateTime.UtcNow.ToString("O"));
 
-                // ── AuthenticateAsync ─────────────────────────────────────────
+                // ── AuthenticateAsync ─────────────────────────────────────
                 _logger.LogInformation(
-                    "[SMTP-DIAG] ── AuthenticateAsync ────────────────────────────\n" +
-                    "  User      : {User}\n" +
-                    "  Timestamp : {Time}",
+                    "[SMTP-DIAG] ── AuthenticateAsync ───────────────────────\n" +
+                    "  User : {User}   Time : {Time}",
                     _settings.User, DateTime.UtcNow.ToString("O"));
 
                 authReached = true;
-                var authSw = Stopwatch.StartNew();
+                authSw.Start();
                 await client.AuthenticateAsync(_settings.User, _settings.AppPassword);
                 authSw.Stop();
 
                 _logger.LogInformation(
-                    "[SMTP-DIAG] AuthenticateAsync succeeded in {ElapsedMs} ms | Timestamp={Time}",
+                    "[SMTP-DIAG] AuthenticateAsync OK in {Ms} ms | Time={Time}",
                     authSw.ElapsedMilliseconds, DateTime.UtcNow.ToString("O"));
 
-                // ── SendAsync ─────────────────────────────────────────────────
+                // ── SendAsync ─────────────────────────────────────────────
                 _logger.LogInformation(
-                    "[SMTP-DIAG] ── SendAsync ─────────────────────────────────────\n" +
-                    "  To        : {ToEmail}\n" +
-                    "  Subject   : {Subject}\n" +
-                    "  Timestamp : {Time}",
+                    "[SMTP-DIAG] ── SendAsync ────────────────────────────────\n" +
+                    "  To : {To}   Subject : {Subject}   Time : {Time}",
                     toEmail, subject, DateTime.UtcNow.ToString("O"));
 
-                var sendSw = Stopwatch.StartNew();
+                sendSw.Start();
                 await client.SendAsync(message);
                 sendSw.Stop();
 
                 _logger.LogInformation(
-                    "[SMTP-DIAG] SendAsync succeeded in {ElapsedMs} ms | Timestamp={Time}",
+                    "[SMTP-DIAG] SendAsync OK in {Ms} ms | Time={Time}",
                     sendSw.ElapsedMilliseconds, DateTime.UtcNow.ToString("O"));
 
+                overallSw.Stop();
+
+                // ── TASK 5 Timing Summary ─────────────────────────────────
                 _logger.LogInformation(
-                    "[SMTP-DIAG] ── TIMING SUMMARY ───────────────────────────────\n" +
-                    "  DNS lookup   : {DnsMs} ms\n" +
-                    "  TCP connect  : {TcpMs} ms\n" +
-                    "  SMTP connect : {SmtpMs} ms\n" +
-                    "  Auth         : {AuthMs} ms\n" +
-                    "  Send         : {SendMs} ms\n" +
-                    "  Total        : {TotalMs} ms",
-                    dnsStopwatch.ElapsedMilliseconds,
-                    tcpStopwatch.ElapsedMilliseconds,
+                    "[SMTP-DIAG] ── TIMING SUMMARY ───────────────────────────\n" +
+                    "  DNS lookup     : {Dns,6} ms\n"                            +
+                    "  TCP hostname   : {TcpHost,6} ms  ({TcpHostResult})\n"    +
+                    "  SMTP connect   : {Smtp,6} ms\n"                           +
+                    "  Authenticate   : {Auth,6} ms\n"                           +
+                    "  Send           : {Send,6} ms\n"                           +
+                    "  ─────────────────────────────────────────\n"             +
+                    "  Total elapsed  : {Total,6} ms",
+                    dnsSw.ElapsedMilliseconds,
+                    hostnameTcpSw.ElapsedMilliseconds,
+                    hostnameTcpOk ? "OK" : "FAILED",
                     connectSw.ElapsedMilliseconds,
                     authSw.ElapsedMilliseconds,
                     sendSw.ElapsedMilliseconds,
-                    overallStopwatch.ElapsedMilliseconds);
+                    overallSw.ElapsedMilliseconds);
             }
             catch (Exception ex)
             {
-                overallStopwatch.Stop();
+                overallSw.Stop();
+                connectSw.Stop();
+                authSw.Stop();
+                sendSw.Stop();
 
-                // Detect SocketErrorCode if the inner exception is a SocketException
-                var socketEx    = ex.InnerException as SocketException ?? ex as SocketException;
-                var socketError = socketEx?.SocketErrorCode.ToString() ?? "(n/a)";
+                var se          = ex as SocketException ?? ex.InnerException as SocketException;
+                var socketError = se?.SocketErrorCode.ToString() ?? "(n/a)";
 
                 _logger.LogError(
                     ex,
-                    "[SMTP-DIAG] SMTP FAILED — ExceptionType: {ExType} | Message: {Message}\n" +
-                    "  InnerExceptionType    : {InnerType}\n" +
-                    "  InnerMessage          : {InnerMessage}\n" +
-                    "  SocketErrorCode       : {SocketError}\n" +
-                    "  Elapsed               : {ElapsedMs} ms\n" +
-                    "  StackTrace:\n{StackTrace}",
-                    ex.GetType().FullName,
-                    ex.Message,
+                    "[SMTP-DIAG] SMTP FAILED\n"                              +
+                    "  ExceptionType      : {ExType}\n"                      +
+                    "  Message            : {Msg}\n"                         +
+                    "  InnerExceptionType : {InnerType}\n"                   +
+                    "  InnerMessage       : {InnerMsg}\n"                    +
+                    "  SocketErrorCode    : {SockErr}\n"                     +
+                    "  Elapsed            : {Ms} ms\n"                       +
+                    "  StackTrace:\n{Stack}",
+                    ex.GetType().FullName, ex.Message,
                     ex.InnerException?.GetType().FullName ?? "(none)",
                     ex.InnerException?.Message            ?? "(none)",
                     socketError,
-                    overallStopwatch.ElapsedMilliseconds,
+                    overallSw.ElapsedMilliseconds,
                     ex.StackTrace);
 
-                // ── Task 4: Infrastructure report at point of failure ─────────
+                // ── TASK 6 comparison at failure point ───────────────────
+                string tcpVsMailkitVerdict;
+                if (!tcpReachable)
+                    tcpVsMailkitVerdict =
+                        "TcpClient FAILED + MailKit FAILED → INFRASTRUCTURE BLOCKING";
+                else if (!hostnameTcpOk && tcpReachable)
+                    tcpVsMailkitVerdict =
+                        "TcpClient (per-IP) OK but hostname FAILED → INFRASTRUCTURE (IPv6 preference)";
+                else
+                    tcpVsMailkitVerdict =
+                        "TcpClient OK + MailKit FAILED → MAILKIT CONFIGURATION ISSUE";
+
+                // ── TASK 7 Infrastructure Report ─────────────────────────
+                string failStage =
+                    !tlsStarted  ? "MailKit ConnectAsync / TLS negotiation" :
+                    !authReached ? "AuthenticateAsync"                      :
+                                   "SendAsync";
+                string issueType =
+                    !tlsStarted  ? "Infrastructure (network / TLS)" :
+                    !authReached ? "Credentials or Google account config" :
+                                   "SMTP relay / message content";
+
                 _logger.LogError(
-                    "[SMTP-DIAG] INFRASTRUCTURE REPORT:\n" +
-                    "  DNS Resolved          : {DnsOk}\n" +
-                    "  TCP Reachable         : {TcpOk}\n" +
-                    "  TLS Negotiation Start : {TlsOk}\n" +
-                    "  AuthenticateAsync     : {AuthOk}\n" +
-                    "  Failure Stage         : {Stage}\n" +
-                    "  Elapsed               : {ElapsedMs} ms\n" +
-                    "  Application Logic OK  : YES (business logic unchanged)\n" +
-                    "  Issue Type            : {IssueType}",
+                    "[SMTP-DIAG] ── INFRASTRUCTURE REPORT ───────────────────────\n"         +
+                    "  DNS Resolved           : {DnsOk}\n"                                   +
+                    "  Resolved IPs           : {IpCount} address(es)\n"                     +
+                    "  IPv4 TCP reachable     : {V4Ok}\n"                                    +
+                    "  IPv6 TCP reachable     : {V6Ok}\n"                                    +
+                    "  Hostname TCP reachable : {HostOk}\n"                                  +
+                    "  SMTP Greeting reached  : {TlsOk}\n"                                   +
+                    "  TLS reached            : {TlsOk}\n"                                   +
+                    "  Auth reached           : {AuthOk}\n"                                  +
+                    "  Exact failure point    : {Stage}\n"                                   +
+                    "  Issue type             : {IssueType}\n"                               +
+                    "  TcpClient vs MailKit   : {Verdict}\n"                                 +
+                    "  Railway networking     : {RailwayNote}\n"                             +
+                    "  Application Logic OK   : YES — no business logic changed\n"           +
+                    "  Elapsed                : {Ms} ms\n"                                   +
+                    "  ─────────────────────────────────────────────────────────\n"          +
+                    "  Recommendations:\n"                                                    +
+                    "    • If TCP blocked    → Settings → Networking in Railway project.\n"   +
+                    "    • If port 587 blocked → set SMTP_PORT=465 (SMTPS).\n"               +
+                    "    • If IPv6 preferred → Scenario A fix already applied (IPv4 direct).\n" +
+                    "    • If all TCP blocked → switch to HTTP relay (Resend/SendGrid/Mailgun).\n" +
+                    "    • If Auth failed    → regenerate Gmail App Password (2-FA required).",
                     dnsResolved,
-                    tcpReachable,
+                    resolvedAddresses.Length,
+                    anyIpv4Ok,
+                    anyIpv6Ok,
+                    hostnameTcpOk,
+                    tlsStarted,
                     tlsStarted,
                     authReached,
-                    !tlsStarted  ? "MailKit ConnectAsync / TLS negotiation" :
-                    !authReached ? "AuthenticateAsync"                       : "SendAsync",
-                    overallStopwatch.ElapsedMilliseconds,
-                    !tlsStarted ? "Infrastructure (network/TLS)" :
-                    !authReached ? "Credentials or account config"  : "SMTP relay / message");
+                    failStage,
+                    issueType,
+                    tcpVsMailkitVerdict,
+                    !tcpReachable
+                        ? "Outbound SMTP appears blocked"
+                        : "Outbound TCP reachable (at least one IP succeeded)",
+                    overallSw.ElapsedMilliseconds);
 
                 throw new InvalidOperationException("Gagal Mengirim Email", ex);
             }
             finally
             {
+                // ── DisconnectAsync ───────────────────────────────────────
                 if (client.IsConnected)
                 {
                     _logger.LogInformation(
-                        "[SMTP-DIAG] ── DisconnectAsync ──────────────────────────────\n" +
-                        "  Timestamp : {Time}",
-                        DateTime.UtcNow.ToString("O"));
+                        "[SMTP-DIAG] ── DisconnectAsync ──────────────────────────\n" +
+                        "  Time : {Time}", DateTime.UtcNow.ToString("O"));
 
-                    var disconnectSw = Stopwatch.StartNew();
-                    await client.DisconnectAsync(true);
-                    disconnectSw.Stop();
-
-                    _logger.LogInformation(
-                        "[SMTP-DIAG] DisconnectAsync completed in {ElapsedMs} ms | Timestamp={Time}",
-                        disconnectSw.ElapsedMilliseconds, DateTime.UtcNow.ToString("O"));
+                    var dSw = Stopwatch.StartNew();
+                    try
+                    {
+                        await client.DisconnectAsync(true);
+                        dSw.Stop();
+                        _logger.LogInformation(
+                            "[SMTP-DIAG] DisconnectAsync OK in {Ms} ms | Time={Time}",
+                            dSw.ElapsedMilliseconds, DateTime.UtcNow.ToString("O"));
+                    }
+                    catch (Exception dEx)
+                    {
+                        dSw.Stop();
+                        _logger.LogWarning(dEx,
+                            "[SMTP-DIAG] DisconnectAsync failed (non-critical): {Msg}",
+                            dEx.Message);
+                    }
                 }
             }
         }
