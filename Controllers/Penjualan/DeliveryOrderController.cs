@@ -131,28 +131,6 @@ namespace trinova_erp_backend.Controllers.Penjualan
         }
 
         [HttpPut("/api/delivery-order/{id}")]
-        public async Task<IActionResult> UpdateDeliveryOrder(int id, [FromBody] PengirimanPenjualan model)
-        {
-            try
-            {
-                await _pengirimanUsecase.MarkDeliveryOrderReceivedAsync(id);
-                return Ok(new { status = true, message = "Delivery Order ditandai diterima. Sales Order terkait telah diselesaikan." });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { status = false, message = ex.Message });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { status = false, message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { status = false, message = ex.Message });
-            }
-        }
-
-        [HttpPut("/api/delivery-order/{id}")]
         public async Task<IActionResult> UpdateDeliveryOrder(int id, [FromBody] PengirimanPenjualan model)        {
             try
             {

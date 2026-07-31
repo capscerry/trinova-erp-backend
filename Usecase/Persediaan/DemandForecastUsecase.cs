@@ -48,27 +48,5 @@ namespace trinova_erp_backend.Usecase.Persediaan
             return _excelExporter.Export(forecasts);
         }
 
-        // ── New forecast endpoints ────────────────────────────────────────────
-
-        public async Task<List<ForecastResult>> GetRealtimeForecast()
-        {
-            return await _forecastClient.GetRealtimeForecast();
-        }
-
-        public async Task GenerateMonthlyForecast()
-        {
-            await _forecastClient.GenerateMonthlyForecast();
-        }
-
-        public async Task<List<ForecastResult>> GetLatestMonthlyForecast()
-        {
-            return await _forecastClient.GetLatestMonthlyForecast();
-        }
-
-        public async Task<byte[]> DownloadForecast()
-        {
-            var forecasts = await _forecastClient.GetLatestMonthlyForecast();
-            return _excelExporter.Export(forecasts);
-        }
     }
 }
