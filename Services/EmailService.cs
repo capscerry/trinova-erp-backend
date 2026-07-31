@@ -386,40 +386,38 @@ namespace trinova_erp_backend.Services
             }
 
             // ══════════════════════════════════════════════════════════════
-            // TASK 8 — Scenario-based recommendation (before MailKit attempt)
+            // TASK 8 — Scenario-based recommendation (log-only, no abort)
+            //
+            // TCP pre-checks are informational only. Execution always proceeds
+            // to MailKit.ConnectAsync() regardless of tcpReachable value.
+            // Only a real MailKit failure produces an exception to the caller.
             // ══════════════════════════════════════════════════════════════
             if (!tcpReachable)
             {
-                // Scenario B: neither IPv4 nor IPv6 can connect
-                _logger.LogError(
-                    "[SMTP-DIAG] ── SCENARIO B: ALL TCP BLOCKED ──────────────────\n"                    +
-                    "  Conclusion    : Outbound SMTP from this deployment is blocked entirely.\n"         +
-                    "  Recommendations:\n"                                                                +
-                    "    1. Enable outbound networking in Railway project settings.\n"                    +
-                    "    2. Try SMTP port 465 instead of 587 (set SMTP_PORT=465).\n"                     +
-                    "    3. Switch to an HTTP-based transactional email relay:\n"                         +
-                    "         • Resend   — https://resend.com  (HTTP API, no raw SMTP)\n"                +
-                    "         • SendGrid — https://sendgrid.com\n"                                       +
-                    "         • Mailgun  — https://mailgun.com\n"                                        +
-                    "    4. Do not replace Gmail in code — only change the infrastructure.\n"             +
-                    "  Business Logic Changed : NO");
-
-                throw new InvalidOperationException(
-                    "Gagal Mengirim Email: outbound SMTP is blocked by the deployment environment.");
+                // Scenario B hint: all TCP probes failed — log it, but do NOT abort.
+                // MailKit will make its own connection attempt; if that also fails the
+                // catch block below will raise the appropriate exception.
+                _logger.LogWarning(
+                    "[SMTP-DIAG] ── SCENARIO B HINT: ALL TCP PROBES FAILED ────────\n"                  +
+                    "  All pre-flight TCP probes failed, but MailKit will still attempt\n"              +
+                    "  ConnectAsync() — the pre-checks are informational only.\n"                       +
+                    "  If MailKit also fails the infrastructure exception will be raised then.\n"        +
+                    "  Recommendations (if MailKit fails too):\n"                                       +
+                    "    1. Enable outbound networking in Railway project settings.\n"                   +
+                    "    2. Try SMTP port 465 instead of 587 (set SMTP_PORT=465).\n"                    +
+                    "    3. Switch to an HTTP-based relay: Resend, SendGrid, or Mailgun.");
             }
 
             if (anyIpv4Ok && !anyIpv6Ok && !hostnameTcpOk)
             {
-                // Scenario A: IPv4 succeeds, IPv6 fails, hostname fails
+                // Scenario A: IPv4 succeeds, IPv6 fails, hostname fails (log-only)
                 _logger.LogWarning(
                     "[SMTP-DIAG] ── SCENARIO A: IPv4 OK, IPv6 BLOCKED ────────────\n"                  +
                     "  IPv4 TCP      : SUCCESS\n"                                                        +
                     "  IPv6 TCP      : FAILED\n"                                                         +
                     "  Hostname TCP  : FAILED (OS chose IPv6 first)\n"                                   +
-                    "  Minimal Fix   : Connect MailKit directly to the working IPv4 address\n"          +
-                    "                  instead of the hostname.\n"                                       +
-                    "  Implementation: Pass the first reachable IPv4 address as the host\n"             +
-                    "                  parameter to client.ConnectAsync(). No business logic changes.");
+                    "  MailKit will use the IPv4 address directly (see smtpConnectHost below).\n"       +
+                    "  No business logic changes.");
             }
 
             // ══════════════════════════════════════════════════════════════
@@ -523,6 +521,21 @@ namespace trinova_erp_backend.Services
 
             try
             {
+                // ── Pre-ConnectAsync flag summary ─────────────────────────
+                // Log all reachability flags here so they can be compared
+                // directly with the /api/diagnostics/smtp-connectivity output.
+                // These values do NOT gate the ConnectAsync call — MailKit
+                // determines actual connectivity.
+                _logger.LogInformation(
+                    "[SMTP-DIAG] ── PRE-CONNECT FLAG SUMMARY ────────────────────\n"  +
+                    "  hostnameTcpOk  : {HostOk}\n"                                   +
+                    "  anyIpv4Ok      : {AnyV4}\n"                                    +
+                    "  anyIpv6Ok      : {AnyV6}\n"                                    +
+                    "  tcpReachable   : {TcpR}\n"                                     +
+                    "  smtpConnectHost: {ConnHost}\n"                                  +
+                    "  (TCP pre-checks are informational only — ConnectAsync proceeds regardless)",
+                    hostnameTcpOk, anyIpv4Ok, anyIpv6Ok, tcpReachable, smtpConnectHost);
+
                 // ── ConnectAsync ─────────────────────────────────────────
                 _logger.LogInformation(
                     "[SMTP-DIAG] ── ConnectAsync ─────────────────────────────\n" +
@@ -621,7 +634,7 @@ namespace trinova_erp_backend.Services
                     overallSw.ElapsedMilliseconds,
                     ex.StackTrace);
 
-                // ── TASK 6 comparison at failure point ───────────────────
+                // ── TcpClient vs MailKit comparison ───────────────────────
                 string tcpVsMailkitVerdict;
                 if (!tcpReachable)
                     tcpVsMailkitVerdict =
@@ -633,7 +646,7 @@ namespace trinova_erp_backend.Services
                     tcpVsMailkitVerdict =
                         "TcpClient OK + MailKit FAILED → MAILKIT CONFIGURATION ISSUE";
 
-                // ── TASK 7 Infrastructure Report ─────────────────────────
+                // ── Infrastructure report ─────────────────────────────────
                 string failStage =
                     !tlsStarted  ? "MailKit ConnectAsync / TLS negotiation" :
                     !authReached ? "AuthenticateAsync"                      :
@@ -678,10 +691,27 @@ namespace trinova_erp_backend.Services
                     issueType,
                     tcpVsMailkitVerdict,
                     !tcpReachable
-                        ? "Outbound SMTP appears blocked"
+                        ? "Outbound SMTP appears blocked (pre-flight TCP failed)"
                         : "Outbound TCP reachable (at least one IP succeeded)",
                     overallSw.ElapsedMilliseconds);
 
+                // ── Classify the exception for the caller ─────────────────
+                // Only report the "blocked" message if MailKit itself could not
+                // establish the TCP/TLS connection (network-level failure).
+                // Auth or send failures get a distinct message so callers and
+                // operators can tell them apart.
+                bool isNetworkFailure = !tlsStarted &&
+                    (ex is SocketException
+                     || ex.InnerException is SocketException
+                     || ex is OperationCanceledException
+                     || ex is TimeoutException
+                     || ex.InnerException is TimeoutException);
+
+                if (isNetworkFailure)
+                    throw new InvalidOperationException(
+                        "Gagal Mengirim Email: outbound SMTP is blocked by the deployment environment.", ex);
+
+                // Auth / protocol / content error — surface the real message.
                 throw new InvalidOperationException("Gagal Mengirim Email", ex);
             }
             finally

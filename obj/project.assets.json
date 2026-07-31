@@ -9360,11 +9360,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
+      "projectUniqueName": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
       "projectName": "trinova-erp-backend",
-      "projectPath": "c:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
+      "projectPath": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
       "packagesPath": "C:\\Users\\Davina\\.nuget\\packages\\",
-      "outputPath": "c:\\Users\\Davina\\Desktop\\trinova-erp-backend\\obj\\",
+      "outputPath": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Davina\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -9470,13 +9470,5 @@
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.128/PortableRuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "Undefined",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Problem reading the cache file c:\\Users\\Davina\\Desktop\\trinova-erp-backend\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
-    }
-  ]
+  }
 }

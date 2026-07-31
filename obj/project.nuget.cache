@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "+mrcR7t4QoTromFSy7WVTSaQNniik68iTtqtP8e/u6utDgT4KXLAda0g7+NdT2HJYzxROj5QwVQdnEHTlXhclw==",
+  "dgSpecHash": "0Bc3gPFfLdNJx+D+eP0GKFKRzYjBrBCYa48i0r8wM9/FzwWgoyKdCJHC+qD4CsY6zfL9tUvQHvPyLV7tJdqWoA==",
   "success": true,
-  "projectFilePath": "c:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
+  "projectFilePath": "C:\\Users\\Davina\\Desktop\\trinova-erp-backend\\trinova-erp-backend.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Davina\\.nuget\\packages\\azure.core\\1.25.0\\azure.core.1.25.0.nupkg.sha512",
     "C:\\Users\\Davina\\.nuget\\packages\\azure.identity\\1.7.0\\azure.identity.1.7.0.nupkg.sha512",
@@ -172,12 +172,5 @@
     "C:\\Users\\Davina\\.nuget\\packages\\system.xml.xdocument\\4.3.0\\system.xml.xdocument.4.3.0.nupkg.sha512",
     "C:\\Users\\Davina\\.nuget\\packages\\microsoft.netcore.app.crossgen2.win-x64\\8.0.28\\microsoft.netcore.app.crossgen2.win-x64.8.0.28.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "Undefined",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Problem reading the cache file c:\\Users\\Davina\\Desktop\\trinova-erp-backend\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
-    }
-  ]
+  "logs": []
 }
