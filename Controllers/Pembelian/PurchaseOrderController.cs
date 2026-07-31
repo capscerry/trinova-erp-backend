@@ -12,13 +12,16 @@ namespace trinova_erp_backend.Controllers.Pembelian
     [Microsoft.AspNetCore.Authorization.Authorize]
     public class PurchaseOrderController : ControllerBase
     {
-        private readonly IPurchaseOrderUsecase _purchaseOrderUsecase;
+        private readonly IPurchaseOrderUsecase         _purchaseOrderUsecase;
+        private readonly ILogger<PurchaseOrderController> _logger;
 
         public PurchaseOrderController(
-            IPurchaseOrderUsecase purchaseOrderUsecase
+            IPurchaseOrderUsecase purchaseOrderUsecase,
+            ILogger<PurchaseOrderController> logger
         )
         {
             _purchaseOrderUsecase = purchaseOrderUsecase;
+            _logger               = logger;
         }
 
         // ── PURCHASING-ONLY ENDPOINTS ────────────────────────────────────
@@ -88,14 +91,52 @@ namespace trinova_erp_backend.Controllers.Pembelian
         [HttpPost("/api/purchase-order/{id}/send-email")]
         public async Task<IActionResult> SendPurchaseOrderEmail(int id, [FromBody] SendQuotationEmailRequest? request)
         {
+            _logger.LogInformation("[SendEmail] Controller received request — PO id={Id}", id);
             try
             {
                 await _purchaseOrderUsecase.SendPurchaseOrderEmailAsync(id, request);
+                _logger.LogInformation("[SendEmail] Controller — completed successfully, PO id={Id}", id);
                 return Ok(new { status = true, message = "Email Purchase Order (PDF) berhasil dikirim ke supplier." });
             }
-            catch (InvalidOperationException ex) { return BadRequest(new { status = false, message = ex.Message }); }
-            catch (ArgumentException ex)         { return BadRequest(new { status = false, message = ex.Message }); }
-            catch (Exception ex)                 { return StatusCode(500, new { status = false, message = "Terjadi kesalahan tak terduga: " + ex.Message }); }
+            catch (InvalidOperationException ex)
+            {
+                // [DIAGNOSTIC] Full exception detail for InvalidOperationException
+                _logger.LogError(ex,
+                    "[SendEmail] InvalidOperationException — ExceptionType: {Type} | Message: {Message} | " +
+                    "InnerExceptionType: {InnerType} | InnerMessage: {InnerMessage} | StackTrace: {StackTrace}",
+                    ex.GetType().FullName,
+                    ex.Message,
+                    ex.InnerException?.GetType().FullName ?? "(none)",
+                    ex.InnerException?.Message          ?? "(none)",
+                    ex.StackTrace);
+                return BadRequest(new { status = false, message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                // [DIAGNOSTIC] Full exception detail for ArgumentException
+                _logger.LogError(ex,
+                    "[SendEmail] ArgumentException — ExceptionType: {Type} | Message: {Message} | " +
+                    "InnerExceptionType: {InnerType} | InnerMessage: {InnerMessage} | StackTrace: {StackTrace}",
+                    ex.GetType().FullName,
+                    ex.Message,
+                    ex.InnerException?.GetType().FullName ?? "(none)",
+                    ex.InnerException?.Message          ?? "(none)",
+                    ex.StackTrace);
+                return BadRequest(new { status = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // [DIAGNOSTIC] Full exception detail for any unexpected exception
+                _logger.LogError(ex,
+                    "[SendEmail] Unexpected Exception — ExceptionType: {Type} | Message: {Message} | " +
+                    "InnerExceptionType: {InnerType} | InnerMessage: {InnerMessage} | StackTrace: {StackTrace}",
+                    ex.GetType().FullName,
+                    ex.Message,
+                    ex.InnerException?.GetType().FullName ?? "(none)",
+                    ex.InnerException?.Message          ?? "(none)",
+                    ex.StackTrace);
+                return StatusCode(500, new { status = false, message = "Terjadi kesalahan tak terduga: " + ex.Message });
+            }
         }
 
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]

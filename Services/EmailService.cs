@@ -36,13 +36,17 @@ namespace trinova_erp_backend.Services
             string? attachmentFileName = null)
         {
             // ── 1. Validate EmailSettings before touching SMTP ────────────────
+            // [DIAGNOSTIC] Log SMTP configuration (password presence only, never value)
             _logger.LogInformation(
-                "EmailService.SendAsync: Host={Host} Port={Port} User={User} FromName={FromName}",
-                _settings.Host,
+                "[SendEmail] SMTP Config — Host: {Host} | Port: {Port} | User: {User} | " +
+                "FromName: {FromName} | Password Configured: {HasPassword}",
+                string.IsNullOrWhiteSpace(_settings.Host)        ? "(empty)" : _settings.Host,
                 _settings.Port,
-                _settings.User,
-                _settings.FromName);
+                string.IsNullOrWhiteSpace(_settings.User)        ? "(empty)" : _settings.User,
+                string.IsNullOrWhiteSpace(_settings.FromName)    ? "(empty)" : _settings.FromName,
+                !string.IsNullOrWhiteSpace(_settings.AppPassword));
 
+            // [DIAGNOSTIC] Validate each required SMTP field before attempting connection
             if (string.IsNullOrWhiteSpace(_settings.Host))
                 throw new InvalidOperationException(
                     "EmailSettings.Host tidak dikonfigurasi. " +
@@ -63,8 +67,10 @@ namespace trinova_erp_backend.Services
                     "EmailSettings.AppPassword tidak dikonfigurasi. " +
                     "Set environment variable SMTP_APP_PASSWORD.");
 
+            _logger.LogInformation("[SendEmail] SMTP config validation passed.");
+
             // ── 2. Build message ──────────────────────────────────────────────
-            _logger.LogInformation("EmailService: membuat MimeMessage ke {ToEmail}", toEmail);
+            _logger.LogInformation("[SendEmail] Building MimeMessage to {ToEmail}", toEmail);
 
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(_settings.FromName, _settings.User));
@@ -77,7 +83,7 @@ namespace trinova_erp_backend.Services
                 && !string.IsNullOrWhiteSpace(attachmentFileName))
             {
                 _logger.LogInformation(
-                    "EmailService: menambahkan lampiran '{FileName}' ({Bytes} bytes)",
+                    "[SendEmail] Adding attachment '{FileName}' ({Bytes} bytes)",
                     attachmentFileName, attachmentBytes.Length);
 
                 bodyBuilder.Attachments.Add(
@@ -87,6 +93,7 @@ namespace trinova_erp_backend.Services
             }
 
             message.Body = bodyBuilder.ToMessageBody();
+            _logger.LogInformation("[SendEmail] MimeMessage built successfully.");
 
             // ── 3. Send via SMTP ──────────────────────────────────────────────
             using var client = new SmtpClient
@@ -101,36 +108,43 @@ namespace trinova_erp_backend.Services
             try
             {
                 _logger.LogInformation(
-                    "EmailService: SMTP Connect -> {Host}:{Port} (StartTls)",
+                    "[SendEmail] Connecting to SMTP -> {Host}:{Port} (StartTls)",
                     _settings.Host, _settings.Port);
                 await client.ConnectAsync(_settings.Host, _settings.Port, SecureSocketOptions.StartTls);
+                _logger.LogInformation("[SendEmail] SMTP Connected.");
 
-                _logger.LogInformation("EmailService: SMTP Authenticate user={User}", _settings.User);
+                _logger.LogInformation("[SendEmail] Authenticating SMTP user={User}", _settings.User);
                 await client.AuthenticateAsync(_settings.User, _settings.AppPassword);
+                _logger.LogInformation("[SendEmail] SMTP Authenticated.");
 
-                _logger.LogInformation("EmailService: SMTP Send ke {ToEmail}", toEmail);
+                _logger.LogInformation("[SendEmail] Sending Email to {ToEmail}", toEmail);
                 await client.SendAsync(message);
-
-                _logger.LogInformation("EmailService: email berhasil dikirim ke {ToEmail}", toEmail);
+                _logger.LogInformation("[SendEmail] Email Sent Successfully to {ToEmail}", toEmail);
             }
             catch (Exception ex)
             {
-                // FIX: previously this line crashed with FormatException
-                // ("Failure to parse near offset 25. Expected an ASCII digit.")
-                // because Console.WriteLine("... {ToEmail}", toEmail) used a
-                // named placeholder that String.Format cannot parse.
-                // Now we log with structured logging (which handles named tokens
-                // correctly) and chain the original exception so the real cause
-                // is never swallowed.
-                _logger.LogError(ex, "EmailService: gagal mengirim email ke {ToEmail}", toEmail);
+                // [DIAGNOSTIC] Log full exception detail so the real failure is never hidden
+                _logger.LogError(
+                    ex,
+                    "[SendEmail] FAILED — ExceptionType: {ExceptionType} | Message: {Message} | " +
+                    "InnerExceptionType: {InnerType} | InnerMessage: {InnerMessage} | " +
+                    "StackTrace: {StackTrace}",
+                    ex.GetType().FullName,
+                    ex.Message,
+                    ex.InnerException?.GetType().FullName ?? "(none)",
+                    ex.InnerException?.Message          ?? "(none)",
+                    ex.StackTrace);
+
+                // Preserve original exception as inner so callers can inspect it
                 throw new InvalidOperationException("Gagal Mengirim Email", ex);
             }
             finally
             {
                 if (client.IsConnected)
                 {
-                    _logger.LogInformation("EmailService: SMTP Disconnect");
+                    _logger.LogInformation("[SendEmail] Disconnecting SMTP.");
                     await client.DisconnectAsync(true);
+                    _logger.LogInformation("[SendEmail] SMTP Disconnected.");
                 }
             }
         }

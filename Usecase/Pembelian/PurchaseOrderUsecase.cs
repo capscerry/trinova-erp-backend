@@ -44,6 +44,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
         private readonly ISupplierProductRepo     _supplierProductRepo;
         private readonly IEmailService            _emailService;
         private readonly IActivityLogService      _activityLogService;
+        private readonly ILogger<PurchaseOrderUsecase> _logger;
 
         public PurchaseOrderUsecase(
             IPurchaseOrderRepo       purchaseOrderRepo,
@@ -51,7 +52,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
             IPurchaseOrderDetailRepo purchaseOrderDetailRepo,
             ISupplierProductRepo     supplierProductRepo,
             IEmailService            emailService,
-            IActivityLogService      activityLogService
+            IActivityLogService      activityLogService,
+            ILogger<PurchaseOrderUsecase> logger
         )
         {
             _purchaseOrderRepo       = purchaseOrderRepo;
@@ -60,6 +62,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
             _supplierProductRepo     = supplierProductRepo;
             _emailService            = emailService;
             _activityLogService      = activityLogService;
+            _logger                  = logger;
         }
 
         public async Task<PurchaseOrderPrintDetailDTO?> GetPurchaseOrderPrintDetailAsync(int id)
@@ -84,43 +87,77 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
         public async Task SendPurchaseOrderEmailAsync(int id, SendQuotationEmailRequest? request)
         {
+            _logger.LogInformation("[SendEmail] Request received — PO id={Id}", id);
+
             if (id <= 0)
                 throw new ArgumentException("Id Purchase Order tidak valid.");
 
+            // ── Step 1: Load Purchase Order ───────────────────────────────────
+            _logger.LogInformation("[SendEmail] Loading Purchase Order id={Id}", id);
             var po = await _purchaseOrderRepo.GetPurchaseOrderById(id);
             if (po == null)
                 throw new InvalidOperationException("Purchase Order tidak ditemukan.");
+            _logger.LogInformation(
+                "[SendEmail] Purchase Order loaded — po_number={PoNumber} supplier_id={SupplierId}",
+                po.po_number, po.supplier_id);
 
+            // ── Step 2: Load Supplier ─────────────────────────────────────────
+            _logger.LogInformation("[SendEmail] Loading Supplier id={SupplierId}", po.supplier_id);
             var supplier = await _supplierRepo.GetSupplierById(po.supplier_id);
             if (supplier == null)
                 throw new InvalidOperationException("Data supplier untuk Purchase Order ini tidak ditemukan.");
+            _logger.LogInformation(
+                "[SendEmail] Supplier loaded — name={SupplierName} email={Email}",
+                supplier.supplier_name, supplier.email ?? "(null)");
 
             if (string.IsNullOrWhiteSpace(supplier.email))
                 throw new InvalidOperationException(
                     $"Supplier '{supplier.supplier_name}' belum memiliki alamat email terdaftar. " +
                     "Lengkapi data email supplier terlebih dahulu di menu Supplier.");
 
+            // ── Step 3: Decode attachment ─────────────────────────────────────
             byte[]? attachmentBytes = null;
             if (!string.IsNullOrWhiteSpace(request?.AttachmentBase64))
             {
+                _logger.LogInformation(
+                    "[SendEmail] Decoding PDF attachment — FileName={FileName} Base64Length={Len}",
+                    request.AttachmentFileName ?? "(null)", request.AttachmentBase64.Length);
                 try
                 {
                     attachmentBytes = Convert.FromBase64String(request.AttachmentBase64);
+                    _logger.LogInformation(
+                        "[SendEmail] PDF decoded successfully — {Bytes} bytes", attachmentBytes.Length);
                 }
-                catch (FormatException)
+                catch (FormatException fex)
                 {
+                    _logger.LogError(fex,
+                        "[SendEmail] FAILED at attachment decode — base64 string is malformed");
                     throw new InvalidOperationException("Lampiran PDF tidak valid (base64 rusak).");
                 }
             }
+            else
+            {
+                _logger.LogInformation("[SendEmail] No attachment provided — sending email without PDF.");
+            }
 
+            // ── Step 4: Build email body ──────────────────────────────────────
+            _logger.LogInformation("[SendEmail] Building HTML email body.");
             var htmlBody = BuildPurchaseOrderEmailHtml(po, supplier, request?.Message);
             var subject  = $"Purchase Order {po.po_number} — Trinova";
             var fileName = string.IsNullOrWhiteSpace(request?.AttachmentFileName)
                 ? $"PO-{po.po_number}.pdf"
                 : request.AttachmentFileName;
+            _logger.LogInformation(
+                "[SendEmail] Email prepared — Subject={Subject} To={ToEmail} FileName={FileName}",
+                subject, supplier.email, fileName);
 
+            // ── Step 5: Send via EmailService ─────────────────────────────────
+            _logger.LogInformation("[SendEmail] Entering EmailService.SendAsync");
             await _emailService.SendAsync(supplier.email!, supplier.supplier_name, subject, htmlBody, attachmentBytes, fileName);
+            _logger.LogInformation("[SendEmail] EmailService.SendAsync returned — email dispatched.");
 
+            // ── Step 6: Activity log ──────────────────────────────────────────
+            _logger.LogInformation("[SendEmail] Logging activity.");
             await _activityLogService.LogAsync(new ActivityLogCreate
             {
                 Module        = "purchasing",
@@ -131,6 +168,9 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 RefId         = po.purchase_order_id,
                 RefNumber     = po.po_number
             });
+
+            _logger.LogInformation("[SendEmail] Completed Successfully — PO {PoNumber} sent to {Email}",
+                po.po_number, supplier.email);
         }
 
         private static string BuildPurchaseOrderEmailHtml(PurchaseOrder po, Supplier supplier, string? customMessage)
