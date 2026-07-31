@@ -6,8 +6,7 @@ using trinova_erp_backend.Config;
 
 namespace trinova_erp_backend.Services
 {
-    public interface IEmailService
-    {
+    public interface IEmailService {
         Task SendAsync(
             string toEmail,
             string toName,
@@ -20,19 +19,17 @@ namespace trinova_erp_backend.Services
     public class EmailService : IEmailService
     {
         private readonly EmailSettings _settings;
-
         public EmailService(IOptionsSnapshot<EmailSettings> options)
         {
             _settings = options.Value;
         }
 
-        public async Task SendAsync(
-            string toEmail,
-            string toName,
-            string subject,
-            string htmlBody,
-            byte[]? attachmentBytes = null,
-            string? attachmentFileName = null)
+        public async Task SendAsync(string toEmail,
+        string toName,
+        string subject,
+        string htmlBody,
+        byte[]? attachmentBytes = null,
+        string? attachmentFileName = null)
         {
             if (string.IsNullOrWhiteSpace(_settings.User) || string.IsNullOrWhiteSpace(_settings.AppPassword))
                 throw new InvalidOperationException("SMTP belum dikonfigurasi");
@@ -42,13 +39,12 @@ namespace trinova_erp_backend.Services
             message.To.Add(new MailboxAddress(toName, toEmail));
             message.Subject = subject;
 
-            var bodyBuilder = new BodyBuilder { HtmlBody = htmlBody };
+            var builder = new BodyBuilder { HtmlBody = htmlBody };
 
             if (attachmentBytes != null && attachmentBytes.Length > 0 && !string.IsNullOrWhiteSpace(attachmentFileName))
-                bodyBuilder.Attachments.Add(attachmentFileName, attachmentBytes, ContentType.Parse("application/pdf"));
+                builder.Attachments.Add(attachmentFileName, attachmentBytes, ContentType.Parse("application/pdf"));
 
-            message.Body = bodyBuilder.ToMessageBody();
-
+            message.Body = builder.ToMessageBody();
             using var client = new SmtpClient
             {
                 // Default MailKit timeout adalah 100 detik -- kalau ada
@@ -58,7 +54,6 @@ namespace trinova_erp_backend.Services
                 // jaringan langsung ketahuan alih-alih terasa "loading lama".
                 Timeout = 15000,
             };
-
             try
             {
                 await client.ConnectAsync(_settings.Host, _settings.Port, SecureSocketOptions.StartTls);
@@ -67,7 +62,7 @@ namespace trinova_erp_backend.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Gagal mengirim email ke {0}: {1}", toEmail, ex.Message);
+                Console.WriteLine("Gagal mengirim email ke {ToEmail}", toEmail);
                 throw new InvalidOperationException("Gagal Mengirim Email");
             }
             finally
@@ -78,3 +73,4 @@ namespace trinova_erp_backend.Services
         }
     }
 }
+ 

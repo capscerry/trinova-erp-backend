@@ -103,8 +103,14 @@ namespace trinova_erp_backend.Usecase.Pembelian
             byte[]? attachmentBytes = null;
             if (!string.IsNullOrWhiteSpace(request?.AttachmentBase64))
             {
-                try { attachmentBytes = Convert.FromBase64String(request.AttachmentBase64); }
-                catch (FormatException) { throw new InvalidOperationException("Lampiran PDF tidak valid (base64 rusak)."); }
+                try
+                {
+                    attachmentBytes = Convert.FromBase64String(request.AttachmentBase64);
+                }
+                catch (FormatException)
+                {
+                    throw new InvalidOperationException("Lampiran PDF tidak valid (base64 rusak).");
+                }
             }
 
             var htmlBody = BuildPurchaseOrderEmailHtml(po, supplier, request?.Message);

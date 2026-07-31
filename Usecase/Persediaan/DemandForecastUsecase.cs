@@ -14,29 +14,38 @@ namespace trinova_erp_backend.Usecase.Persediaan
     /// </summary>
     public class DemandForecastUsecase
     {
-        private readonly ForecastClient      _forecastClient;
-        private readonly ForecastDatasetRepo _datasetRepo;
+        private readonly ForecastClient _forecastClient;
         private readonly ForecastExcelExporter _excelExporter;
 
         public DemandForecastUsecase(
-            ForecastClient       forecastClient,
-            ForecastDatasetRepo  datasetRepo,
-            ForecastExcelExporter excelExporter)
+            ForecastClient forecastClient,
+            ForecastExcelExporter excelExporter
+        )
         {
             _forecastClient = forecastClient;
-            _datasetRepo    = datasetRepo;
-            _excelExporter  = excelExporter;
+            _excelExporter = excelExporter;
         }
 
-        /// <summary>
-        /// Builds the forecast dataset from SQL Server and sends it to the AI.
-        /// Returns an empty list when the dataset is empty or the AI is unavailable.
-        /// Never throws — failures are handled inside ForecastClient.
-        /// </summary>
-        public async Task<List<ForecastResult>> GenerateForecast()
+        public async Task<List<ForecastResult>> GetRealtimeForecast()
         {
-            var dataset = await _datasetRepo.GetForecastDatasetAsync();
-            return await _forecastClient.PostForecast(dataset);
+            return await _forecastClient.GetRealtimeForecast();
+        }
+
+        public async Task GenerateMonthlyForecast()
+        {
+            await _forecastClient.GenerateMonthlyForecast();
+        }
+
+        public async Task<List<ForecastResult>> GetLatestMonthlyForecast()
+        {
+            return await _forecastClient.GetLatestMonthlyForecast();
+        }
+
+        public async Task<byte[]> DownloadForecast()
+        {
+            var forecasts = await _forecastClient.GetLatestMonthlyForecast();
+
+            return _excelExporter.Export(forecasts);
         }
 
         // ── New forecast endpoints ────────────────────────────────────────────

@@ -74,8 +74,12 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
             try
             {
-                // Gate: DO linked to a SO can only be created after ALL invoices
-                // for that SO are fully paid. Ad-hoc DOs (no SoId) skip this gate.
+                // Flow baru: Delivery Order baru boleh dibuat setelah semua
+                // invoice terkait Sales Order-nya lunas 100% -- berlaku sama
+                // untuk barang reguler (1 invoice) maupun barang indent
+                // (2 invoice proforma DP 30% + pelunasan 70%, jumlahnya harus
+                // menutupi subtotal SO). DO tanpa SO (pengiriman langsung/
+                // ad-hoc) tidak kena gate ini.
                 if (model.Header.SoId.HasValue && model.Header.SoId.Value > 0)
                 {
                     var isFullyPaid = await _pengirimanRepo.IsSalesOrderFullyInvoicedAndPaidAsync(
@@ -294,8 +298,11 @@ namespace trinova_erp_backend.Usecase.Penjualan
             }
         }
 
-        // The only official path for DO "In Delivery" → "Received".
-        // When the customer signs receipt, the linked SO is also closed (Completed).
+        // Satu-satunya jalur resmi DO "In Delivery" -> "Received". Begitu
+        // barang diterima & ditandatangani customer, Sales Order terkait
+        // otomatis ikut selesai (Completed) -- ini SATU-SATUNYA pemicu
+        // status Completed pada flow baru, menggantikan trigger lama yang
+        // berbasis pelunasan invoice semata.
         public async Task MarkDeliveryOrderReceivedAsync(int id)
         {
             if (id <= 0)
@@ -320,14 +327,19 @@ namespace trinova_erp_backend.Usecase.Penjualan
                 await _pengirimanRepo.UpdateDeliveryOrderStatusAsync(id, "Received", connection, transaction);
 
                 if (current.SoId.HasValue && current.SoId.Value > 0)
-                    await _pengirimanRepo.UpdateSalesOrderStatusAsync(current.SoId.Value, "Completed", connection, transaction);
+                {
+                    await _pengirimanRepo.UpdateSalesOrderStatusAsync(
+                        current.SoId.Value, "Completed", connection, transaction);
+                }
 
                 await transaction.CommitAsync();
 
                 await _activityLogService.LogSalesAsync(
                     "delivery_order_received",
                     $"Delivery Order #{id} ditandai diterima",
-                    current.SoId.HasValue ? "Sales Order terkait otomatis diselesaikan (Completed)." : null,
+                    current.SoId.HasValue
+                        ? "Sales Order terkait otomatis diselesaikan (Completed)."
+                        : null,
                     "delivery_order_header",
                     id,
                     null);

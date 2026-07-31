@@ -25,6 +25,11 @@
         public int? QuotationId { get; set; }
         public string? Status { get; set; }
         public bool IsIndent { get; set; }
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> viko-branch-terbaru
     }
     public class SalesOrderDetail { 
         public int OrderId { get; set; }

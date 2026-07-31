@@ -158,13 +158,24 @@ namespace trinova_erp_backend.Repositories.Penjualan
         }
 
 
+        // Cek apakah semua Sales Invoice non-Cancelled milik SO ini sudah
+        // menutupi seluruh subtotal SO DAN semuanya sudah lunas (remaining
+        // amount <= 0). Dipakai sebagai gate sebelum Delivery Order boleh
+        // dibuat -- flow baru: DO cuma boleh dibuat setelah invoice terkait
+        // (baik 1 invoice reguler maupun 2 invoice proforma DP+pelunasan
+        // untuk barang indent) lunas 100%.
         public async Task<bool> IsSalesOrderFullyInvoicedAndPaidAsync(
             int soId,
             SqlConnection connection,
             SqlTransaction transaction)
         {
-            // Compares invoiced grand total (subtotal - discount + tax per invoice)
-            // against SO subtotal. Returns true only when fully covered AND all paid.
+            // so.subtotal adalah grand total SO (SUDAH termasuk PPN -- lihat
+            // komentar mapFormToApiPayload di frontend SalesOrderType.ts),
+            // sedangkan si.subtotal per invoice adalah subtotal KOTOR sebelum
+            // diskon & PPN. Membandingkan keduanya apa adanya membuat SO ber-
+            // PPN TIDAK PERNAH dianggap lunas (selalu kurang sebesar nilai
+            // pajaknya) walau seluruh invoice sudah lunas. Rekonstruksi basis
+            // yang sepadan: (subtotal - discount_total + tax_total) per invoice.
             const string query = @"
                 SELECT
                     so.subtotal AS SoSubtotal,
@@ -175,12 +186,17 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 WHERE so.order_id = @SoId
                 GROUP BY so.subtotal";
 
-            var row = await connection.QueryFirstOrDefaultAsync(query, new { SoId = soId }, transaction);
-            if (row == null) return false;
+            var row = await connection.QueryFirstOrDefaultAsync(
+                query,
+                new { SoId = soId },
+                transaction);
 
-            decimal soSubtotal       = row.SoSubtotal;
+            if (row == null)
+                return false;
+
+            decimal soSubtotal = row.SoSubtotal;
             decimal invoicedSubtotal = row.InvoicedSubtotal;
-            int unpaidInvoiceCount   = (int)row.UnpaidInvoiceCount;
+            int unpaidInvoiceCount = (int)row.UnpaidInvoiceCount;
 
             return invoicedSubtotal >= soSubtotal && unpaidInvoiceCount == 0 && invoicedSubtotal > 0;
         }
@@ -195,8 +211,13 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 FROM delivery_order_header
                 WHERE id = @Id";
 
-            var row = await connection.QueryFirstOrDefaultAsync(query, new { Id = deliveryOrderId }, transaction);
-            if (row == null) return (null, null);
+            var row = await connection.QueryFirstOrDefaultAsync(
+                query,
+                new { Id = deliveryOrderId },
+                transaction);
+
+            if (row == null)
+                return (null, null);
 
             return ((string)row.Status, (int?)row.SoId);
         }
@@ -212,7 +233,10 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 SET status = @Status
                 WHERE id = @Id";
 
-            await connection.ExecuteAsync(query, new { Id = deliveryOrderId, Status = status }, transaction);
+            await connection.ExecuteAsync(
+                query,
+                new { Id = deliveryOrderId, Status = status },
+                transaction);
         }
 
         public async Task UpdateSalesOrderStatusAsync(
@@ -226,7 +250,10 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 SET status = @Status
                 WHERE order_id = @SoId";
 
-            await connection.ExecuteAsync(query, new { SoId = soId, Status = status }, transaction);
+            await connection.ExecuteAsync(
+                query,
+                new { SoId = soId, Status = status },
+                transaction);
         }
 
         public async Task<int> InsertDeliveryOrderHeader(

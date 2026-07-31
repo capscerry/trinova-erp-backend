@@ -70,8 +70,14 @@ namespace trinova_erp_backend.Usecase.Penjualan
             byte[]? attachmentBytes = null;
             if (!string.IsNullOrWhiteSpace(request?.AttachmentBase64))
             {
-                try { attachmentBytes = Convert.FromBase64String(request.AttachmentBase64); }
-                catch (FormatException) { throw new InvalidOperationException("Lampiran PDF tidak valid (base64 rusak)."); }
+                try
+                {
+                    attachmentBytes = Convert.FromBase64String(request.AttachmentBase64);
+                }
+                catch (FormatException)
+                {
+                    throw new InvalidOperationException("Lampiran PDF tidak valid (base64 rusak).");
+                }
             }
 
             var htmlBody = BuildInvoiceEmailHtml(header, request?.Message);
@@ -80,7 +86,13 @@ namespace trinova_erp_backend.Usecase.Penjualan
                 ? $"Invoice-{header.InvoiceNumber}.pdf"
                 : request.AttachmentFileName;
 
-            await _emailService.SendAsync(header.CustomerEmail!, header.CustomerName ?? "Pelanggan", subject, htmlBody, attachmentBytes, fileName);
+            await _emailService.SendAsync(
+                header.CustomerEmail!,
+                header.CustomerName ?? "Pelanggan",
+                subject,
+                htmlBody,
+                attachmentBytes,
+                fileName);
 
             await _activityLogService.LogSalesAsync(
                 "invoice_email_sent",
@@ -418,10 +430,15 @@ namespace trinova_erp_backend.Usecase.Penjualan
                 header.Status = "Issued";
         }
 
-        // Flow baru: Delivery Order dibuat SETELAH invoice lunas, sehingga
-        // status DO tidak lagi diubah ke 'Invoiced' di sini. Sales Order
-        // cukup bergerak dari 'Draft' ke 'Processing' saat invoice pertama
-        // dibuat — tidak pernah langsung ke 'Invoiced' atau 'Completed'.
+        // Flow baru: Delivery Order sekarang SELALU dibuat setelah invoice
+        // (bukan sebelumnya), jadi status DO tidak lagi berubah menjadi
+        // "Invoiced" di sini -- vocabulary status DO yang baru
+        // (In Delivery/Received/Cancelled) tidak punya nilai "Invoiced" sama
+        // sekali. Untuk Sales Order, status "Invoiced"/"Partially Paid" juga
+        // sudah dipensiunkan -- begitu invoice pertama dibuat untuk SO
+        // tersebut, SO cukup pindah dari "Draft" ke "Processing"
+        // (satu arah, tidak menimpa status yang sudah lebih maju seperti
+        // In Delivery/Completed/Cancelled kalau ada invoice susulan/koreksi).
         private static async Task UpdateRelatedDocumentStatuses(
             SalesInvoiceHeader header,
             SqlConnection connection,

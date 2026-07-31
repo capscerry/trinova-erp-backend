@@ -2,22 +2,38 @@
 -- SEED SCRIPT: Sample Sales Data — MENGIKUTI ALUR STATUS RESMI
 -- (bukan status acak seperti seed_sales_demo_data.sql sebelumnya)
 --
--- Aturan status yang diikuti (sesuai brief):
---   Quotation dibuat                          -> Draft
---   SO dibuat dari Quotation                  -> SO: Draft,        Quotation: Processed
---   Delivery Order dibuat dari SO             -> SO: In Delivery,  DO: Draft
---   Invoice dibuat dari Delivery Order        -> DO: Invoiced,     SO: Invoiced, Invoice: Issued
---   Sales Receipt (bayar penuh)               -> Invoice: Paid,          Receipt: Validated, SO: Completed
---   Sales Receipt (bayar sebagian)             -> Invoice: Partially Paid, Receipt: Validated, SO: Partially Paid
---       (SO Partially Paid untuk kasus bayar sebagian adalah interpretasi
---        saya berdasarkan logic cascade yang sudah dikonfirmasi di
---        SalesReceiptRepo.UpdateSalesOrderInvoiceStatus — beri tahu saya
---        kalau ternyata SO harus tetap Completed meski baru dibayar sebagian)
+-- REVISI: disesuaikan dengan redesain flow Sales Module (lihat plan
+-- "Redesain Flow & Status Sales Module") -- SO/DO cuma 5/3 status,
+-- DO baru boleh dibuat SETELAH seluruh invoice SO lunas 100%, dan ada
+-- alur baru untuk barang indent (2x Invoice Proforma DP 30% / Pelunasan
+-- 70%, opsional didahului record Uang Muka).
 --
---   Alur Uang Muka (tanpa Delivery/Invoice):
---   SO dibuat (langsung, tanpa quotation)     -> SO: Draft
---   Uang Muka dibuat dari SO tsb              -> SO: Partially Paid, UangMuka: Draft (belum dibayar)
---   Sales Receipt dibuat dari Uang Muka tsb   -> UangMuka: Received
+-- Aturan status yang diikuti sekarang:
+--   Quotation dibuat                          -> Draft
+--   SO dibuat dari Quotation                  -> SO: Draft, Quotation: Processed
+--   Invoice pertama dibuat untuk SO tsb        -> SO: Processing, Invoice: Issued
+--   Sales Receipt (bayar sebagian)             -> Invoice: Partially Paid  (SO tetap Processing)
+--   Sales Receipt (bayar penuh, SEMUA invoice
+--     terkait SO sudah lunas)                  -> Invoice: Paid
+--   Delivery Order dibuat (HANYA kalau seluruh
+--     invoice SO sudah lunas 100%)             -> DO: In Delivery (default saat dibuat),
+--                                                  SO: In Delivery
+--   DO ditandai "Diterima" (manual)            -> DO: Received, SO: Completed
+--
+--   Alur Barang Indent (sales_order.is_indent = 1, tanpa quotation):
+--   SO dibuat langsung                         -> SO: Draft, is_indent = 1
+--   Uang Muka dibuat (nominal = 30% dari SO)   -> UangMuka: Draft
+--   Invoice Proforma DP dibuat dari SO,
+--     nominal = nominal Uang Muka,
+--     proforma_stage = 'DP'                    -> SO: Processing, Invoice DP: Issued
+--   Sales Receipt atas Invoice DP (lunas)      -> Invoice DP: Paid, UangMuka: Received
+--   Invoice Proforma Pelunasan dibuat,
+--     nominal = sisa (subtotal SO - DP),
+--     proforma_stage = 'Final'                 -> Invoice Final: Issued
+--   Sales Receipt atas Invoice Final (lunas)   -> Invoice Final: Paid
+--   Delivery Order dibuat (setelah KEDUA
+--     invoice proforma lunas)                  -> DO: In Delivery, SO: In Delivery
+--   DO ditandai "Diterima" (manual, sebagian)  -> DO: Received, SO: Completed
 --
 -- Semua data ditag 'FLOWDEMO-' / 'SO-FLOWDEMO-' / dst supaya gampang
 -- dibedakan dari batch seed_sales_demo_data.sql sebelumnya dan gampang
@@ -150,13 +166,14 @@ BEGIN
 END
 
 -- ------------------------------------------------------------
--- 3. Loop B — 150 Quotation -> SO, bertahap ke DO/Invoice/Receipt
---    sesuai bucket (rentang iterasi @b):
---      1-20    : Bucket B — SO Draft saja
---      21-45   : Bucket C — + Delivery Order (SO: In Delivery, DO: Draft)
---      46-75   : Bucket D — + Invoice (DO: Invoiced, SO: Invoiced, Invoice: Issued)
---      76-120  : Bucket E — + Sales Receipt LUNAS (Invoice: Paid, SO: Completed)
---      121-150 : Bucket F — + Sales Receipt SEBAGIAN (Invoice: Partially Paid, SO: Partially Paid)
+-- 3. Loop B — 150 Quotation -> SO (non-indent), bertahap ke
+--    Invoice/Pembayaran/DO sesuai bucket (rentang iterasi @b):
+--      1-30    : Bucket B — SO Draft saja (belum ada invoice)
+--      31-70   : Bucket C — + Invoice Issued (belum dibayar). SO: Processing
+--      71-100  : Bucket D — + Invoice Partially Paid.          SO: Processing
+--      101-130 : Bucket E — Invoice Paid LUNAS -> Delivery Order dibuat
+--                            (baru boleh setelah lunas).       SO: In Delivery
+--      131-150 : Bucket F — + DO ditandai Diterima.            SO: Completed
 -- ------------------------------------------------------------
 DECLARE @b INT = 1;
 WHILE @b <= 150
@@ -180,11 +197,11 @@ BEGIN
     );
     DECLARE @qIdB INT = CAST(SCOPE_IDENTITY() AS INT);
 
-    -- 3b. Sales Order dari quotation ini
+    -- 3b. Sales Order dari quotation ini -- status awal "Draft"
     DECLARE @soDateB DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 3), @qDateB);
     DECLARE @kirimDateB DATETIME = DATEADD(DAY, 3 + (ABS(CHECKSUM(NEWID())) % 5), @soDateB);
 
-    INSERT INTO sales_order (so_number, tanggal_kirim, so_date, po_number, subtotal, customer_id, is_taxable, is_tax_included, address, notes, discount_total, tax_total, status, quotation_id)
+    INSERT INTO sales_order (so_number, tanggal_kirim, so_date, po_number, subtotal, customer_id, is_taxable, is_tax_included, address, notes, discount_total, tax_total, status, quotation_id, is_indent)
     VALUES (
         'SO-FLOWDEMO-' + RIGHT('00000' + CAST(@b AS VARCHAR), 5),
         @kirimDateB, @soDateB,
@@ -195,7 +212,8 @@ BEGIN
         'Sample order from quotation (flow-accurate demo)',
         0, 0,
         'Draft',
-        @qIdB
+        @qIdB,
+        0
     );
     DECLARE @orderIdB INT = CAST(SCOPE_IDENTITY() AS INT);
 
@@ -228,63 +246,30 @@ BEGIN
     UPDATE sales_quotation SET subtotal = @soTotalB WHERE quotation_id = @qIdB;
     UPDATE sales_order SET subtotal = @soTotalB WHERE order_id = @orderIdB;
 
-    -- ── Bucket B (iter 1-20): berhenti di SO Draft ────────────────────
-    IF @b <= 20
-    BEGIN
-        -- status SO tetap 'Draft', tidak ada aksi lanjutan
-        SET @b = @b + 1;
-        CONTINUE;
-    END
-
-    -- ── Bucket C-F (iter 21+): buat Delivery Order ────────────────────
-    UPDATE sales_order SET status = 'In Delivery' WHERE order_id = @orderIdB;
-
-    DECLARE @doDateB DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 4), @kirimDateB);
-    DECLARE @delCatIdB INT;
-    SELECT TOP 1 @delCatIdB = id FROM delivery_category ORDER BY NEWID();
-
-    INSERT INTO delivery_order_header (customer_id, do_number, delivery_category_id, po_number, address, notes, do_date, so_id, status)
-    VALUES (
-        @custIdB,
-        'SJ-FLOWDEMO-' + RIGHT('00000' + CAST(@b AS VARCHAR), 5),
-        @delCatIdB,
-        'PO-FD-' + CAST(1000 + @b AS VARCHAR),
-        @custAddrB,
-        'Sample delivery from SO (flow-accurate demo)',
-        @doDateB,
-        @orderIdB,
-        'Draft'
-    );
-    DECLARE @doIdB INT = CAST(SCOPE_IDENTITY() AS INT);
-
-    INSERT INTO delivery_order_detail (delivery_id, product_id, qty_dikirim, qty_dipesan, warehouse_id)
-    SELECT @doIdB, sod.product_id, sod.product_qty, sod.product_qty, sod.warehouse_id
-    FROM sales_order_detail sod
-    WHERE sod.order_id = @orderIdB;
-
-    -- ── Bucket C (iter 21-45): berhenti di Delivery Order Draft ───────
-    IF @b <= 45
+    -- ── Bucket B (iter 1-30): berhenti di SO Draft ────────────
+    IF @b <= 30
     BEGIN
         SET @b = @b + 1;
         CONTINUE;
     END
 
-    -- ── Bucket D-F (iter 46+): buat Invoice dari Delivery Order ───────
-    UPDATE delivery_order_header SET status = 'Invoiced' WHERE id = @doIdB;
-    UPDATE sales_order SET status = 'Invoiced' WHERE order_id = @orderIdB;
+    -- ── Bucket C-F (iter 31+): buat Invoice reguler dari SO ────────────
+    -- Invoice pertama untuk SO ini -> SO otomatis jadi "Processing".
+    UPDATE sales_order SET status = 'Processing' WHERE order_id = @orderIdB;
 
-    DECLARE @invDateB DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 4), @doDateB);
+    DECLARE @invDateB DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 4), @soDateB);
     DECLARE @dueDateB DATETIME = DATEADD(DAY, 30, @invDateB);
     DECLARE @invTaxB DECIMAL(18,2) = @soTotalB * 0.11;
     DECLARE @invGrandB DECIMAL(18,2) = @soTotalB + @invTaxB;
 
-    INSERT INTO sales_invoice (invoice_number, customer_id, sales_order_id, delivery_order_id, invoice_date, due_date, status, subtotal, discount_total, tax_total, down_payment_amount, shipping_cost, grand_total, paid_amount, remaining_amount, notes, created_by, created_at, updated_at)
+    INSERT INTO sales_invoice (invoice_number, customer_id, sales_order_id, delivery_order_id, invoice_date, due_date, status, subtotal, discount_total, tax_total, down_payment_amount, shipping_cost, grand_total, paid_amount, remaining_amount, notes, created_by, created_at, updated_at, proforma_stage)
     VALUES (
         'INV-FLOWDEMO-' + RIGHT('00000' + CAST(@b AS VARCHAR), 5),
-        @custIdB, @orderIdB, @doIdB,
+        @custIdB, @orderIdB, NULL,
         @invDateB, @dueDateB, 'Issued',
         @soTotalB, 0, @invTaxB, 0, 0, @invGrandB, 0, @invGrandB,
-        'Sample invoice from delivery (flow-accurate demo)', 'system-seed', GETDATE(), GETDATE()
+        'Sample invoice from Sales Order (flow-accurate demo)', 'system-seed', GETDATE(), GETDATE(),
+        NULL
     );
     DECLARE @invIdB INT = CAST(SCOPE_IDENTITY() AS INT);
 
@@ -294,34 +279,21 @@ BEGIN
     FROM sales_order_detail sod
     WHERE sod.order_id = @orderIdB;
 
-    -- ── Bucket D (iter 46-75): berhenti di Invoice Issued, belum dibayar
-    IF @b <= 75
+    -- ── Bucket C (iter 31-70): berhenti di Invoice Issued, belum dibayar
+    IF @b <= 70
     BEGIN
         SET @b = @b + 1;
         CONTINUE;
     END
 
-    -- ── Bucket E-F (iter 76+): buat Sales Receipt ─────────────────────
+    -- ── Bucket D-F (iter 71+): buat Sales Receipt ──────────────────────
     DECLARE @bankIdB INT;
     SELECT TOP 1 @bankIdB = id FROM bank ORDER BY NEWID();
     DECLARE @receiptDateB DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 10), @invDateB);
 
-    IF @b <= 120
+    IF @b <= 100
     BEGIN
-        -- ── Bucket E (iter 76-120): LUNAS ──────────────────────────────
-        INSERT INTO sales_receipt (no_bukti, customer_id, bank_id, nilai_pembayaran, tanggal_bayar, sales_order_id, sales_invoice_id, status)
-        VALUES (
-            'BP-FLOWDEMO-' + RIGHT('00000' + CAST(@b AS VARCHAR), 5),
-            @custIdB, @bankIdB, @invGrandB, @receiptDateB,
-            @orderIdB, @invIdB, 'Validated'
-        );
-
-        UPDATE sales_invoice SET status = 'Paid', paid_amount = @invGrandB, remaining_amount = 0 WHERE id = @invIdB;
-        UPDATE sales_order SET status = 'Completed' WHERE order_id = @orderIdB;
-    END
-    ELSE
-    BEGIN
-        -- ── Bucket F (iter 121-150): SEBAGIAN (30%-70%) ────────────────
+        -- ── Bucket D (iter 71-100): SEBAGIAN (30%-70%) ──────────────────
         DECLARE @paidPctB DECIMAL(5,4) = 0.3 + ((ABS(CHECKSUM(NEWID())) % 40) / 100.0);
         DECLARE @paidAmtB DECIMAL(18,2) = ROUND(@invGrandB * @paidPctB, 0);
         DECLARE @remainAmtB DECIMAL(18,2) = @invGrandB - @paidAmtB;
@@ -334,17 +306,73 @@ BEGIN
         );
 
         UPDATE sales_invoice SET status = 'Partially Paid', paid_amount = @paidAmtB, remaining_amount = @remainAmtB WHERE id = @invIdB;
-        UPDATE sales_order SET status = 'Partially Paid' WHERE order_id = @orderIdB;
+        -- SO tetap "Processing" -- belum lunas, DO belum boleh dibuat.
+
+        SET @b = @b + 1;
+        CONTINUE;
     END
+
+    -- ── Bucket E-F (iter 101+): LUNAS -> Delivery Order boleh dibuat ───
+    INSERT INTO sales_receipt (no_bukti, customer_id, bank_id, nilai_pembayaran, tanggal_bayar, sales_order_id, sales_invoice_id, status)
+    VALUES (
+        'BP-FLOWDEMO-' + RIGHT('00000' + CAST(@b AS VARCHAR), 5),
+        @custIdB, @bankIdB, @invGrandB, @receiptDateB,
+        @orderIdB, @invIdB, 'Validated'
+    );
+
+    UPDATE sales_invoice SET status = 'Paid', paid_amount = @invGrandB, remaining_amount = 0 WHERE id = @invIdB;
+
+    -- Delivery Order -- default status saat dibuat langsung "In Delivery"
+    -- (bukan lagi Draft), karena syarat lunas 100% sudah terpenuhi.
+    UPDATE sales_order SET status = 'In Delivery' WHERE order_id = @orderIdB;
+
+    DECLARE @doDateB DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 4), @receiptDateB);
+    DECLARE @delCatIdB INT;
+    SELECT TOP 1 @delCatIdB = id FROM delivery_category ORDER BY NEWID();
+
+    INSERT INTO delivery_order_header (customer_id, do_number, delivery_category_id, po_number, address, notes, do_date, so_id, status)
+    VALUES (
+        @custIdB,
+        'SJ-FLOWDEMO-' + RIGHT('00000' + CAST(@b AS VARCHAR), 5),
+        @delCatIdB,
+        'PO-FD-' + CAST(1000 + @b AS VARCHAR),
+        @custAddrB,
+        'Sample delivery from fully-paid SO (flow-accurate demo)',
+        @doDateB,
+        @orderIdB,
+        'In Delivery'
+    );
+    DECLARE @doIdB INT = CAST(SCOPE_IDENTITY() AS INT);
+
+    INSERT INTO delivery_order_detail (delivery_id, product_id, qty_dikirim, qty_dipesan, warehouse_id)
+    SELECT @doIdB, sod.product_id, sod.product_qty, sod.product_qty, sod.warehouse_id
+    FROM sales_order_detail sod
+    WHERE sod.order_id = @orderIdB;
+
+    -- ── Bucket E (iter 101-130): berhenti di DO "In Delivery" ──────────
+    IF @b <= 130
+    BEGIN
+        SET @b = @b + 1;
+        CONTINUE;
+    END
+
+    -- ── Bucket F (iter 131-150): DO ditandai Diterima -> SO Completed ──
+    UPDATE delivery_order_header SET status = 'Received' WHERE id = @doIdB;
+    UPDATE sales_order SET status = 'Completed' WHERE order_id = @orderIdB;
 
     SET @b = @b + 1;
 END
 
 -- ------------------------------------------------------------
--- 4. Loop C — 20 SO langsung (TANPA quotation) -> Uang Muka -> (sebagian) Receipt
---      Semua 20  : SO Draft -> Uang Muka dibuat -> SO jadi Partially Paid
---      15 dari 20: Uang Muka juga dapat Sales Receipt -> UangMuka jadi Received
---      5 sisanya : Uang Muka tetap Draft (belum dibayar)
+-- 4. Loop C — 20 SO barang indent (is_indent = 1, TANPA quotation),
+--    Uang Muka -> 2x Invoice Proforma (DP 30% / Pelunasan 70%) -> DO.
+--    Sub-bucket (rentang iterasi @c):
+--      1-4   : Invoice DP dibuat, Issued (belum dibayar).      SO: Processing
+--      5-8   : Invoice DP Partially Paid.                      SO: Processing
+--      9-11  : Invoice DP LUNAS -> Invoice Final dibuat, Issued (belum dibayar)
+--      12-14 : Invoice DP LUNAS -> Invoice Final Partially Paid
+--      15-17 : Kedua invoice LUNAS -> Delivery Order "In Delivery"
+--      18-20 : Kedua invoice LUNAS -> DO ditandai Diterima -> SO Completed
 -- ------------------------------------------------------------
 DECLARE @c INT = 1;
 WHILE @c <= 20
@@ -354,9 +382,10 @@ BEGIN
     DECLARE @custAddrC NVARCHAR(500) = (SELECT alamat FROM master_customer WHERE customer_id = @custIdC);
 
     DECLARE @soDateC DATETIME = DATEADD(DAY, -(ABS(CHECKSUM(NEWID())) % 240), GETDATE());
-    DECLARE @kirimDateC DATETIME = DATEADD(DAY, 5 + (ABS(CHECKSUM(NEWID())) % 5), @soDateC);
+    DECLARE @kirimDateC DATETIME = DATEADD(DAY, 10 + (ABS(CHECKSUM(NEWID())) % 15), @soDateC);
 
-    INSERT INTO sales_order (so_number, tanggal_kirim, so_date, po_number, subtotal, customer_id, is_taxable, is_tax_included, address, notes, discount_total, tax_total, status, quotation_id)
+    -- 4a. Sales Order barang indent -- status awal "Draft"
+    INSERT INTO sales_order (so_number, tanggal_kirim, so_date, po_number, subtotal, customer_id, is_taxable, is_tax_included, address, notes, discount_total, tax_total, status, quotation_id, is_indent)
     VALUES (
         'SO-FLOWDEMO-' + RIGHT('00000' + CAST(2000 + @c AS VARCHAR), 5),
         @kirimDateC, @soDateC,
@@ -364,10 +393,11 @@ BEGIN
         0,
         @custIdC, 1, 0,
         @custAddrC,
-        'Sample direct order for down-payment flow (flow-accurate demo)',
+        'Sample indent order (made-to-order, flow-accurate demo)',
         0, 0,
         'Draft',
-        NULL
+        NULL,
+        1
     );
     DECLARE @orderIdC INT = CAST(SCOPE_IDENTITY() AS INT);
 
@@ -395,10 +425,14 @@ BEGIN
 
     UPDATE sales_order SET subtotal = @soTotalC WHERE order_id = @orderIdC;
 
-    -- Uang Muka dari SO ini — SO langsung jadi Partially Paid begitu DP dibuat
+    -- 4b. Uang Muka dari SO ini -- nominal = 30% dari total SO. Dibuat
+    --     dulu sebelum Invoice Proforma DP, sesuai urutan flow indent
+    --     nyata: buat Uang Muka -> buat Invoice Proforma DP yang menarik
+    --     nominalnya dari record ini -> baru diakhir input Penerimaan.
     DECLARE @soNumberC VARCHAR(50) = (SELECT so_number FROM sales_order WHERE order_id = @orderIdC);
     DECLARE @dpDateC DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 5), @soDateC);
-    DECLARE @dpAmountC DECIMAL(18,2) = ROUND(@soTotalC * (0.2 + (ABS(CHECKSUM(NEWID())) % 30) / 100.0), 0);
+    DECLARE @dpAmountC DECIMAL(18,2) = ROUND(@soTotalC * 0.3, 0);
+    DECLARE @dpFactorC DECIMAL(9,6) = CASE WHEN @soTotalC = 0 THEN 0.3 ELSE @dpAmountC / @soTotalC END;
 
     INSERT INTO uang_muka (NoFaktur, Tanggal, CustomerId, NoPO, NoSo, NominalUangMuka, IsTaxable, IsTaxIncluded, TaxAmount, TotalAmount, SyaratPembayaran, Alamat, Keterangan, Status, CreatedAt, UpdatedAt, CreatedBy)
     VALUES (
@@ -409,30 +443,194 @@ BEGIN
         @dpAmountC, 0, 0, 0, @dpAmountC,
         'Net 30',
         @custAddrC,
-        'Sample down payment (flow-accurate demo)',
+        'Sample down payment (30%) for indent order (flow-accurate demo)',
         'Draft',
         GETDATE(), GETDATE(), 'system-seed'
     );
     DECLARE @umIdC INT = CAST(SCOPE_IDENTITY() AS INT);
 
-    UPDATE sales_order SET status = 'Partially Paid' WHERE order_id = @orderIdC;
+    -- 4c. Invoice Proforma DP (proforma_stage = 'DP'), nominal ditarik
+    --     dari Uang Muka di atas -> Invoice pertama untuk SO ini -> SO
+    --     otomatis jadi "Processing".
+    UPDATE sales_order SET status = 'Processing' WHERE order_id = @orderIdC;
 
-    -- 15 dari 20 dapat Sales Receipt -> Uang Muka jadi Received
-    IF @c <= 15
+    DECLARE @invDpDateC DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 3), @dpDateC);
+    DECLARE @dueDpDateC DATETIME = DATEADD(DAY, 14, @invDpDateC);
+    DECLARE @dpTaxC DECIMAL(18,2) = @dpAmountC * 0.11;
+    DECLARE @dpGrandC DECIMAL(18,2) = @dpAmountC + @dpTaxC;
+
+    INSERT INTO sales_invoice (invoice_number, customer_id, sales_order_id, delivery_order_id, invoice_date, due_date, status, subtotal, discount_total, tax_total, down_payment_amount, shipping_cost, grand_total, paid_amount, remaining_amount, notes, created_by, created_at, updated_at, proforma_stage)
+    VALUES (
+        'INV-FLOWDEMO-DP-' + RIGHT('00000' + CAST(@c AS VARCHAR), 5),
+        @custIdC, @orderIdC, NULL,
+        @invDpDateC, @dueDpDateC, 'Issued',
+        @dpAmountC, 0, @dpTaxC, 0, 0, @dpGrandC, 0, @dpGrandC,
+        'Invoice Proforma DP 30% (flow-accurate demo)', 'system-seed', GETDATE(), GETDATE(),
+        'DP'
+    );
+    DECLARE @invDpIdC INT = CAST(SCOPE_IDENTITY() AS INT);
+
+    INSERT INTO sales_invoice_detail (sales_invoice_id, product_id, description, quantity, uom_id, price, discount, tax, subtotal, warehouse_id, created_at, updated_at)
+    SELECT @invDpIdC, sod.product_id, sod.product_name, sod.product_qty, sod.uom_id,
+           sod.product_price * @dpFactorC,
+           0,
+           sod.total_price * @dpFactorC * 0.11,
+           sod.total_price * @dpFactorC,
+           sod.warehouse_id, GETDATE(), GETDATE()
+    FROM sales_order_detail sod
+    WHERE sod.order_id = @orderIdC;
+
+    -- ── Sub-bucket (iter 1-4): berhenti di Invoice DP Issued, unpaid ───
+    IF @c <= 4
     BEGIN
-        DECLARE @bankIdC INT;
-        SELECT TOP 1 @bankIdC = id FROM bank ORDER BY NEWID();
-        DECLARE @receiptDateC DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 5), @dpDateC);
+        SET @c = @c + 1;
+        CONTINUE;
+    END
 
-        INSERT INTO sales_receipt (no_bukti, customer_id, bank_id, nilai_pembayaran, tanggal_bayar, uang_muka_id, sales_order_id, status)
+    DECLARE @bankIdC INT;
+    SELECT TOP 1 @bankIdC = id FROM bank ORDER BY NEWID();
+
+    -- ── Sub-bucket (iter 5-8): Invoice DP Partially Paid ────────────────
+    IF @c <= 8
+    BEGIN
+        DECLARE @dpPaidPctC DECIMAL(5,4) = 0.3 + ((ABS(CHECKSUM(NEWID())) % 40) / 100.0);
+        DECLARE @dpPaidAmtC DECIMAL(18,2) = ROUND(@dpGrandC * @dpPaidPctC, 0);
+        DECLARE @dpReceiptDateC DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 5), @invDpDateC);
+
+        INSERT INTO sales_receipt (no_bukti, customer_id, bank_id, nilai_pembayaran, tanggal_bayar, uang_muka_id, sales_order_id, sales_invoice_id, status)
         VALUES (
             'BP-FLOWDEMO-DP-' + RIGHT('00000' + CAST(@c AS VARCHAR), 5),
-            @custIdC, @bankIdC, @dpAmountC, @receiptDateC,
-            @umIdC, @orderIdC, 'Validated'
+            @custIdC, @bankIdC, @dpPaidAmtC, @dpReceiptDateC,
+            @umIdC, @orderIdC, @invDpIdC, 'Validated'
         );
 
-        UPDATE uang_muka SET Status = 'Received', UpdatedAt = GETDATE() WHERE Id = @umIdC;
+        UPDATE sales_invoice SET status = 'Partially Paid', paid_amount = @dpPaidAmtC, remaining_amount = @dpGrandC - @dpPaidAmtC WHERE id = @invDpIdC;
+
+        SET @c = @c + 1;
+        CONTINUE;
     END
+
+    -- ── Iter 9+: Invoice DP LUNAS -> Uang Muka jadi Received ────────────
+    DECLARE @dpReceiptDateC2 DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 5), @invDpDateC);
+
+    INSERT INTO sales_receipt (no_bukti, customer_id, bank_id, nilai_pembayaran, tanggal_bayar, uang_muka_id, sales_order_id, sales_invoice_id, status)
+    VALUES (
+        'BP-FLOWDEMO-DP-' + RIGHT('00000' + CAST(@c AS VARCHAR), 5),
+        @custIdC, @bankIdC, @dpGrandC, @dpReceiptDateC2,
+        @umIdC, @orderIdC, @invDpIdC, 'Validated'
+    );
+
+    UPDATE sales_invoice SET status = 'Paid', paid_amount = @dpGrandC, remaining_amount = 0 WHERE id = @invDpIdC;
+    UPDATE uang_muka SET Status = 'Received', UpdatedAt = GETDATE() WHERE Id = @umIdC;
+
+    -- 4d. Invoice Proforma Pelunasan (proforma_stage = 'Final') -- nominal
+    --     = sisa (subtotal SO - DP), supaya jumlah kedua invoice pas 100%.
+    DECLARE @finalFactorC DECIMAL(9,6) = 1 - @dpFactorC;
+    DECLARE @finalAmountC DECIMAL(18,2) = @soTotalC - @dpAmountC;
+    DECLARE @invFinalDateC DATETIME = DATEADD(DAY, 3 + (ABS(CHECKSUM(NEWID())) % 10), @dpReceiptDateC2);
+    DECLARE @dueFinalDateC DATETIME = DATEADD(DAY, 14, @invFinalDateC);
+    DECLARE @finalTaxC DECIMAL(18,2) = @finalAmountC * 0.11;
+    DECLARE @finalGrandC DECIMAL(18,2) = @finalAmountC + @finalTaxC;
+
+    INSERT INTO sales_invoice (invoice_number, customer_id, sales_order_id, delivery_order_id, invoice_date, due_date, status, subtotal, discount_total, tax_total, down_payment_amount, shipping_cost, grand_total, paid_amount, remaining_amount, notes, created_by, created_at, updated_at, proforma_stage)
+    VALUES (
+        'INV-FLOWDEMO-FINAL-' + RIGHT('00000' + CAST(@c AS VARCHAR), 5),
+        @custIdC, @orderIdC, NULL,
+        @invFinalDateC, @dueFinalDateC, 'Issued',
+        @finalAmountC, 0, @finalTaxC, 0, 0, @finalGrandC, 0, @finalGrandC,
+        'Invoice Proforma Pelunasan 70% (flow-accurate demo)', 'system-seed', GETDATE(), GETDATE(),
+        'Final'
+    );
+    DECLARE @invFinalIdC INT = CAST(SCOPE_IDENTITY() AS INT);
+
+    INSERT INTO sales_invoice_detail (sales_invoice_id, product_id, description, quantity, uom_id, price, discount, tax, subtotal, warehouse_id, created_at, updated_at)
+    SELECT @invFinalIdC, sod.product_id, sod.product_name, sod.product_qty, sod.uom_id,
+           sod.product_price * @finalFactorC,
+           0,
+           sod.total_price * @finalFactorC * 0.11,
+           sod.total_price * @finalFactorC,
+           sod.warehouse_id, GETDATE(), GETDATE()
+    FROM sales_order_detail sod
+    WHERE sod.order_id = @orderIdC;
+
+    -- ── Sub-bucket (iter 9-11): berhenti di Invoice Final Issued, unpaid
+    IF @c <= 11
+    BEGIN
+        SET @c = @c + 1;
+        CONTINUE;
+    END
+
+    DECLARE @bankIdC2 INT;
+    SELECT TOP 1 @bankIdC2 = id FROM bank ORDER BY NEWID();
+
+    -- ── Sub-bucket (iter 12-14): Invoice Final Partially Paid ───────────
+    IF @c <= 14
+    BEGIN
+        DECLARE @finalPaidPctC DECIMAL(5,4) = 0.3 + ((ABS(CHECKSUM(NEWID())) % 40) / 100.0);
+        DECLARE @finalPaidAmtC DECIMAL(18,2) = ROUND(@finalGrandC * @finalPaidPctC, 0);
+        DECLARE @finalReceiptDateC DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 5), @invFinalDateC);
+
+        INSERT INTO sales_receipt (no_bukti, customer_id, bank_id, nilai_pembayaran, tanggal_bayar, sales_order_id, sales_invoice_id, status)
+        VALUES (
+            'BP-FLOWDEMO-FINAL-' + RIGHT('00000' + CAST(@c AS VARCHAR), 5),
+            @custIdC, @bankIdC2, @finalPaidAmtC, @finalReceiptDateC,
+            @orderIdC, @invFinalIdC, 'Validated'
+        );
+
+        UPDATE sales_invoice SET status = 'Partially Paid', paid_amount = @finalPaidAmtC, remaining_amount = @finalGrandC - @finalPaidAmtC WHERE id = @invFinalIdC;
+
+        SET @c = @c + 1;
+        CONTINUE;
+    END
+
+    -- ── Iter 15+: Invoice Final LUNAS -> kedua invoice lunas 100% ───────
+    -- -> Delivery Order boleh dibuat.
+    DECLARE @finalReceiptDateC2 DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 5), @invFinalDateC);
+
+    INSERT INTO sales_receipt (no_bukti, customer_id, bank_id, nilai_pembayaran, tanggal_bayar, sales_order_id, sales_invoice_id, status)
+    VALUES (
+        'BP-FLOWDEMO-FINAL-' + RIGHT('00000' + CAST(@c AS VARCHAR), 5),
+        @custIdC, @bankIdC2, @finalGrandC, @finalReceiptDateC2,
+        @orderIdC, @invFinalIdC, 'Validated'
+    );
+
+    UPDATE sales_invoice SET status = 'Paid', paid_amount = @finalGrandC, remaining_amount = 0 WHERE id = @invFinalIdC;
+
+    UPDATE sales_order SET status = 'In Delivery' WHERE order_id = @orderIdC;
+
+    DECLARE @doDateC DATETIME = DATEADD(DAY, 1 + (ABS(CHECKSUM(NEWID())) % 4), @finalReceiptDateC2);
+    DECLARE @delCatIdC INT;
+    SELECT TOP 1 @delCatIdC = id FROM delivery_category ORDER BY NEWID();
+
+    INSERT INTO delivery_order_header (customer_id, do_number, delivery_category_id, po_number, address, notes, do_date, so_id, status)
+    VALUES (
+        @custIdC,
+        'SJ-FLOWDEMO-' + RIGHT('00000' + CAST(2000 + @c AS VARCHAR), 5),
+        @delCatIdC,
+        'PO-FD-' + CAST(2000 + @c AS VARCHAR),
+        @custAddrC,
+        'Sample delivery from fully-paid indent SO (flow-accurate demo)',
+        @doDateC,
+        @orderIdC,
+        'In Delivery'
+    );
+    DECLARE @doIdC INT = CAST(SCOPE_IDENTITY() AS INT);
+
+    INSERT INTO delivery_order_detail (delivery_id, product_id, qty_dikirim, qty_dipesan, warehouse_id)
+    SELECT @doIdC, sod.product_id, sod.product_qty, sod.product_qty, sod.warehouse_id
+    FROM sales_order_detail sod
+    WHERE sod.order_id = @orderIdC;
+
+    -- ── Sub-bucket (iter 15-17): berhenti di DO "In Delivery" ───────────
+    IF @c <= 17
+    BEGIN
+        SET @c = @c + 1;
+        CONTINUE;
+    END
+
+    -- ── Sub-bucket (iter 18-20): DO ditandai Diterima -> SO Completed ───
+    UPDATE delivery_order_header SET status = 'Received' WHERE id = @doIdC;
+    UPDATE sales_order SET status = 'Completed' WHERE order_id = @orderIdC;
 
     SET @c = @c + 1;
 END
@@ -442,6 +640,7 @@ COMMIT TRANSACTION SeedFlowAccurate;
 DECLARE @cntCust INT = (SELECT COUNT(*) FROM master_customer WHERE customer_code LIKE 'FLOWDEMO-%');
 DECLARE @cntQuot INT = (SELECT COUNT(*) FROM sales_quotation WHERE quotation_number LIKE 'SQ-FLOWDEMO-%');
 DECLARE @cntSO INT = (SELECT COUNT(*) FROM sales_order WHERE so_number LIKE 'SO-FLOWDEMO-%');
+DECLARE @cntSOIndent INT = (SELECT COUNT(*) FROM sales_order WHERE so_number LIKE 'SO-FLOWDEMO-%' AND is_indent = 1);
 DECLARE @cntDO INT = (SELECT COUNT(*) FROM delivery_order_header WHERE do_number LIKE 'SJ-FLOWDEMO-%');
 DECLARE @cntInv INT = (SELECT COUNT(*) FROM sales_invoice WHERE invoice_number LIKE 'INV-FLOWDEMO-%');
 DECLARE @cntReceipt INT = (SELECT COUNT(*) FROM sales_receipt WHERE no_bukti LIKE 'BP-FLOWDEMO-%');
@@ -450,9 +649,9 @@ DECLARE @cntUM INT = (SELECT COUNT(*) FROM uang_muka WHERE NoFaktur LIKE 'UM-FLO
 PRINT 'Seed selesai.';
 PRINT 'Customer     : ' + CAST(@cntCust AS VARCHAR);
 PRINT 'Quotation    : ' + CAST(@cntQuot AS VARCHAR) + ' (30 berdiri sendiri + 150 jadi SO)';
-PRINT 'Sales Order  : ' + CAST(@cntSO AS VARCHAR) + ' (150 dari quotation + 20 langsung/DP-flow)';
-PRINT 'Delivery Order: ' + CAST(@cntDO AS VARCHAR);
-PRINT 'Invoice      : ' + CAST(@cntInv AS VARCHAR);
+PRINT 'Sales Order  : ' + CAST(@cntSO AS VARCHAR) + ' (150 dari quotation, non-indent + 20 barang indent), termasuk ' + CAST(@cntSOIndent AS VARCHAR) + ' indent';
+PRINT 'Delivery Order: ' + CAST(@cntDO AS VARCHAR) + ' (hanya dibuat untuk SO yang sudah lunas 100%)';
+PRINT 'Invoice      : ' + CAST(@cntInv AS VARCHAR) + ' (termasuk pasangan Proforma DP/Final untuk SO indent)';
 PRINT 'Sales Receipt: ' + CAST(@cntReceipt AS VARCHAR);
 PRINT 'Uang Muka    : ' + CAST(@cntUM AS VARCHAR);
 

@@ -1,8 +1,10 @@
 -- Migration: add is_indent to sales_order + proforma_stage to sales_invoice
--- Supports the new indent-goods flow: indent orders require 2 Sales Invoices
--- (Proforma DP 30% then Proforma Pelunasan 70%) before a Delivery Order can
--- be created. is_indent is a UI guide only — the core rule "DO may only be
--- created after all SO invoices are fully paid" applies to both flow types.
+-- Mendukung flow baru: barang indent butuh 2x Sales Invoice berurutan
+-- (Proforma DP 30% -> Proforma Pelunasan 70%) sebelum Delivery Order boleh
+-- dibuat. is_indent murni menuntun UI (1 invoice reguler vs 2 invoice
+-- proforma) -- aturan inti "DO baru bisa dibuat kalau semua invoice
+-- terkait sudah lunas 100%" berlaku sama untuk kedua flow, jadi tidak ada
+-- percabangan logika bisnis baru di sisi backend selain field label ini.
 
 IF COL_LENGTH('sales_order', 'is_indent') IS NULL
 BEGIN

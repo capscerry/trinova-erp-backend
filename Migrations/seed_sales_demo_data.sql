@@ -95,16 +95,19 @@ BEGIN
     DECLARE @daysAgo INT = ABS(CHECKSUM(NEWID())) % 365;
     DECLARE @soDate DATETIME = DATEADD(DAY, -@daysAgo, GETDATE());
     DECLARE @kirimDate DATETIME = DATEADD(DAY, 3 + (ABS(CHECKSUM(NEWID())) % 7), @soDate);
+    -- Status disesuaikan dengan 5 status Sales Order kanonis hasil redesain
+    -- flow (lihat seed_sales_flow_accurate_demo_data.sql untuk versi yang
+    -- relasinya konsisten -- script ini murni angka acak untuk uji dashboard).
     DECLARE @statusPick INT = ABS(CHECKSUM(NEWID())) % 10;
     DECLARE @status VARCHAR(30) = CASE @statusPick
         WHEN 0 THEN 'Completed'
         WHEN 1 THEN 'Completed'
         WHEN 2 THEN 'Completed'
-        WHEN 3 THEN 'Partially Paid'
-        WHEN 4 THEN 'Partially Paid'
+        WHEN 3 THEN 'Processing'
+        WHEN 4 THEN 'Processing'
         WHEN 5 THEN 'In Delivery'
         WHEN 6 THEN 'Processing'
-        WHEN 7 THEN 'Confirmed'
+        WHEN 7 THEN 'Processing'
         WHEN 8 THEN 'Draft'
         ELSE 'Cancelled'
     END;

@@ -24,7 +24,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
 
         public async Task<InventoryDashboard> GetDashboard()
         {
-            var stocks    = await _stockRepo.GetAllAsync();
+            var stocks = await _stockRepo.GetAllAsync();
             var forecasts = await _forecastClient.GetRealtimeForecast();
 
             if (!forecasts.Any())

@@ -20,6 +20,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
     
     public interface ISalesQuotationUsecase {
         Task<string> InsertSalesQuotation(SalesQuotation quotation);
+        Task SendQuotationEmailAsync(int quotationId, SendQuotationEmailRequest? reques);
         Task<List<QuotationHeaderDTO>> GetAllQuotations();
         Task<List<QuotationHeaderDTO>> GetAllQuotationById(int customerId);
         Task<List<QuotationDetailDTO>> GetAllQuotationDetailById(int quotationId);
@@ -42,7 +43,6 @@ namespace trinova_erp_backend.Usecase.Penjualan
         private readonly ISalesQuotationRepo _salesQuotationRepo;
         private readonly IActivityLogService _activityLogService;
         private readonly IEmailService _emailService;
-
         public SalesQuotationUsecase(
             IOptionsSnapshot<DatabaseConnection> options,
             ISalesQuotationRepo salesQuotationRepo,
@@ -54,6 +54,82 @@ namespace trinova_erp_backend.Usecase.Penjualan
             _activityLogService = activityLogService;
             _emailService = emailService;
         }
+
+        public async Task SendQuotationEmailAsync(int quotationId, SendQuotationEmailRequest? request)
+        {
+            if (quotationId <= 0)
+                throw new ArgumentException("QuotationId tidak valid");
+
+            var data = await _salesQuotationRepo.GetQuotationHeaderDetailById(quotationId);
+            if (data?.Header == null)
+                throw new InvalidOperationException("Sales Quotation tidak ditemukan.");
+
+            var header = data.Header;
+            if (string.IsNullOrWhiteSpace(header.CustomerEmail))
+                throw new InvalidOperationException(
+                    $"Pelanggan '{header.CustomerName}' belum memiliki alamat email terdaftar. " +
+                    "Lengkapi data email pelanggan terlebih dahulu di menu Customer.");
+
+            byte[]? attachmentBytes = null;
+            if (!string.IsNullOrWhiteSpace(request?.AttachmentBase64))
+            {
+                try
+                {
+                    attachmentBytes = Convert.FromBase64String(request.AttachmentBase64);
+                }
+                catch (FormatException)
+                {
+                    throw new InvalidOperationException("Lampiran PDF tidak valid (base64 rusak).");
+                }
+            }
+
+            var htmlBody = BuildQuotationEmailHtml(header, request?.Message);
+            var subject = $"Penawaran Harga {header.QuotationNumber} — Trinova";
+            var fileName = string.IsNullOrWhiteSpace(request?.AttachmentFileName)
+                ? $"Penawaran-{header.QuotationNumber}.pdf"
+                : request.AttachmentFileName;
+
+            await _emailService.SendAsync(
+                header.CustomerEmail!,
+                header.CustomerName ?? "Pelanggan",
+                subject,
+                htmlBody,
+                attachmentBytes,
+                fileName);
+
+            await _activityLogService.LogSalesAsync(
+                "quotation_email_sent",
+                $"Quotation {header.QuotationNumber} dikirim via email ke {header.CustomerEmail}",
+                request?.Message,
+                "sales_quotation",
+                header.Id,
+                header.QuotationNumber);
+        }
+
+        private static string BuildQuotationEmailHtml(QuotationHeaderDTO header, string? customMessage)
+        {
+            var messageBlock = string.IsNullOrWhiteSpace(customMessage)
+                ? ""
+                : $"<p style='color:#334155;'>{System.Net.WebUtility.HtmlEncode(customMessage)}</p>";
+
+            return $@"
+                <div style='font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#1e293b;'>
+                    <div style='background:#0f172a;padding:20px 24px;border-radius:8px 8px 0 0;'>
+                        <h2 style='color:#fbbf24;margin:0;'>Trinova ERP</h2>
+                        <p style='color:#cbd5e1;margin:4px 0 0;font-size:13px;'>Penawaran Harga / Sales Quotation</p>
+                    </div>
+                    <div style='border:1px solid #e2e8f0;border-top:none;padding:24px;border-radius:0 0 8px 8px;'>
+                        <p>Yth. Bapak/Ibu <b>{header.CustomerName}</b>,</p>
+                        {messageBlock}
+                        <p>Berikut kami lampirkan penawaran harga <b>{header.QuotationNumber}</b> tanggal
+                           {header.QuotationDate:dd MMMM yyyy} dalam bentuk PDF terlampir.</p>
+                        <p style='margin-top:16px;font-size:13px;color:#334155;'>
+                            Silakan hubungi kami apabila ada pertanyaan mengenai penawaran ini. Terima kasih.
+                        </p>
+                    </div>
+                </div>";
+        }
+
         public async Task<List<QuotationHeaderDTO>> GetAllQuotations()
         {
             var result = await _salesQuotationRepo.GetQuotationHeaders();

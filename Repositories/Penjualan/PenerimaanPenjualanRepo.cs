@@ -471,12 +471,14 @@ namespace trinova_erp_backend.Repositories.Penjualan
             }
         }
 
-        // Flow baru: pembayaran (baik langsung ke SO maupun lewat invoice)
-        // tidak lagi menyelesaikan (Completed) Sales Order — itu sekarang
-        // HANYA dipicu oleh Delivery Order ditandai diterima
+        // Flow baru: pembayaran (baik langsung ke SO tanpa invoice, maupun
+        // lewat invoice) tidak lagi menyelesaikan (Completed) Sales Order --
+        // itu sekarang HANYA dipicu oleh Delivery Order ditandai diterima
         // (lihat PengirimanPenjualanUsecase.MarkDeliveryOrderReceivedAsync).
-        // Method ini hanya memastikan SO bergerak dari Draft ke Processing,
-        // dan sengaja TIDAK menyentuh SO yang statusnya sudah lebih maju.
+        // Kedua method di bawah cuma memastikan SO pindah/tetap di
+        // "Processing" selama masih dalam tahap penagihan & pembayaran, dan
+        // sengaja TIDAK menyentuh SO yang statusnya sudah "In Delivery",
+        // "Completed", atau "Cancelled" (guard di WHERE clause).
         private static async Task UpdateSalesOrderPaymentStatus(
             int salesOrderId,
             SqlConnection connection,
