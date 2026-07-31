@@ -420,7 +420,37 @@ builder.Services
 
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    // ── JWT Bearer security definition ────────────────────────────────────────
+    // Adds a "Authorize" button to Swagger UI so you can paste a JWT token and
+    // have it sent as "Authorization: Bearer <token>" on every request.
+    // This is documentation/testing only — no auth middleware is changed.
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name         = "Authorization",
+        Type         = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme       = "bearer",
+        BearerFormat = "JWT",
+        In           = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description  = "Enter your JWT token. Example: eyJhbGci..."
+    });
+
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id   = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 builder.Services.AddScoped<MasterProductSubcategoryRepo>();
 builder.Services.AddScoped<MasterProductSubcategoryUsecase>();
 builder.Services.AddScoped<StockMovementRepo>();
