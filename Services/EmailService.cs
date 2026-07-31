@@ -412,11 +412,23 @@ namespace trinova_erp_backend.Services
             {
                 // Scenario A: IPv4 succeeds, IPv6 fails, hostname fails (log-only)
                 _logger.LogWarning(
-                    "[SMTP-DIAG] ── SCENARIO A: IPv4 OK, IPv6 BLOCKED ────────────\n"                  +
-                    "  IPv4 TCP      : SUCCESS\n"                                                        +
-                    "  IPv6 TCP      : FAILED\n"                                                         +
-                    "  Hostname TCP  : FAILED (OS chose IPv6 first)\n"                                   +
-                    "  MailKit will use the IPv4 address directly (see smtpConnectHost below).\n"       +
+                    "[SMTP-DIAG] ── SCENARIO A: IPv4 OK, IPv6 BLOCKED ────────────\n"              +
+                    "  IPv4 TCP      : SUCCESS\n"                                                    +
+                    "  IPv6 TCP      : FAILED\n"                                                     +
+                    "  Hostname TCP  : FAILED (OS chose IPv6 first)\n"                               +
+                    "  smtpConnectHost will be set to the working IPv4 address (see log below).\n"  +
+                    "  No business logic changes.");
+            }
+
+            if (anyIpv6Ok && !anyIpv4Ok && !hostnameTcpOk)
+            {
+                // Scenario C: IPv6 succeeds, IPv4 fails, hostname fails
+                _logger.LogWarning(
+                    "[SMTP-DIAG] ── SCENARIO C: IPv6 OK, IPv4 BLOCKED ────────────\n"              +
+                    "  IPv6 TCP      : SUCCESS\n"                                                    +
+                    "  IPv4 TCP      : FAILED\n"                                                     +
+                    "  Hostname TCP  : FAILED (OS chose IPv4 first, or IPv6 not preferred)\n"       +
+                    "  smtpConnectHost will be set to the working IPv6 address (see log below).\n"  +
                     "  No business logic changes.");
             }
 
@@ -488,19 +500,57 @@ namespace trinova_erp_backend.Services
             _logger.LogInformation("[SMTP-DIAG] MimeMessage built successfully.");
 
             // ══════════════════════════════════════════════════════════════
-            // TASK 5 — SMTP Stage Timing
-            // Determine the connection host: prefer a working IPv4 address
-            // when the hostname TCP test failed but IPv4 succeeded (Scenario A).
+            // SMTP endpoint selection — bypass MailKit DNS re-resolution
+            //
+            // The TCP diagnostic loop already determined which addresses are
+            // reachable on this deployment. Use that result directly so that
+            // MailKit.ConnectAsync() never re-resolves the hostname and picks
+            // a different (blocked) address family.
+            //
+            // Priority:
+            //   1. First successful IPv6 address   (Railway: IPv6 reachable, IPv4 blocked)
+            //   2. First successful IPv4 address   (classic fallback)
+            //   3. Hostname                        (last resort — only if both families failed)
             // ══════════════════════════════════════════════════════════════
-            string smtpConnectHost = _settings.Host;
-            if (!hostnameTcpOk && anyIpv4Ok)
+            string smtpConnectHost;
+
+            if (anyIpv6Ok)
             {
-                var firstWorkingIpv4 = ipv4Results.First(r => r.Success).Address.ToString();
-                smtpConnectHost = firstWorkingIpv4;
+                // Use the first IPv6 address that passed the TCP probe.
+                // MailKit requires IPv6 literals to be enclosed in square brackets
+                // (RFC 5321 §4.1.3), otherwise the colons in the address confuse
+                // its host parser.
+                var firstV6 = ipv6Results.First(r => r.Success).Address;
+                smtpConnectHost = $"[{firstV6}]";
+
                 _logger.LogInformation(
-                    "[SMTP-DIAG] Scenario A fix applied: MailKit will connect to " +
-                    "IPv4 address {Addr} instead of hostname {Host}.",
-                    firstWorkingIpv4, _settings.Host);
+                    "[SMTP-DIAG] Using direct SMTP endpoint: {Endpoint}  " +
+                    "(IPv6, TCP probe succeeded — bypasses DNS re-resolution)",
+                    smtpConnectHost);
+            }
+            else if (anyIpv4Ok)
+            {
+                // Use the first IPv4 address that passed the TCP probe.
+                var firstV4 = ipv4Results.First(r => r.Success).Address;
+                smtpConnectHost = firstV4.ToString();
+
+                _logger.LogInformation(
+                    "[SMTP-DIAG] Using direct SMTP endpoint: {Endpoint}  " +
+                    "(IPv4, TCP probe succeeded — bypasses DNS re-resolution)",
+                    smtpConnectHost);
+            }
+            else
+            {
+                // All per-IP probes failed — fall back to the hostname and let
+                // MailKit attempt the connection anyway. If it fails, the catch
+                // block will classify the exception and surface the right message.
+                smtpConnectHost = _settings.Host;
+
+                _logger.LogWarning(
+                    "[SMTP-DIAG] No reachable IP found in TCP probes. " +
+                    "Falling back to hostname {Host}. " +
+                    "ConnectAsync may fail if all addresses are blocked.",
+                    _settings.Host);
             }
 
             // SmtpTimeoutSeconds is configurable via SMTP_TIMEOUT_SECONDS env var (default: 20 s).
@@ -547,9 +597,9 @@ namespace trinova_erp_backend.Services
 
                 connectSw.Start();
                 await client.ConnectAsync(
-                smtpConnectHost,
-                465,
-                SecureSocketOptions.SslOnConnect);
+                    smtpConnectHost,
+                    _settings.Port,
+                    SecureSocketOptions.StartTls);
                 connectSw.Stop();
                 tlsStarted = true;
 
