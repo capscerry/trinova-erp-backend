@@ -206,12 +206,12 @@ namespace trinova_erp_backend.Services
                     ? "IPv4" : "IPv6";
 
                 _logger.LogInformation(
-                    "[SMTP-DIAG] ── IPv6 PREFERENCE DETECTION ────────────────────\n"     +
-                    "  First address returned by DNS : {FirstAddr} ({PreferredFamily})\n" +
-                    "  OS resolver will prefer       : {PreferredFamily}\n"               +
-                    "  MailKit ConnectAsync(hostname) will attempt {PreferredFamily} first.\n" +
-                    "  If Railway blocks {PreferredFamily}, the connection will time out.",
-                    firstAddr, firstFamily);
+                    "[SMTP-DIAG] ── IPv6 PREFERENCE DETECTION ────────────────────\n"       +
+                    "  First address returned by DNS : {FirstAddr} ({PreferredFamily})\n"   +
+                    "  OS resolver will prefer       : {PreferredFamily2}\n"                +
+                    "  MailKit ConnectAsync(hostname) will attempt {PreferredFamily3} first.\n" +
+                    "  If Railway blocks {PreferredFamily4}, the connection will time out.",
+                    firstAddr, firstFamily, firstFamily, firstFamily, firstFamily);
 
                 if (firstAddr.AddressFamily == AddressFamily.InterNetworkV6)
                     _logger.LogWarning(
@@ -631,7 +631,7 @@ namespace trinova_erp_backend.Services
                     "  IPv4 TCP reachable     : {V4Ok}\n"                                    +
                     "  IPv6 TCP reachable     : {V6Ok}\n"                                    +
                     "  Hostname TCP reachable : {HostOk}\n"                                  +
-                    "  SMTP Greeting reached  : {TlsOk}\n"                                   +
+                    "  SMTP Greeting reached  : {SmtpGreeting}\n"                            +
                     "  TLS reached            : {TlsOk}\n"                                   +
                     "  Auth reached           : {AuthOk}\n"                                  +
                     "  Exact failure point    : {Stage}\n"                                   +
