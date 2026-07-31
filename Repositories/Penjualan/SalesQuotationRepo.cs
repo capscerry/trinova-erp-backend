@@ -91,6 +91,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 sq.quotation_date    AS QuotationDate,
                 mc.customer_name     AS CustomerName,
                 mc.customer_id       AS CustomerId,
+                mc.email             AS CustomerEmail,
                 sq.address           AS Address,
                 sq.notes             AS Notes,
                 sq.subtotal          AS Subtotal,
@@ -215,7 +216,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     is_tax_included,
                     subtotal,
                     discount_total,
-                    tax_total
+                    tax_total,
+                    status
                 )
                 VALUES
                 (
@@ -228,7 +230,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @IsTaxIncluded,
                     @Subtotal,
                     @DiscountTotal,
-                    @TaxTotal
+                    @TaxTotal,
+                    'Draft'
                 );
 
                 SELECT CAST(SCOPE_IDENTITY() AS INT);

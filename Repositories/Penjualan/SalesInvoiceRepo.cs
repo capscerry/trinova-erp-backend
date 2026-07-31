@@ -54,6 +54,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     si.paid_amount AS PaidAmount,
                     si.remaining_amount AS RemainingAmount,
                     si.notes AS Notes,
+                    si.proforma_stage AS ProformaStage,
                     si.created_by AS CreatedBy,
                     si.created_at AS CreatedAt,
                     si.updated_at AS UpdatedAt
@@ -149,6 +150,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     si.invoice_number AS InvoiceNumber,
                     si.customer_id AS CustomerId,
                     mc.customer_name AS CustomerName,
+                    mc.email AS CustomerEmail,
                     si.sales_order_id AS SalesOrderId,
                     so.so_number AS SalesOrderNumber,
                     si.delivery_order_id AS DeliveryOrderId,
@@ -165,6 +167,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     si.paid_amount AS PaidAmount,
                     si.remaining_amount AS RemainingAmount,
                     si.notes AS Notes,
+                    si.proforma_stage AS ProformaStage,
                     si.created_by AS CreatedBy,
                     si.created_at AS CreatedAt,
                     si.updated_at AS UpdatedAt
@@ -231,6 +234,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     paid_amount,
                     remaining_amount,
                     notes,
+                    proforma_stage,
                     created_by,
                     created_at,
                     updated_at
@@ -254,6 +258,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @PaidAmount,
                     @RemainingAmount,
                     @Notes,
+                    @ProformaStage,
                     @CreatedBy,
                     GETDATE(),
                     GETDATE()
@@ -283,6 +288,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     paid_amount = @PaidAmount,
                     remaining_amount = @RemainingAmount,
                     notes = @Notes,
+                    proforma_stage = @ProformaStage,
                     updated_at = GETDATE()
                 WHERE id = @Id";
 

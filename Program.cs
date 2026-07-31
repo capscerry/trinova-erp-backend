@@ -76,6 +76,12 @@ var xgboostUrl =
     ?? Env.GetString("XGBOOST_API_URL")
     ?? "http://127.0.0.1:8000";
 
+var smtpHost        = configuration["SMTP_HOST"]         ?? Env.GetString("SMTP_HOST")         ?? "smtp.gmail.com";
+var smtpPortRaw     = configuration["SMTP_PORT"]         ?? Env.GetString("SMTP_PORT");
+var smtpUser        = configuration["SMTP_USER"]         ?? Env.GetString("SMTP_USER");
+var smtpAppPassword = configuration["SMTP_APP_PASSWORD"] ?? Env.GetString("SMTP_APP_PASSWORD");
+var smtpFromName    = configuration["SMTP_FROM_NAME"]    ?? Env.GetString("SMTP_FROM_NAME")    ?? "Trinova ERP";
+
 // Purchasing AI base URL — configurable via appsettings or environment variable.
 // Environment variable name: ExternalServices__PurchasingAIBaseUrl
 // Falls back to the XGBoost URL so existing behaviour is preserved when the
@@ -147,6 +153,15 @@ builder.Services.Configure<JwtSettings>(options =>
     options.Issuer             = jwtIssuer!;
     options.Audience           = jwtAudience!;
     options.ExpirationMinutes  = int.TryParse(jwtExpireRaw, out var exp) ? exp : 60;
+});
+
+builder.Services.Configure<EmailSettings>(options =>
+{
+    options.Host        = smtpHost!;
+    options.Port        = int.TryParse(smtpPortRaw, out var p) ? p : 587;
+    options.User        = smtpUser ?? string.Empty;
+    options.AppPassword = smtpAppPassword ?? string.Empty;
+    options.FromName    = smtpFromName!;
 });
 
 builder.Services.AddApplicationServices();
@@ -230,6 +245,7 @@ builder.Services.AddScoped<StockMovementRepo>();
 builder.Services.AddScoped<StockTransferUsecase>();
 builder.Services.AddScoped<OrderFulfillmentUsecase>();
 builder.Services.AddScoped<DemandForecastUsecase>();
+builder.Services.AddScoped<ForecastExcelExporter>();
 builder.Services.AddScoped<PurchaseRequisitionDetailRepo>();
 builder.Services.AddScoped<InventoryDashboardUsecase>();
 builder.Services.AddScoped<ForecastDatasetRepo>();

@@ -16,6 +16,7 @@
         public decimal TaxTotal { get; set; }
         public bool IsTaxAble { get; set; }
         public string? Status { get; set; }
+        public bool IsIndent { get; set; }
         public int? QuotationId { get; set; }
         public string? QuotationNumber { get; set; }
         public List<SalesOrderProductDetail> Detail { get; set; } = new();

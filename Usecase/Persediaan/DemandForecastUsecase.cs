@@ -14,15 +14,18 @@ namespace trinova_erp_backend.Usecase.Persediaan
     /// </summary>
     public class DemandForecastUsecase
     {
-        private readonly ForecastClient     _forecastClient;
+        private readonly ForecastClient      _forecastClient;
         private readonly ForecastDatasetRepo _datasetRepo;
+        private readonly ForecastExcelExporter _excelExporter;
 
         public DemandForecastUsecase(
-            ForecastClient      forecastClient,
-            ForecastDatasetRepo datasetRepo)
+            ForecastClient       forecastClient,
+            ForecastDatasetRepo  datasetRepo,
+            ForecastExcelExporter excelExporter)
         {
             _forecastClient = forecastClient;
             _datasetRepo    = datasetRepo;
+            _excelExporter  = excelExporter;
         }
 
         /// <summary>
@@ -34,6 +37,29 @@ namespace trinova_erp_backend.Usecase.Persediaan
         {
             var dataset = await _datasetRepo.GetForecastDatasetAsync();
             return await _forecastClient.PostForecast(dataset);
+        }
+
+        // ── New forecast endpoints ────────────────────────────────────────────
+
+        public async Task<List<ForecastResult>> GetRealtimeForecast()
+        {
+            return await _forecastClient.GetRealtimeForecast();
+        }
+
+        public async Task GenerateMonthlyForecast()
+        {
+            await _forecastClient.GenerateMonthlyForecast();
+        }
+
+        public async Task<List<ForecastResult>> GetLatestMonthlyForecast()
+        {
+            return await _forecastClient.GetLatestMonthlyForecast();
+        }
+
+        public async Task<byte[]> DownloadForecast()
+        {
+            var forecasts = await _forecastClient.GetLatestMonthlyForecast();
+            return _excelExporter.Export(forecasts);
         }
     }
 }

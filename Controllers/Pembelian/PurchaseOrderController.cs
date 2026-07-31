@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using trinova_erp_backend.Models;
+using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
@@ -62,6 +63,39 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 po_number = number,
                 next_number = number
             });
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpGet("/api/purchase-order/{id}/detail")]
+        public async Task<IActionResult> GetPurchaseOrderPrintDetail(int id)
+        {
+            try
+            {
+                var result = await _purchaseOrderUsecase.GetPurchaseOrderPrintDetailAsync(id);
+
+                if (result == null)
+                    return NotFound(new { status = false, message = "Purchase Order tidak ditemukan." });
+
+                return Ok(new { status = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = false, message = ex.Message });
+            }
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpPost("/api/purchase-order/{id}/send-email")]
+        public async Task<IActionResult> SendPurchaseOrderEmail(int id, [FromBody] SendQuotationEmailRequest? request)
+        {
+            try
+            {
+                await _purchaseOrderUsecase.SendPurchaseOrderEmailAsync(id, request);
+                return Ok(new { status = true, message = "Email Purchase Order (PDF) berhasil dikirim ke supplier." });
+            }
+            catch (InvalidOperationException ex) { return BadRequest(new { status = false, message = ex.Message }); }
+            catch (ArgumentException ex)         { return BadRequest(new { status = false, message = ex.Message }); }
+            catch (Exception ex)                 { return StatusCode(500, new { status = false, message = "Terjadi kesalahan tak terduga: " + ex.Message }); }
         }
 
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]

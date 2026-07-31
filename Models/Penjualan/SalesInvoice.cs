@@ -12,6 +12,7 @@ namespace trinova_erp_backend.Models.Penjualan
         public string InvoiceNumber { get; set; } = string.Empty;
         public int CustomerId { get; set; }
         public string? CustomerName { get; set; }
+        public string? CustomerEmail { get; set; }
         public int? SalesOrderId { get; set; }
         public string? SalesOrderNumber { get; set; }
         public int? DeliveryOrderId { get; set; }
@@ -19,6 +20,12 @@ namespace trinova_erp_backend.Models.Penjualan
         public DateTime InvoiceDate { get; set; }
         public DateTime DueDate { get; set; }
         public string Status { get; set; } = "Draft";
+        /// <summary>
+        /// Label tahap proforma untuk flow barang indent: "DP" (proforma 30%),
+        /// "Final" (proforma pelunasan 70%), atau null untuk invoice reguler non-indent.
+        /// Murni label/tampilan — tidak mempengaruhi perhitungan pembayaran.
+        /// </summary>
+        public string? ProformaStage { get; set; }
         public decimal Subtotal { get; set; }
         public decimal DiscountTotal { get; set; }
         public decimal TaxTotal { get; set; }

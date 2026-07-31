@@ -14,6 +14,13 @@
         public decimal TaxTotal { get; set; }
         public bool IsTaxAble { get; set; }
         public string? Status { get; set; }
+        public string? CustomerEmail { get; set; }
+    }
 
+    public class SendQuotationEmailRequest
+    {
+        public string? Message { get; set; }
+        public string? AttachmentBase64 { get; set; }
+        public string? AttachmentFileName { get; set; }
     }
 }

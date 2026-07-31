@@ -168,5 +168,31 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
             return new List<ForecastResult>();
         }
+
+        // ── New endpoints added by viko-branch-terbaru ────────────────────────
+
+        public async Task<List<ForecastResult>> GetRealtimeForecast()
+        {
+            var response = await _httpClient.GetAsync("/forecast");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<List<ForecastResult>>(json, _jsonOpts);
+            return result ?? new List<ForecastResult>();
+        }
+
+        public async Task GenerateMonthlyForecast()
+        {
+            var response = await _httpClient.PostAsync("/forecast/monthly/generate", null);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task<List<ForecastResult>> GetLatestMonthlyForecast()
+        {
+            var response = await _httpClient.GetAsync("/forecast/monthly/latest");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<List<ForecastResult>>(json, _jsonOpts);
+            return result ?? new List<ForecastResult>();
+        }
     }
 }

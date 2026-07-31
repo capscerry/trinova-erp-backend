@@ -16,7 +16,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
         Task<List<DeliveryOrderDetailDTO>> GetDoDetail(int deliveryOrderId);
         Task InsertDeliveryOrder(PengirimanPenjualan model);
         Task UpdateDeliveryOrder(int id, PengirimanPenjualan model);
-
+        Task MarkDeliveryOrderReceivedAsync(int id);
     }
     public class PengirimanPenjualanUsecase : IPengirimanPenjualanUsecase
     {
@@ -74,6 +74,22 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
             try
             {
+                // Gate: DO linked to a SO can only be created after ALL invoices
+                // for that SO are fully paid. Ad-hoc DOs (no SoId) skip this gate.
+                if (model.Header.SoId.HasValue && model.Header.SoId.Value > 0)
+                {
+                    var isFullyPaid = await _pengirimanRepo.IsSalesOrderFullyInvoicedAndPaidAsync(
+                        model.Header.SoId.Value,
+                        connection,
+                        transaction);
+
+                    if (!isFullyPaid)
+                        throw new InvalidOperationException(
+                            "Sales Order ini belum lunas sepenuhnya. Pastikan seluruh invoice " +
+                            "(untuk barang indent: kedua invoice proforma DP dan pelunasan) sudah " +
+                            "dibuat dan dibayar penuh sebelum membuat Delivery Order.");
+                }
+
                 var header = new DeliveryOrderHeaderDTO
                 {
                     CustomerId = model.Header.CustomerId,
@@ -278,9 +294,55 @@ namespace trinova_erp_backend.Usecase.Penjualan
             }
         }
 
+        // The only official path for DO "In Delivery" → "Received".
+        // When the customer signs receipt, the linked SO is also closed (Completed).
+        public async Task MarkDeliveryOrderReceivedAsync(int id)
+        {
+            if (id <= 0)
+                throw new ArgumentException("Id Delivery Order tidak valid.");
+
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                var current = await _pengirimanRepo.GetStatusAndSoIdAsync(id, connection, transaction);
+
+                if (current.Status == null)
+                    throw new InvalidOperationException("Delivery Order tidak ditemukan.");
+
+                if (!string.Equals(current.Status, "In Delivery", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException(
+                        $"Delivery Order dengan status '{current.Status}' tidak bisa ditandai diterima. " +
+                        "Hanya Delivery Order berstatus 'In Delivery' yang bisa diproses.");
+
+                await _pengirimanRepo.UpdateDeliveryOrderStatusAsync(id, "Received", connection, transaction);
+
+                if (current.SoId.HasValue && current.SoId.Value > 0)
+                    await _pengirimanRepo.UpdateSalesOrderStatusAsync(current.SoId.Value, "Completed", connection, transaction);
+
+                await transaction.CommitAsync();
+
+                await _activityLogService.LogSalesAsync(
+                    "delivery_order_received",
+                    $"Delivery Order #{id} ditandai diterima",
+                    current.SoId.HasValue ? "Sales Order terkait otomatis diselesaikan (Completed)." : null,
+                    "delivery_order_header",
+                    id,
+                    null);
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
         // Uses the warehouse chosen on the DO line as-is. Only falls back to
         // the linked Sales Order's warehouse for that product when the
         // client didn't send one (safety net for older/manual clients).
+
         private async Task<int?> ResolveWarehouseIdAsync(
             int? warehouseId,
             int? soId,

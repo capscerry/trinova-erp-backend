@@ -80,7 +80,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     notes = @Notes,
                     discount_total = @DiscountTotal,
                     quotation_id = @QuotationId,
-                    tax_total = @TaxTotal
+                    tax_total = @TaxTotal,
+                    is_indent = @IsIndent
                 WHERE order_id = @OrderId;
             END
             ELSE
@@ -99,7 +100,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     notes,
                     discount_total,
                     quotation_id,
-                    tax_total
+                    tax_total,
+                    is_indent,
+                    status
                 )
                 VALUES
                 (
@@ -115,7 +118,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @Notes,
                     @DiscountTotal,
                     @QuotationId,
-                    @TaxTotal
+                    @TaxTotal,
+                    @IsIndent,
+                    'Draft'
                 );
 
                 SET @OrderId = CAST(SCOPE_IDENTITY() AS INT);
@@ -135,7 +140,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 notes AS Notes,
                 discount_total AS DiscountTotal,
                 quotation_id   AS QuotationId,
-                tax_total AS TaxTotal   
+                tax_total AS TaxTotal,
+                is_indent AS IsIndent,
+                status AS Status
             FROM sales_order
             WHERE order_id = @OrderId;
         ";
@@ -271,8 +278,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
                      so.is_tax_included AS IsTaxIncluded,
                      so.address         AS Address,
                      so.notes           AS Notes,
+                     so.is_indent       AS IsIndent,
                      ISNULL(so.status, 'Draft') AS Status
-                 FROM sales_order so JOIN master_customer mc  ON so.customer_id  = mc.customer_id 
+                 FROM sales_order so JOIN master_customer mc  ON so.customer_id  = mc.customer_id
                  ORDER BY order_id DESC;
             ";
 
@@ -299,8 +307,9 @@ namespace trinova_erp_backend.Repositories.Penjualan
                      so.is_tax_included AS IsTaxIncluded,
                      so.address         AS Address,
                      so.notes           AS Notes,
+                     so.is_indent       AS IsIndent,
                      ISNULL(so.status, 'Draft') AS Status
-                 FROM sales_order so JOIN master_customer mc  ON so.customer_id  = mc.customer_id 
+                 FROM sales_order so JOIN master_customer mc  ON so.customer_id  = mc.customer_id
                  WHERE mc.customer_id = @CustomerId
                  ORDER BY order_id DESC";
 
@@ -338,6 +347,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 so.is_taxable AS IsTaxAble,
                 so.notes AS Keterangan,
                 ISNULL(so.status, 'Draft') AS Status,
+                so.is_indent AS IsIndent,
                 so.quotation_id AS QuotationId,
                 sq.quotation_number AS QuotationNumber
             FROM sales_order so
