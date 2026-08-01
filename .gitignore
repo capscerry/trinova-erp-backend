@@ -3,3 +3,6 @@
 bin/
 obj/
 .env
+obj/trinova-erp-backend.csproj.nuget.g.props
+obj/trinova-erp-backend.csproj.nuget.g.props
+obj/trinova-erp-backend.csproj.nuget.dgspec.json
