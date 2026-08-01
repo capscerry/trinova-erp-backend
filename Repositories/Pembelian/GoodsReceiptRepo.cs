@@ -334,6 +334,11 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                     ? reader["nomor_faktur_pajak"]?.ToString()
                                     : null,
 
+                                created_at =
+                                    reader["created_at"] != DBNull.Value
+                                    ? Convert.ToDateTime(reader["created_at"])
+                                    : (DateTime?)null,
+
                             };
 
                             response.Add(receipt);

@@ -10,12 +10,15 @@ namespace trinova_erp_backend.Controllers.Pembelian
     public class GoodsReceiptController : ControllerBase
     {
         private readonly IGoodsReceiptUsecase _goodsReceiptUsecase;
+        private readonly ILogger<GoodsReceiptController> _logger;
 
         public GoodsReceiptController(
-            IGoodsReceiptUsecase goodsReceiptUsecase
+            IGoodsReceiptUsecase goodsReceiptUsecase,
+            ILogger<GoodsReceiptController> logger
         )
         {
             _goodsReceiptUsecase = goodsReceiptUsecase;
+            _logger = logger;
         }
 
         [HttpPost("/api/goods-receipt")]
@@ -119,14 +122,28 @@ namespace trinova_erp_backend.Controllers.Pembelian
         [HttpGet("/api/goods-receipt/for-purchase-return")]
         public async Task<IActionResult> GetAllAvailableForReturn()
         {
-            var result = await _goodsReceiptUsecase
-                .GetAllAvailableForReturn();
-
-            return Ok(new
+            try
             {
-                status = true,
-                data = result
-            });
+                var result = await _goodsReceiptUsecase
+                    .GetAllAvailableForReturn();
+
+                return Ok(new
+                {
+                    status = true,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to load Goods Receipts available for Purchase Return.");
+
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    status = false,
+                    message = "Gagal memuat daftar Goods Receipt untuk retur."
+                });
+            }
         }
 
         /// <summary>

@@ -28,12 +28,15 @@ namespace trinova_erp_backend.Controllers.Pembelian
     public class PurchaseReturnController : ControllerBase
     {
         private readonly IPurchaseReturnUsecase _purchaseReturnUsecase;
+        private readonly ILogger<PurchaseReturnController> _logger;
 
         public PurchaseReturnController(
-            IPurchaseReturnUsecase purchaseReturnUsecase
+            IPurchaseReturnUsecase purchaseReturnUsecase,
+            ILogger<PurchaseReturnController> logger
         )
         {
             _purchaseReturnUsecase = purchaseReturnUsecase;
+            _logger = logger;
         }
 
         [HttpGet("/api/purchase-return/next-number")]
@@ -150,10 +153,13 @@ namespace trinova_erp_backend.Controllers.Pembelian
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex,
+                    "Failed to load available return details for GoodsReceiptId={GrId}.", grId);
+
                 return BadRequest(new
                 {
                     status = false,
-                    message = ex.Message
+                    message = "Gagal memuat item yang bisa diretur dari Goods Receipt ini."
                 });
             }
         }
