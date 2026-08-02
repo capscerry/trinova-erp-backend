@@ -15,11 +15,6 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
         Task<List<GoodsReceipt>> GetAllWithoutInvoice();
 
-        /// <summary>
-        /// Returns only Goods Receipts that have at least one detail line
-        /// with remaining_qty &gt; 0.  Used by the Purchase Return creation
-        /// modal so exhausted GRs are never shown.
-        /// </summary>
         Task<List<GoodsReceipt>> GetAllAvailableForReturn();
 
         Task<GoodsReceipt?> GetGoodsReceiptById(int id);
@@ -29,11 +24,6 @@ namespace trinova_erp_backend.Repositories.Pembelian
         Task<bool> UpdateGoodsReceiptStatus(int id, string status);
 
         Task<bool> DeleteGoodsReceipt(int id);
-
-        /// <summary>
-        /// Returns true when a Goods Receipt already exists for the given
-        /// purchase_order_id.  Used to prevent duplicate GR creation.
-        /// </summary>
         Task<bool> IsGoodsReceiptExist(int purchaseOrderId);
     }
 
@@ -47,11 +37,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 ?? throw new InvalidOperationException("Database connection string is not configured.");
         }
 
-        // GENERATE GR NUMBER
         public async Task<string> GenerateGRNumber()
         {
-            // Query only rows that already follow the canonical GR-NNNNNNNNNN
-            // format so that leftover legacy numbers can never corrupt the counter.
             const string query = @"
                 SELECT TOP 1 receipt_number
                 FROM goods_receipt
@@ -522,7 +509,11 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 nomor_faktur_pajak =
                                     reader["nomor_faktur_pajak"] != DBNull.Value
                                     ? reader["nomor_faktur_pajak"]?.ToString()
-                                    : null
+                                    : null,
+
+                                transaction_name = reader["transaction_name"] != DBNull.Value ? reader["transaction_name"]?.ToString() : null,
+                                transaction_detail = reader["transaction_detail"] != DBNull.Value ? reader["transaction_detail"]?.ToString() : null,
+
                             };
                         }
                     }

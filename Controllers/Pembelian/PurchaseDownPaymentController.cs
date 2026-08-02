@@ -103,6 +103,29 @@ namespace trinova_erp_backend.Controllers.Pembelian
             );
         }
 
+        /// <summary>
+        /// Single Down Payment (header + PO totals + supplier_name).
+        /// Fixes the 405 that was triggered when the frontend called
+        /// GET /purchase-down-payment/{id} and found no matching route (only
+        /// DELETE existed for this URL template).
+        /// </summary>
+        [HttpGet("/api/purchase-down-payment/{id}")]
+        public async Task<IActionResult> GetPurchaseDownPaymentById(int id)
+        {
+            var result = await _purchaseDownPaymentUsecase.GetPurchaseDownPaymentById(id);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    status = false,
+                    message = "Purchase Down Payment tidak ditemukan"
+                });
+            }
+
+            return Ok(result);
+        }
+
         [HttpDelete("/api/purchase-down-payment/{id}")]
         public async Task<IActionResult>
             DeletePurchaseDownPayment(int id)

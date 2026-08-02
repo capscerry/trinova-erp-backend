@@ -14,6 +14,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
         Task<List<PurchaseInvoice>>
             GetAllPurchaseInvoice();
 
+        Task<PurchaseInvoice?> GetPurchaseInvoiceById(int id);
+
         Task<List<PurchaseInvoice>> GetUnpaidInvoicesBySupplier(
             int supplierId
         );
@@ -83,6 +85,11 @@ namespace trinova_erp_backend.Usecase.Pembelian
         {
             return await _purchaseInvoiceRepo
                 .GetAllPurchaseInvoice();
+        }
+
+        public async Task<PurchaseInvoice?> GetPurchaseInvoiceById(int id)
+        {
+            return await _purchaseInvoiceRepo.GetPurchaseInvoiceById(id);
         }
 
         public async Task<List<PurchaseInvoice>> GetUnpaidInvoicesBySupplier(

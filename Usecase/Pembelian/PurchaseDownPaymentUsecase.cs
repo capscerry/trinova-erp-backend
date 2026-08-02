@@ -14,6 +14,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
         Task<List<PurchaseDownPayment>>
             GetAllPurchaseDownPayment();
 
+        Task<PurchaseDownPayment?> GetPurchaseDownPaymentById(int id);
+
         Task<bool> DeletePurchaseDownPayment(int id);
     }
 
@@ -106,6 +108,13 @@ namespace trinova_erp_backend.Usecase.Pembelian
             return await
                 _purchaseDownPaymentRepo
                     .GetAllPurchaseDownPayment();
+        }
+
+        public async Task<PurchaseDownPayment?> GetPurchaseDownPaymentById(int id)
+        {
+            return await
+                _purchaseDownPaymentRepo
+                    .GetPurchaseDownPaymentById(id);
         }
 
         public async Task<bool> DeletePurchaseDownPayment(int id)

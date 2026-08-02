@@ -513,6 +513,7 @@ namespace trinova_erp_backend.Services
             //   3. Hostname                        (last resort — only if both families failed)
             // ══════════════════════════════════════════════════════════════
             string smtpConnectHost;
+            IPAddress? chosenAddress = null;
 
             if (anyIpv6Ok)
             {
@@ -520,24 +521,26 @@ namespace trinova_erp_backend.Services
                 // MailKit requires IPv6 literals to be enclosed in square brackets
                 // (RFC 5321 §4.1.3), otherwise the colons in the address confuse
                 // its host parser.
-                var firstV6 = ipv6Results.First(r => r.Success).Address;
-                smtpConnectHost = $"[{firstV6}]";
+                chosenAddress = ipv6Results.First(r => r.Success).Address;
+                smtpConnectHost = $"[{chosenAddress}]";
 
                 _logger.LogInformation(
                     "[SMTP-DIAG] Using direct SMTP endpoint: {Endpoint}  " +
-                    "(IPv6, TCP probe succeeded — bypasses DNS re-resolution)",
-                    smtpConnectHost);
+                    "(IPv6, TCP probe succeeded — bypasses DNS re-resolution; " +
+                    "TLS will still validate against hostname {Host})",
+                    smtpConnectHost, _settings.Host);
             }
             else if (anyIpv4Ok)
             {
                 // Use the first IPv4 address that passed the TCP probe.
-                var firstV4 = ipv4Results.First(r => r.Success).Address;
-                smtpConnectHost = firstV4.ToString();
+                chosenAddress = ipv4Results.First(r => r.Success).Address;
+                smtpConnectHost = chosenAddress.ToString();
 
                 _logger.LogInformation(
                     "[SMTP-DIAG] Using direct SMTP endpoint: {Endpoint}  " +
-                    "(IPv4, TCP probe succeeded — bypasses DNS re-resolution)",
-                    smtpConnectHost);
+                    "(IPv4, TCP probe succeeded — bypasses DNS re-resolution; " +
+                    "TLS will still validate against hostname {Host})",
+                    smtpConnectHost, _settings.Host);
             }
             else
             {
@@ -596,10 +599,40 @@ namespace trinova_erp_backend.Services
                     DateTime.UtcNow.ToString("O"));
 
                 connectSw.Start();
-                await client.ConnectAsync(
-                    smtpConnectHost,
-                    _settings.Port,
-                    SecureSocketOptions.StartTls);
+
+                if (chosenAddress != null)
+                {
+                    // Connect the raw socket directly to the pre-validated IP
+                    // (bypasses MailKit's own DNS resolution / family ordering),
+                    // but still pass the real hostname so MailKit performs TLS
+                    // SNI + certificate hostname validation against
+                    // "smtp.gmail.com" — not the IP literal. Passing the IP
+                    // itself as the "host" here is what previously caused
+                    // SslHandshakeException ("host name did not match the name
+                    // given in the server's SSL certificate").
+                    //
+                    // NOT wrapped in `using` — SmtpClient takes ownership of this
+                    // socket for the entire session (AuthenticateAsync, SendAsync)
+                    // and disposes it itself on DisconnectAsync/Dispose. Disposing
+                    // it here right after ConnectAsync caused every subsequent
+                    // write to throw ObjectDisposedException.
+                    var socket = new Socket(
+                        chosenAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    await socket.ConnectAsync(chosenAddress, _settings.Port);
+                    await client.ConnectAsync(
+                        socket,
+                        _settings.Host,
+                        _settings.Port,
+                        SecureSocketOptions.StartTls);
+                }
+                else
+                {
+                    await client.ConnectAsync(
+                        smtpConnectHost,
+                        _settings.Port,
+                        SecureSocketOptions.StartTls);
+                }
+
                 connectSw.Stop();
                 tlsStarted = true;
 

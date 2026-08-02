@@ -147,6 +147,29 @@ namespace trinova_erp_backend.Controllers.Pembelian
         }
 
         /// <summary>
+        /// Header + item lines for one Goods Receipt (used by the detail page
+        /// and the print page). Fixes the 405 that was triggered when the
+        /// frontend called GET /goods-receipt/{id} and found no matching route
+        /// (only PUT/DELETE existed for this URL template).
+        /// </summary>
+        [HttpGet("/api/goods-receipt/{id}")]
+        public async Task<IActionResult> GetGoodsReceiptById(int id)
+        {
+            var result = await _goodsReceiptUsecase.GetGoodsReceiptById(id);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    status = false,
+                    message = "Goods Receipt tidak ditemukan"
+                });
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Updates a Goods Receipt header (receipt_number, receipt_date,
         /// received_by, status).  Fixes the 405 that was triggered when the
         /// frontend called PUT /goods-receipt/{id} and found no matching route.

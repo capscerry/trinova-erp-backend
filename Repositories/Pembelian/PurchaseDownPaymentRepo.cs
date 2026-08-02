@@ -14,7 +14,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
         );
 
         Task<List<PurchaseDownPayment>>
-            GetAllPurchaseDownPayment();
+            GetAllPurchaseDownPayment(int? id = null);
 
         Task<PurchaseDownPayment?>
             GetPurchaseDownPaymentById(
@@ -171,10 +171,13 @@ namespace trinova_erp_backend.Repositories.Pembelian
             }
         }
 
+        // GET ALL (atau satu baris saja kalau `id` diisi -- dipakai juga oleh
+        // GetPurchaseDownPaymentById, yang sebelumnya cuma stub
+        // NotImplementedException).
         public async Task<List<PurchaseDownPayment>>
-            GetAllPurchaseDownPayment()
+            GetAllPurchaseDownPayment(int? id = null)
         {
-            const string query = @"
+            string query = @"
             SELECT
                 pdp.*,
                 po.po_number,
@@ -187,7 +190,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 ON pdp.purchase_order_id = po.purchase_order_id
             LEFT JOIN master_supplier s
                 ON pdp.supplier_id = s.supplier_id
-            ";
+            " + (id.HasValue ? "WHERE pdp.purchase_down_payment_id = @id" : "");
 
             var response =
                 new List<PurchaseDownPayment>();
@@ -200,6 +203,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 using (SqlCommand command =
                     new SqlCommand(query, connection))
                 {
+                    if (id.HasValue)
+                        command.Parameters.AddWithValue("@id", id.Value);
+
                     await connection.OpenAsync();
 
                     using (
@@ -327,7 +333,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 int id
             )
         {
-            throw new NotImplementedException();
+            var results = await GetAllPurchaseDownPayment(id);
+            return results.FirstOrDefault();
         }
 
         public async Task<bool>

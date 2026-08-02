@@ -98,8 +98,12 @@ namespace trinova_erp_backend.Usecase.Pembelian
             if (po == null)
                 throw new InvalidOperationException("Purchase Order tidak ditemukan.");
             _logger.LogInformation(
-                "[SendEmail] Purchase Order loaded — po_number={PoNumber} supplier_id={SupplierId}",
-                po.po_number, po.supplier_id);
+                "[SendEmail] Purchase Order loaded — po_number={PoNumber} supplier_id={SupplierId} status={Status}",
+                po.po_number, po.supplier_id, po.status);
+
+            if (!string.Equals(po.status, "Approved", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException(
+                    $"Purchase Order '{po.po_number}' harus berstatus Approved sebelum email dapat dikirim ke supplier. Status saat ini: {po.status}.");
 
             // ── Step 2: Load Supplier ─────────────────────────────────────────
             _logger.LogInformation("[SendEmail] Loading Supplier id={SupplierId}", po.supplier_id);

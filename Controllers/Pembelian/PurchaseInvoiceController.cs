@@ -103,6 +103,29 @@ namespace trinova_erp_backend.Controllers.Pembelian
         }
 
         /// <summary>
+        /// Single invoice (header + supplier + dp_paid/payment_paid/outstanding).
+        /// Fixes the 405 that was triggered when the frontend called
+        /// GET /purchase-invoice/{id} and found no matching route (only
+        /// PUT/DELETE existed for this URL template).
+        /// </summary>
+        [HttpGet("/api/purchase-invoice/{id}")]
+        public async Task<IActionResult> GetPurchaseInvoiceById(int id)
+        {
+            var result = await _purchaseInvoiceUsecase.GetPurchaseInvoiceById(id);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    status = false,
+                    message = "Purchase Invoice tidak ditemukan"
+                });
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Returns all unpaid / partially-paid invoices for a specific supplier
         /// with their real-time outstanding_amount. Call this when opening the
         /// Purchase Return settlement dialog so the dropdown always reflects
