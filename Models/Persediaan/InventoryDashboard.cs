@@ -10,7 +10,10 @@ namespace trinova_erp_backend.Models.Persediaan
 
         public decimal TotalStock { get; set; }
 
-        public InventoryAiSummary AiSummary { get; set; } = new();
+        // Nullable: null saat layanan AI gagal/tidak ada data, supaya frontend
+        // (`dashboard?.aiSummary &&`) menyembunyikan section AI dengan rapi,
+        // alih-alih menampilkannya dengan data kosong.
+        public InventoryAiSummary? AiSummary { get; set; }
     }
 
     public class InventoryAiSummary

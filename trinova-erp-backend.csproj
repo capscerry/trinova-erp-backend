@@ -5,7 +5,27 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>trinova_erp_backend</RootNamespace>
+    <!--
+      Performance flags — do not affect business logic or API contracts.
+      PublishReadyToRun: pre-compiles to native code at publish time, reducing
+        JIT overhead on cold starts (mirrors the Dockerfile flag).
+      ServerGarbageCollection: uses server GC which is optimised for throughput
+        on multi-core hosts (Railway containers). Reduces GC pause frequency.
+      TieredCompilation: allows the runtime to start with fast code and
+        recompile hot paths at higher optimisation tiers in the background.
+      TieredPGO: extends tiered compilation with profile-guided optimisation
+        so the most-called code paths get the best native code over time.
+    -->
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <TieredCompilation>true</TieredCompilation>
+    <TieredPGO>true</TieredPGO>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Migrations\MigrationRunner\**\*.cs" />
+    <None Include="Migrations\MigrationRunner\**\*" />
+</ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
@@ -14,6 +34,7 @@
     <PackageReference Include="DotNetEnv" Version="3.2.0" />
     <PackageReference Include="ExcelDataReader" Version="3.8.0" />
     <PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
+    <PackageReference Include="MailKit" Version="4.17.0" />
 
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.7" />
 
@@ -32,7 +53,6 @@
   <ItemGroup>
     <Folder Include="Controllers\Persediaan\" />
     <Folder Include="Controllers\Pembelian\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

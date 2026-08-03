@@ -1,23 +1,34 @@
 using Microsoft.AspNetCore.Mvc;
 using trinova_erp_backend.Models;
+using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
 {
+    // All endpoints require authentication at minimum.
+    // Individual endpoints carry the narrowest role list needed.
     [Route("api/[controller]")]
     [ApiController]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class PurchaseOrderController : ControllerBase
     {
-        private readonly IPurchaseOrderUsecase _purchaseOrderUsecase;
+        private readonly IPurchaseOrderUsecase         _purchaseOrderUsecase;
+        private readonly ILogger<PurchaseOrderController> _logger;
 
         public PurchaseOrderController(
-            IPurchaseOrderUsecase purchaseOrderUsecase
+            IPurchaseOrderUsecase purchaseOrderUsecase,
+            ILogger<PurchaseOrderController> logger
         )
         {
             _purchaseOrderUsecase = purchaseOrderUsecase;
+            _logger               = logger;
         }
 
+        // ── PURCHASING-ONLY ENDPOINTS ────────────────────────────────────
+        // Create, edit, delete, and draft-number generation remain restricted
+        // to Purchasing staff. Procurement Manager has no access here.
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpPost("/api/purchase-order")]
         public async Task<IActionResult> InsertPurchaseOrder(
             [FromBody] PurchaseOrder purchaseOrder
@@ -43,11 +54,12 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpGet("/api/purchase-order/next-number")]
         public async Task<IActionResult> GetNextPONumber()
         {
             var number = await _purchaseOrderUsecase.GetNextPONumber();
-            
+
             return Ok(new
             {
                 status = true,
@@ -56,6 +68,82 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpGet("/api/purchase-order/{id}/detail")]
+        public async Task<IActionResult> GetPurchaseOrderPrintDetail(int id)
+        {
+            try
+            {
+                var result = await _purchaseOrderUsecase.GetPurchaseOrderPrintDetailAsync(id);
+
+                if (result == null)
+                    return NotFound(new { status = false, message = "Purchase Order tidak ditemukan." });
+
+                return Ok(new { status = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = false, message = ex.Message });
+            }
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpPost("/api/purchase-order/{id}/send-email")]
+        // Task 2 (Diagnostic): Cap total wall-clock time at 55 s so the server can
+        // always write a structured HTTP response before Railway's 60 s upstream
+        // timeout kills the HTTP/2 stream (which would produce ERR_HTTP2_PROTOCOL_ERROR).
+        [Microsoft.AspNetCore.Http.Timeouts.RequestTimeout("send-email")]
+        public async Task<IActionResult> SendPurchaseOrderEmail(int id, [FromBody] SendQuotationEmailRequest? request)
+        {
+            _logger.LogInformation("[SendEmail] Controller received request — PO id={Id}", id);
+            try
+            {
+                await _purchaseOrderUsecase.SendPurchaseOrderEmailAsync(id, request);
+                _logger.LogInformation("[SendEmail] Controller — completed successfully, PO id={Id}", id);
+                return Ok(new { status = true, message = "Email Purchase Order (PDF) berhasil dikirim ke supplier." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                // [DIAGNOSTIC] Full exception detail for InvalidOperationException
+                _logger.LogError(ex,
+                    "[SendEmail] InvalidOperationException — ExceptionType: {Type} | Message: {Message} | " +
+                    "InnerExceptionType: {InnerType} | InnerMessage: {InnerMessage} | StackTrace: {StackTrace}",
+                    ex.GetType().FullName,
+                    ex.Message,
+                    ex.InnerException?.GetType().FullName ?? "(none)",
+                    ex.InnerException?.Message          ?? "(none)",
+                    ex.StackTrace);
+                return BadRequest(new { status = false, message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                // [DIAGNOSTIC] Full exception detail for ArgumentException
+                _logger.LogError(ex,
+                    "[SendEmail] ArgumentException — ExceptionType: {Type} | Message: {Message} | " +
+                    "InnerExceptionType: {InnerType} | InnerMessage: {InnerMessage} | StackTrace: {StackTrace}",
+                    ex.GetType().FullName,
+                    ex.Message,
+                    ex.InnerException?.GetType().FullName ?? "(none)",
+                    ex.InnerException?.Message          ?? "(none)",
+                    ex.StackTrace);
+                return BadRequest(new { status = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // [DIAGNOSTIC] Full exception detail for any unexpected exception
+                _logger.LogError(ex,
+                    "[SendEmail] Unexpected Exception — ExceptionType: {Type} | Message: {Message} | " +
+                    "InnerExceptionType: {InnerType} | InnerMessage: {InnerMessage} | StackTrace: {StackTrace}",
+                    ex.GetType().FullName,
+                    ex.Message,
+                    ex.InnerException?.GetType().FullName ?? "(none)",
+                    ex.InnerException?.Message          ?? "(none)",
+                    ex.StackTrace);
+                return StatusCode(500, new { status = false, message = "Terjadi kesalahan tak terduga: " + ex.Message });
+            }
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpGet("/api/purchase-order")]
         public async Task<IActionResult> GetAllPurchaseOrder()
         {
@@ -79,6 +167,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpPut("/api/purchase-order/{id}")]
         public async Task<IActionResult> UpdatePurchaseOrder(
             int id,
@@ -106,11 +195,12 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
-        [HttpPatch("/api/purchase-order/{id}/approve")]
-        public async Task<IActionResult> ApprovePurchaseOrder(int id)
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpPatch("/api/purchase-order/{id}/request-approval")]
+        public async Task<IActionResult> RequestApproval(int id)
         {
             var (success, message) = await _purchaseOrderUsecase
-                .ApprovePurchaseOrder(id);
+                .RequestApproval(id);
 
             if (success)
                 return Ok(new { status = true, message });
@@ -118,6 +208,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
             return BadRequest(new { status = false, message });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpPatch("/api/purchase-order/{id}/unapprove")]
         public async Task<IActionResult> UnapprovePurchaseOrder(int id)
         {
@@ -130,16 +221,13 @@ namespace trinova_erp_backend.Controllers.Pembelian
             return BadRequest(new { status = false, message = "Unapprove failed — PO not found or not in Approved state" });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpPatch("/api/purchase-order/{id}/deduction")]
         public async Task<IActionResult> ApplyDeduction(
             int id,
             [FromBody] PODeductionRequest request
         )
         {
-            // Validate: the PO must exist and its total_amount must be >= the
-            // deduction amount (Purchase Return value). This mirrors the same
-            // rule applied to Cash Refund — you cannot deduct more than the PO
-            // is worth.
             var po = await _purchaseOrderUsecase.GetPurchaseOrderById(id);
 
             if (po == null)
@@ -172,8 +260,10 @@ namespace trinova_erp_backend.Controllers.Pembelian
             });
         }
 
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
         [HttpDelete("/api/purchase-order/{id}")]
-        public async Task<IActionResult> DeletePurchaseOrder(int id)        {
+        public async Task<IActionResult> DeletePurchaseOrder(int id)
+        {
             var result = await _purchaseOrderUsecase
                 .DeletePurchaseOrder(id);
 
@@ -191,6 +281,81 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 status = false,
                 message = "Failed Delete Data"
             });
+        }
+
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpGet("/api/purchase-order/pending-approval")]
+        public async Task<IActionResult> GetPendingApproval()
+        {
+            var result = await _purchaseOrderUsecase
+                .GetPurchaseOrdersByStatus("Waiting for Approval");
+
+            if (result == null || result.Count == 0)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    data = new List<object>(),
+                    message = "No Purchase Orders pending approval"
+                });
+            }
+
+            return Ok(new
+            {
+                status = true,
+                data = result
+            });
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpGet("/api/purchase-order/approved")]
+        public async Task<IActionResult> GetApproved()
+        {
+            var result = await _purchaseOrderUsecase
+                .GetApprovedAndCompletedPurchaseOrders();
+
+            if (result == null || result.Count == 0)
+            {
+                return Ok(new
+                {
+                    status = true,
+                    data = new List<object>(),
+                    message = "No Approved Purchase Orders found"
+                });
+            }
+
+            return Ok(new
+            {
+                status = true,
+                data = result
+            });
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpPatch("/api/purchase-order/{id}/approve")]
+        public async Task<IActionResult> ApprovePurchaseOrder(int id)
+        {
+            var (success, message) = await _purchaseOrderUsecase
+                .ApprovePurchaseOrder(id);
+
+            if (success)
+                return Ok(new { status = true, message });
+
+            return BadRequest(new { status = false, message });
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
+        [HttpPatch("/api/purchase-order/{id}/reject")]
+        public async Task<IActionResult> RejectPurchaseOrder(int id)
+        {
+            var (success, message) = await _purchaseOrderUsecase
+                .RejectPurchaseOrder(id);
+
+            if (success)
+                return Ok(new { status = true, message });
+
+            return BadRequest(new { status = false, message });
         }
     }
 }

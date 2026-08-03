@@ -100,7 +100,6 @@ namespace trinova_erp_backend.Usecase.Persediaan
             forecastSheet.Cell("G1").Value = "Generated At";
 
             var headerRange = forecastSheet.Range("A1:G1");
-
             headerRange.Style.Font.Bold = true;
             headerRange.Style.Font.FontColor = XLColor.White;
             headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;

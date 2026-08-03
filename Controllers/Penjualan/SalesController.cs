@@ -185,9 +185,37 @@ namespace trinova_erp_backend.Controllers.Penjualan
             });
         }
 
-        [HttpPut("/api/sales-category/{id}")]
-        public async Task<IActionResult> UpdateCategory(int id, [FromBody] SalesCategory model)
+        [HttpPost("/api/SalesQuotation/{quotationId}/send-email")]
+        public async Task<IActionResult> SendQuotationEmail(
+        int quotationId,
+        [FromBody] SendQuotationEmailRequest? request)
         {
+            try
+            {
+                await _salesQuotationUsecase.SendQuotationEmailAsync(quotationId, request);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Email penawaran (PDF) berhasil dikirim ke pelanggan."
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Terjadi kesalahan tak terduga: " + ex.Message });
+            }
+        }
+
+        [HttpPut("/api/sales-category/{id}")]
+        public async Task<IActionResult> UpdateCategory(int id, [FromBody] SalesCategory model)        {
             model.Id = id;
             var result = await _salesCategoryUsecase.UpdateDataCategory(model);
             if (result)
@@ -397,7 +425,8 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 isTaxAble = so.IsTaxAble ?? false,
                 isTaxIncluded = so.IsTaxIncluded,
                 taxTotal = so.TaxTotal ?? 0,
-                status = so.Status ?? "Draft"
+                status = so.Status ?? "Draft",
+                isIndent = so.IsIndent
             });
 
             return Ok(new

@@ -1,30 +1,36 @@
 using trinova_erp_backend.Models.Persediaan;
 using trinova_erp_backend.Repositories.Persediaan;
+using trinova_erp_backend.Services.InventoryAI;
 
 namespace trinova_erp_backend.Usecase.Persediaan
 {
     public class InventoryDashboardUsecase
     {
-        private readonly InventoryStockRepo _stockRepo;
-        private readonly ForecastHistoryRepository _forecastHistoryRepository;
-        private readonly MasterProductRepo _productRepo;
+        private readonly InventoryStockRepo  _stockRepo;
+        private readonly IInventoryAIService _inventoryAIService;
+        private readonly MasterProductRepo   _productRepo;
 
         public InventoryDashboardUsecase(
-            InventoryStockRepo stockRepo,
-            ForecastHistoryRepository forecastHistoryRepository,
-            MasterProductRepo productRepo)
+            InventoryStockRepo  stockRepo,
+            IInventoryAIService inventoryAIService,
+            MasterProductRepo   productRepo)
         {
-            _stockRepo = stockRepo;
-            _forecastHistoryRepository = forecastHistoryRepository; 
-            _productRepo = productRepo;
+            _stockRepo          = stockRepo;
+            _inventoryAIService = inventoryAIService;
+            _productRepo        = productRepo;
         }
 
         public async Task<InventoryDashboard> GetDashboard()
         {
             var stocks = await _stockRepo.GetAllAsync();
-            var forecasts = await _forecastHistoryRepository.GetLatestForecast();
 
-            if (!forecasts.Any())
+            // IInventoryAIService never throws -- it degrades gracefully and
+            // reports failure via `success = false` (see InventoryAIService.cs).
+            // So the dashboard's core numbers (products, stock) always render
+            // even when the AI service is down; only the AI section is skipped.
+            var forecastResult = await _inventoryAIService.GetForecastAsync();
+
+            if (!forecastResult.success || forecastResult.data is null || forecastResult.data.Count == 0)
             {
                 return new InventoryDashboard
                 {
@@ -32,6 +38,8 @@ namespace trinova_erp_backend.Usecase.Persediaan
                     TotalStock = stocks.Sum(x => x.qty_on_hand)
                 };
             }
+
+            var forecasts = forecastResult.data;
 
             var highestForecast = forecasts
                 .OrderByDescending(x => x.ForecastNextMonth)

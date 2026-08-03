@@ -273,18 +273,30 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 using SqlCommand command = new SqlCommand(query, connection);
                 using SqlDataReader reader = await command.ExecuteReaderAsync();
 
+                // Performance: cache ordinal positions before the read loop so
+                // GetOrdinal() (which does a string scan) is called once per
+                // query rather than once per row. Mapping behaviour unchanged.
+                int ord_category_id   = reader.GetOrdinal("category_id");
+                int ord_category_code = reader.GetOrdinal("category_code");
+                int ord_category_name = reader.GetOrdinal("category_name");
+                int ord_is_active     = reader.GetOrdinal("is_active");
+                int ord_created_date  = reader.GetOrdinal("created_date");
+                int ord_created_by    = reader.GetOrdinal("created_by");
+                int ord_update_date   = reader.GetOrdinal("update_date");
+                int ord_update_by     = reader.GetOrdinal("update_by");
+
                 while (await reader.ReadAsync())
                 {
                     response.Add(new SupplierCategory
                     {
-                        category_id   = reader.GetInt32(reader.GetOrdinal("category_id")),
-                        category_code = reader["category_code"]?.ToString() ?? string.Empty,
-                        category_name = reader.GetString(reader.GetOrdinal("category_name")),
-                        is_active     = reader["is_active"] != DBNull.Value && Convert.ToBoolean(reader["is_active"]),
-                        created_date  = reader["created_date"] as DateTime?,
-                        created_by    = reader["created_by"]?.ToString(),
-                        update_date   = reader["update_date"] as DateTime?,
-                        update_by     = reader["update_by"]?.ToString()
+                        category_id   = reader.GetInt32(ord_category_id),
+                        category_code = reader[ord_category_code]?.ToString() ?? string.Empty,
+                        category_name = reader.GetString(ord_category_name),
+                        is_active     = reader[ord_is_active] != DBNull.Value && Convert.ToBoolean(reader[ord_is_active]),
+                        created_date  = reader[ord_created_date] as DateTime?,
+                        created_by    = reader[ord_created_by]?.ToString(),
+                        update_date   = reader[ord_update_date] as DateTime?,
+                        update_by     = reader[ord_update_by]?.ToString()
                     });
                 }
             }

@@ -138,6 +138,17 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 var salesInvoiceId = dto.SalesInvoiceId.GetValueOrDefault();
                 var salesOrderId = await ResolveSalesOrderIdForReceipt(dto, connection, transaction);
 
+                // Kalau receipt ini dibuat langsung dari Faktur Proforma DP (bukan
+                // dipilih lewat "Uang Muka" secara eksplisit), tetap kaitkan ke
+                // record Uang Muka SO tsb -- secara bisnis melunasi Faktur Proforma
+                // DP 30% SAMA DENGAN melunasi Uang Muka SO ini, jadi user tidak
+                // perlu tahu/pilih dua jalur berbeda untuk hal yang sama. Tanpa ini,
+                // status Uang Muka tetap "Unpaid" walau invoice DP-nya sudah lunas.
+                if (uangMukaId <= 0 && salesInvoiceId > 0)
+                {
+                    uangMukaId = await ResolveUangMukaIdForDpInvoice(salesInvoiceId, connection, transaction);
+                }
+
                 var result = await connection.QueryFirstOrDefaultAsync<PenerimaanPenjualan>(
                     query,
                     new
@@ -147,7 +158,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         dto.BankId,
                         dto.NilaiPembayaran,
                         dto.TanggalBayar,
-                        UangMukaId = dto.UangMukaId == 0 ? null : dto.UangMukaId,
+                        UangMukaId = uangMukaId > 0 ? (int?)uangMukaId : null,
                         SalesOrderId = salesOrderId > 0 ? (int?)salesOrderId : null,
                         SalesInvoiceId = dto.SalesInvoiceId == 0 ? null : dto.SalesInvoiceId
                     },
@@ -224,6 +235,30 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 transaction);
         }
 
+        // Cari record Uang Muka SO yang sesuai untuk sebuah faktur Proforma DP --
+        // dipakai supaya Sales Receipt yang dibuat dari faktur DP tetap ikut
+        // melunasi Uang Muka-nya, bukan hanya faktur itu sendiri.
+        private static async Task<int> ResolveUangMukaIdForDpInvoice(
+            int salesInvoiceId,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            if (salesInvoiceId <= 0)
+                return 0;
+
+            return await connection.QueryFirstOrDefaultAsync<int>(
+                @"SELECT TOP 1 um.Id
+                  FROM sales_invoice si
+                  INNER JOIN sales_order so ON so.order_id = si.sales_order_id
+                  INNER JOIN uang_muka um ON um.NoSo = so.so_number
+                  WHERE si.id = @SalesInvoiceId
+                    AND si.proforma_stage = 'DP'
+                    AND ISNULL(um.Status, '') NOT IN ('Cancelled', 'Dibatalkan')
+                  ORDER BY um.Id DESC",
+                new { SalesInvoiceId = salesInvoiceId },
+                transaction);
+        }
+
         public async Task<bool> UpdateSalesReceipt(int id, PenerimaanPenjualan dto)
         {
             const string query = @"
@@ -248,6 +283,14 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 var salesOrderId = await ResolveSalesOrderIdForReceipt(dto, connection, transaction);
                 dto.SalesOrderId = salesOrderId > 0 ? salesOrderId : null;
 
+                var uangMukaId = dto.UangMukaId.GetValueOrDefault();
+                var salesInvoiceId = dto.SalesInvoiceId.GetValueOrDefault();
+                if (uangMukaId <= 0 && salesInvoiceId > 0)
+                {
+                    uangMukaId = await ResolveUangMukaIdForDpInvoice(salesInvoiceId, connection, transaction);
+                }
+                dto.UangMukaId = uangMukaId > 0 ? uangMukaId : null;
+
                 var previous = await connection.QueryFirstOrDefaultAsync<PenerimaanPenjualan>(
                     @"SELECT
                         id AS Id,
@@ -270,7 +313,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         dto.BankId,
                         dto.NilaiPembayaran,
                         dto.TanggalBayar,
-                        UangMukaId = dto.UangMukaId == 0 ? null : dto.UangMukaId,
+                        UangMukaId = uangMukaId > 0 ? (int?)uangMukaId : null,
                         SalesOrderId = salesOrderId > 0 ? (int?)salesOrderId : null,
                         SalesInvoiceId = dto.SalesInvoiceId == 0 ? null : dto.SalesInvoiceId
                     },
@@ -471,6 +514,14 @@ namespace trinova_erp_backend.Repositories.Penjualan
             }
         }
 
+        // Flow baru: pembayaran (baik langsung ke SO tanpa invoice, maupun
+        // lewat invoice) tidak lagi menyelesaikan (Completed) Sales Order --
+        // itu sekarang HANYA dipicu oleh Delivery Order ditandai diterima
+        // (lihat PengirimanPenjualanUsecase.MarkDeliveryOrderReceivedAsync).
+        // Kedua method di bawah cuma memastikan SO pindah/tetap di
+        // "Processing" selama masih dalam tahap penagihan & pembayaran, dan
+        // sengaja TIDAK menyentuh SO yang statusnya sudah "In Delivery",
+        // "Completed", atau "Cancelled" (guard di WHERE clause).
         private static async Task UpdateSalesOrderPaymentStatus(
             int salesOrderId,
             SqlConnection connection,
@@ -485,10 +536,11 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         WHERE sales_order_id = @SalesOrderId
                           AND ISNULL(status, '') NOT IN ('Cancelled', 'Dibatalkan')
                     ) > 0
-                        THEN 'Partially Paid'
+                        THEN 'Processing'
                     ELSE status
                 END
-                WHERE order_id = @SalesOrderId;";
+                WHERE order_id = @SalesOrderId
+                  AND status IN ('Draft', 'Processing');";
 
             await connection.ExecuteAsync(query, new { SalesOrderId = salesOrderId }, transaction);
         }
@@ -498,20 +550,15 @@ namespace trinova_erp_backend.Repositories.Penjualan
             SqlConnection connection,
             SqlTransaction transaction)
         {
+            // When an invoice payment lands, move SO from Draft → Processing.
+            // Never escalate to Completed here — that is done exclusively by
+            // MarkDeliveryOrderReceivedAsync so the Completed state is only
+            // reached after physical goods receipt by the customer.
             const string query = @"
                 UPDATE sales_order
-                SET status = CASE
-                    WHEN EXISTS (
-                        SELECT 1
-                        FROM sales_invoice
-                        WHERE sales_order_id = @SalesOrderId
-                          AND ISNULL(status, '') NOT IN ('Paid', 'Cancelled', 'Lunas', 'Dibatalkan')
-                          AND ISNULL(remaining_amount, 0) > 0
-                    )
-                        THEN 'Partially Paid'
-                    ELSE 'Completed'
-                END
-                WHERE order_id = @SalesOrderId;";
+                SET status = 'Processing'
+                WHERE order_id = @SalesOrderId
+                  AND status IN ('Draft', 'Processing');";
 
             await connection.ExecuteAsync(query, new { SalesOrderId = salesOrderId }, transaction);
         }

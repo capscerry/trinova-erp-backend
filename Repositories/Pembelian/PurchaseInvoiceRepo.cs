@@ -38,7 +38,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
         );
 
         Task<List<PurchaseInvoice>>
-            GetAllPurchaseInvoice();
+            GetAllPurchaseInvoice(int? id = null);
 
         Task<bool> IsInvoiceExist(
             int goodsReceiptId
@@ -307,71 +307,18 @@ namespace trinova_erp_backend.Repositories.Pembelian
             }
         }
 
+        // Reuses GetAllPurchaseInvoice's fully-JOINed query (supplier_name,
+        // dp_paid, payment_paid, outstanding_amount, transaction_name, dst.)
+        // filtered to one row -- matches exactly what the old detail modal
+        // displayed, instead of the bare handful of columns this method used
+        // to return on its own.
         public async Task<PurchaseInvoice?>
             GetPurchaseInvoiceById(
                 int id
             )
         {
-            const string query = @"
-                SELECT *
-                FROM purchase_invoice
-                WHERE purchase_invoice_id = @id";
-
-            using (SqlConnection connection =
-                new SqlConnection(_connectionString))
-
-            using (SqlCommand command =
-                new SqlCommand(query, connection))
-            {
-                await connection.OpenAsync();
-
-                command.Parameters.AddWithValue(
-                    "@id",
-                    id
-                );
-
-                Console.WriteLine(query);
-
-                using (SqlDataReader reader =
-                    await command.ExecuteReaderAsync())
-                {
-                    if (await reader.ReadAsync())
-                    {
-                        return new PurchaseInvoice
-                        {
-                            purchase_invoice_id =
-                                Convert.ToInt32(
-                                    reader["purchase_invoice_id"]
-                                ),
-
-                            goods_receipt_id =
-                                Convert.ToInt32(
-                                    reader["goods_receipt_id"]
-                                ),
-
-                            invoice_number =
-                                reader["invoice_number"]
-                                    ?.ToString() ?? "",
-
-                            supplier_id =
-                                Convert.ToInt32(
-                                    reader["supplier_id"]
-                                ),
-
-                            total_amount =
-                                Convert.ToDecimal(
-                                    reader["total_amount"]
-                                ),
-
-                            status =
-                                reader["status"]
-                                    ?.ToString() ?? ""
-                        };
-                    }
-                }
-            }
-
-            return null;
+            var results = await GetAllPurchaseInvoice(id);
+            return results.FirstOrDefault();
         }
 
         public async Task<bool>
@@ -780,11 +727,14 @@ namespace trinova_erp_backend.Repositories.Pembelian
             await command.ExecuteNonQueryAsync();
         }
 
-        // GET ALL
+        // GET ALL (atau satu baris saja kalau `id` diisi -- dipakai juga oleh
+        // GetPurchaseInvoiceById supaya field yang dikembalikan konsisten,
+        // termasuk dp_paid/payment_paid/outstanding_amount yang sebelumnya
+        // cuma tersedia lewat query list ini)
         public async Task<List<PurchaseInvoice>>
-            GetAllPurchaseInvoice()
+            GetAllPurchaseInvoice(int? id = null)
         {
-        const string query = @"
+        string query = @"
         SELECT
             pi.purchase_invoice_id,
             pi.goods_receipt_id,
@@ -859,7 +809,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
         LEFT JOIN master_supplier ms
             ON pi.supplier_id =
             ms.supplier_id
-
+        " + (id.HasValue ? "WHERE pi.purchase_invoice_id = @id" : "") + @"
         ORDER BY pi.purchase_invoice_id DESC";
 
             var response =
@@ -873,6 +823,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 using (SqlCommand command =
                     new SqlCommand(query, connection))
                 {
+                    if (id.HasValue)
+                        command.Parameters.AddWithValue("@id", id.Value);
+
                     await connection.OpenAsync();
 
                     using (SqlDataReader reader =

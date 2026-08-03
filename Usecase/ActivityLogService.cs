@@ -61,7 +61,7 @@ namespace trinova_erp_backend.Services
 
             var actor = ResolveActor();
 
-            await _activityLogRepo.InsertAsync(new ActivityLog
+            var log = new ActivityLog
             {
                 Module = data.Module,
                 ActivityType = data.ActivityType,
@@ -71,8 +71,34 @@ namespace trinova_erp_backend.Services
                 RefId = data.RefId,
                 RefNumber = data.RefNumber,
                 UserId = actor.UserId,
-                UserName = actor.UserName
+                UserName = actor.UserName,
+                IpAddress = ResolveIpAddress()
+            };
+
+            // Fire-and-forget: never block the HTTP response waiting for the log insert.
+            _ = Task.Run(async () =>
+            {
+                try { await _activityLogRepo.InsertAsync(log); }
+                catch { /* Swallow logging errors — they must not affect the response */ }
             });
+
+            await Task.CompletedTask;
+        }
+
+        private string? ResolveIpAddress()
+        {
+            var context = _httpContextAccessor.HttpContext;
+            if (context == null) return null;
+
+            // Behind a reverse proxy/load balancer the real client IP is in
+            // X-Forwarded-For (first entry); fall back to the socket IP.
+            var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(forwardedFor))
+            {
+                return forwardedFor.Split(',')[0].Trim();
+            }
+
+            return context.Connection.RemoteIpAddress?.ToString();
         }
 
         private ActivityActor ResolveActor()

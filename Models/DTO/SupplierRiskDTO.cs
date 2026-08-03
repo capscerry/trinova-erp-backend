@@ -1,36 +1,22 @@
 namespace trinova_erp_backend.Models.DTO
 {
-    // ─── Predict ────────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Sent to POST /predict/supplier-risk on the FastAPI service.
-    /// Field names match the FastAPI SupplierInput Pydantic model exactly.
+    /// Request body sent to POST /predict/supplier-risk on the FastAPI service.
+    /// Field names match FastAPI's SupplierInput schema.
     /// </summary>
     public class SupplierRiskPredictRequest
     {
-        /// <summary>Optional — echoed back in the response for traceability.</summary>
-        public int? supplier_id      { get; set; }
+        /// <summary>Optional — for traceability only, not used as a feature.</summary>
+        public int?   supplier_id      { get; set; }
 
-        /// <summary>Unit price or contract value in local currency (> 0).</summary>
-        public double supplier_price  { get; set; }
-
-        /// <summary>Agreed lead time in calendar days (>= 1).</summary>
-        public int    lead_time_days  { get; set; }
-
-        /// <summary>Historical claim / defect rate (0.0 – 1.0).</summary>
-        public double claim_rate      { get; set; }
-
-        /// <summary>Historical on-time delivery rate (0.0 – 1.0).</summary>
-        public double on_time_rate    { get; set; }
-
-        /// <summary>Number of orders placed with this supplier per year.</summary>
-        public int    order_frequency { get; set; }
+        public double supplier_price   { get; set; }
+        public int    lead_time_days   { get; set; }
+        public double claim_rate       { get; set; }
+        public double on_time_rate     { get; set; }
+        public int    order_frequency  { get; set; }
     }
 
-    /// <summary>
-    /// Response from POST /predict/supplier-risk.
-    /// Matches FastAPI's SupplierRiskResponse schema.
-    /// </summary>
     public class SupplierRiskPredictResponse
     {
         /// <summary>Echoed from the request when supplied.</summary>
@@ -86,29 +72,29 @@ namespace trinova_erp_backend.Models.DTO
     /// <summary>
     /// One split's evaluation metrics — matches FastAPI's SplitMetrics Pydantic model.
     /// </summary>
-    public class SupplierRiskSplitMetrics
-    {
-        public double log_loss { get; set; }
-        public double mse      { get; set; }
-        public double mae      { get; set; }
-        public double r2       { get; set; }
-        public double accuracy { get; set; }
-        public double auc_roc  { get; set; }
-    }
+public class SupplierRiskSplitMetrics
+{
+    public double accuracy  { get; set; }
+    public double precision { get; set; }
+    public double recall    { get; set; }
+    public double f1_score  { get; set; }
+    public double auc_roc   { get; set; }
+    public double log_loss  { get; set; }
+}
 
     /// <summary>
     /// Metrics for a single TimeSeriesSplit CV fold — matches FastAPI's FoldMetrics model.
     /// </summary>
-    public class SupplierRiskFoldMetrics
-    {
-        public int    fold     { get; set; }
-        public double log_loss { get; set; }
-        public double mse      { get; set; }
-        public double mae      { get; set; }
-        public double r2       { get; set; }
-        public double accuracy { get; set; }
-        public double auc_roc  { get; set; }
-    }
+public class SupplierRiskFoldMetrics
+{
+    public int    fold      { get; set; }
+    public double accuracy  { get; set; }
+    public double precision { get; set; }
+    public double recall    { get; set; }
+    public double f1_score  { get; set; }
+    public double auc_roc   { get; set; }
+    public double log_loss  { get; set; }
+}
 
     /// <summary>
     /// Aggregated TimeSeriesSplit cross-validation results — matches FastAPI's CVResults model.
@@ -117,28 +103,23 @@ namespace trinova_erp_backend.Models.DTO
     /// Each fold expands forward in time so validation rows always come after training
     /// rows, preventing any future-data leakage.
     /// </summary>
-    public class SupplierRiskCVResults
-    {
-        public List<SupplierRiskFoldMetrics> fold_metrics  { get; set; } = new();
+public class SupplierRiskCVResults
+{
+    public List<SupplierRiskFoldMetrics> fold_metrics { get; set; } = new();
 
-        /// <summary>Mean log-loss across all folds. Null when CV was skipped.</summary>
-        public double? avg_log_loss  { get; set; }
-
-        /// <summary>Mean MSE across all folds.</summary>
-        public double? avg_mse       { get; set; }
-
-        /// <summary>Mean MAE across all folds.</summary>
-        public double? avg_mae       { get; set; }
-
-        /// <summary>Mean R² across all folds.</summary>
-        public double? avg_r2        { get; set; }
-
-        /// <summary>Mean accuracy across all folds.</summary>
-        public double? avg_accuracy  { get; set; }
-
-        /// <summary>Mean AUC-ROC across all folds.</summary>
-        public double? avg_auc_roc   { get; set; }
-    }
+    public double? avg_accuracy  { get; set; }
+    public double? avg_precision { get; set; }
+    public double? avg_recall    { get; set; }
+    public double? avg_f1_score  { get; set; }
+    public double? avg_auc_roc   { get; set; }
+    public double? avg_log_loss  { get; set; }
+    public double? std_accuracy { get; set; }
+    public double? std_precision { get; set; }
+    public double? std_recall { get; set; }
+    public double? std_f1_score { get; set; }
+    public double? std_auc_roc { get; set; }
+    public double? std_log_loss { get; set; }
+}
 
     /// <summary>
     /// Response returned by all /train* endpoints on the FastAPI service.
@@ -287,6 +268,51 @@ namespace trinova_erp_backend.Models.DTO
         public double                           consistency_ratio { get; set; }
         public Dictionary<string, double>       ahp_weights       { get; set; } = new();
         public List<RankedSupplierResult>       ranked_suppliers  { get; set; } = new();
+    }
+
+    // ─── Recommendation profiles (single source of truth) ────────────────────────
+
+    /// <summary>
+    /// The top-ranked supplier for a single purchasing profile, derived entirely
+    /// from the AHP-TOPSIS ranked_suppliers list — no additional calculation.
+    /// </summary>
+    public class SupplierRecommendationProfile
+    {
+        /// <summary>Profile name: "Balanced", "High Urgency", "Budget Priority", or "Quality Focus".</summary>
+        public string  profile        { get; set; } = string.Empty;
+
+        public int?    supplier_id    { get; set; }
+        public string? supplier_name  { get; set; }
+
+        /// <summary>TOPSIS score from the ranked result (0 – 1).</summary>
+        public double  topsis_score   { get; set; }
+
+        /// <summary>Rank position within this profile's ordered list.</summary>
+        public int     topsis_rank    { get; set; }
+
+        public double  on_time_rate   { get; set; }
+        public double  claim_rate     { get; set; }
+        public int     lead_time_days { get; set; }
+        public double  supplier_price { get; set; }
+        public int     order_frequency { get; set; }
+        public string  risk_level     { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// The complete unified recommendation dataset returned by
+    /// GET /api/supplier-risk/recommendation.
+    /// Every purchasing screen must consume this object as-is.
+    /// </summary>
+    public class SupplierRecommendationResult
+    {
+        /// <summary>Full AHP-TOPSIS ranked list — the authoritative supplier ordering.</summary>
+        public RankResponse                          ranking     { get; set; } = new();
+
+        /// <summary>
+        /// Per-profile best suppliers derived purely from ranked_suppliers.
+        /// Keys: "Balanced", "High Urgency", "Budget Priority", "Quality Focus".
+        /// </summary>
+        public Dictionary<string, SupplierRecommendationProfile> profiles { get; set; } = new();
     }
 
     // ─── ERP aggregation (internal) ──────────────────────────────────────────────

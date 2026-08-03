@@ -112,6 +112,18 @@ namespace trinova_erp_backend.Usecase.Pembelian
             int? invoiceId = await _purchasePaymentRepo
                 .GetInvoiceIdByPaymentId(id);
 
+            // Guard: reject edits on payments that belong to a Paid invoice
+            if (invoiceId.HasValue)
+            {
+                var invoice = await _purchaseInvoiceRepo
+                    .GetPurchaseInvoiceById(invoiceId.Value);
+
+                if (invoice != null && invoice.status == "Paid")
+                    throw new InvalidOperationException(
+                        "Cannot edit a payment for an invoice that is already Paid"
+                    );
+            }
+
             bool isDuplicate = await _purchasePaymentRepo
                 .IsDuplicatePayment(
                     model.purchase_invoice_id,
@@ -124,6 +136,39 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 throw new InvalidOperationException(
                     "A payment with the same invoice, date, and amount already exists"
                 );
+
+            // Guard: if this edit would mark the payment as Confirmed (settling
+            // the invoice), verify that all payments including this one sum to
+            // exactly the invoice total — no more, no less.
+            if (string.Equals(model.status, "Confirmed", StringComparison.OrdinalIgnoreCase)
+                && invoiceId.HasValue)
+            {
+                var invoice = await _purchaseInvoiceRepo
+                    .GetPurchaseInvoiceById(invoiceId.Value);
+
+                if (invoice != null)
+                {
+                    decimal previousPayments = await _purchasePaymentRepo
+                        .GetTotalPaidByInvoice(
+                            invoiceId.Value,
+                            excludePaymentId: id
+                        );
+
+                    decimal totalAfterEdit = previousPayments + model.amount;
+
+                    if (totalAfterEdit < invoice.total_amount)
+                        throw new InvalidOperationException(
+                            $"Payment total ({totalAfterEdit:F2}) is less than the invoice total ({invoice.total_amount:F2}). " +
+                            "Exact payment is required to mark as Confirmed."
+                        );
+
+                    if (totalAfterEdit > invoice.total_amount)
+                        throw new InvalidOperationException(
+                            $"Payment total ({totalAfterEdit:F2}) exceeds the invoice total ({invoice.total_amount:F2}). " +
+                            "Exact payment is required to mark as Confirmed."
+                        );
+                }
+            }
 
             bool result = await _purchasePaymentRepo
                 .UpdatePurchasePayment(id, model);

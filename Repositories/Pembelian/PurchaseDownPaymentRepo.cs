@@ -14,7 +14,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
         );
 
         Task<List<PurchaseDownPayment>>
-            GetAllPurchaseDownPayment();
+            GetAllPurchaseDownPayment(int? id = null);
 
         Task<PurchaseDownPayment?>
             GetPurchaseDownPaymentById(
@@ -28,6 +28,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
         Task<bool> DeletePurchaseDownPayment(
             int id
         );
+
+        /// <summary>
+        /// Returns true when a Down Payment already exists for the given
+        /// purchase_order_id.  Used to prevent duplicate DP creation.
+        /// </summary>
+        Task<bool> IsDownPaymentExist(int purchaseOrderId);
     }
 
     public class PurchaseDownPaymentRepo
@@ -165,10 +171,13 @@ namespace trinova_erp_backend.Repositories.Pembelian
             }
         }
 
+        // GET ALL (atau satu baris saja kalau `id` diisi -- dipakai juga oleh
+        // GetPurchaseDownPaymentById, yang sebelumnya cuma stub
+        // NotImplementedException).
         public async Task<List<PurchaseDownPayment>>
-            GetAllPurchaseDownPayment()
+            GetAllPurchaseDownPayment(int? id = null)
         {
-            const string query = @"
+            string query = @"
             SELECT
                 pdp.*,
                 po.po_number,
@@ -181,7 +190,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 ON pdp.purchase_order_id = po.purchase_order_id
             LEFT JOIN master_supplier s
                 ON pdp.supplier_id = s.supplier_id
-            ";
+            " + (id.HasValue ? "WHERE pdp.purchase_down_payment_id = @id" : "");
 
             var response =
                 new List<PurchaseDownPayment>();
@@ -194,6 +203,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 using (SqlCommand command =
                     new SqlCommand(query, connection))
                 {
+                    if (id.HasValue)
+                        command.Parameters.AddWithValue("@id", id.Value);
+
                     await connection.OpenAsync();
 
                     using (
@@ -321,7 +333,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 int id
             )
         {
-            throw new NotImplementedException();
+            var results = await GetAllPurchaseDownPayment(id);
+            return results.FirstOrDefault();
         }
 
         public async Task<bool>
@@ -330,6 +343,32 @@ namespace trinova_erp_backend.Repositories.Pembelian
             )
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<bool>
+            IsDownPaymentExist(int purchaseOrderId)
+        {
+            const string query = @"
+                SELECT COUNT(*)
+                FROM purchase_down_payment
+                WHERE purchase_order_id = @purchase_order_id";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            await connection.OpenAsync();
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            command.Parameters.AddWithValue(
+                "@purchase_order_id", purchaseOrderId);
+
+            int count =
+                Convert.ToInt32(
+                    await command.ExecuteScalarAsync());
+
+            return count > 0;
         }
 
         public async Task<bool>

@@ -71,5 +71,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
             return result ?? new List<ForecastResult>();
         }
+
     }
 }

@@ -6,7 +6,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
     public class PurchaseDownPaymentController
         : ControllerBase
     {
@@ -30,35 +30,46 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 PurchaseDownPayment model
             )
         {
-            var result =
-                await _purchaseDownPaymentUsecase
-                    .InsertPurchaseDownPayment(
-                        model
-                    );
-
-            if (result > 0)
+            try
             {
-                return Ok(
-                    new
+                var result =
+                    await _purchaseDownPaymentUsecase
+                        .InsertPurchaseDownPayment(
+                            model
+                        );
+
+                if (result > 0)
+                {
+                    return Ok(new
                     {
                         status = true,
-                        message =
-                            "Insert Successfully",
+                        message = "Insert Successfully",
+                        purchase_down_payment_id = result
+                    });
+                }
 
-                        purchase_down_payment_id =
-                            result
-                    }
-                );
-            }
-
-            return BadRequest(
-                new
+                return BadRequest(new
                 {
                     status = false,
-                    message =
-                        "Insert Failed"
-                }
-            );
+                    message = "Insert Failed"
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
         }
 
         [HttpGet("/api/purchase-down-payment/next-number")]
@@ -90,6 +101,29 @@ namespace trinova_erp_backend.Controllers.Pembelian
                     data = result
                 }
             );
+        }
+
+        /// <summary>
+        /// Single Down Payment (header + PO totals + supplier_name).
+        /// Fixes the 405 that was triggered when the frontend called
+        /// GET /purchase-down-payment/{id} and found no matching route (only
+        /// DELETE existed for this URL template).
+        /// </summary>
+        [HttpGet("/api/purchase-down-payment/{id}")]
+        public async Task<IActionResult> GetPurchaseDownPaymentById(int id)
+        {
+            var result = await _purchaseDownPaymentUsecase.GetPurchaseDownPaymentById(id);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    status = false,
+                    message = "Purchase Down Payment tidak ditemukan"
+                });
+            }
+
+            return Ok(result);
         }
 
         [HttpDelete("/api/purchase-down-payment/{id}")]

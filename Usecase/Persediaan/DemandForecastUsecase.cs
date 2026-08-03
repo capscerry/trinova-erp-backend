@@ -3,6 +3,15 @@ using trinova_erp_backend.Repositories.Persediaan;
 
 namespace trinova_erp_backend.Usecase.Persediaan
 {
+    /// <summary>
+    /// Orchestrates demand forecast generation:
+    ///   1. Fetch the stock-usage dataset from SQL Server via ForecastDatasetRepo.
+    ///   2. POST the dataset to the Inventory AI service via ForecastClient.
+    ///   3. Return the ForecastResult list to the controller.
+    ///
+    /// The AI service is called with a POST /forecast payload so it always trains
+    /// on fresh SQL Server data rather than reading the database directly.
+    /// </summary>
     public class DemandForecastUsecase
     {
         private readonly ForecastDatasetRepository _forecastDatasetRepository;
@@ -64,5 +73,6 @@ namespace trinova_erp_backend.Usecase.Persediaan
 
             return _excelExporter.Export(forecasts);
         }
+
     }
 }

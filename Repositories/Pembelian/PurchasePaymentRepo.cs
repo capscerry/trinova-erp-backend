@@ -43,6 +43,17 @@ public interface IPurchasePaymentRepo
         decimal amount,
         int? excludePaymentId = null
     );
+
+    /// <summary>
+    /// Returns the sum of all existing payment amounts for the given invoice,
+    /// optionally excluding one payment row (pass the id of the row being
+    /// edited so it is not counted against itself).
+    /// Returns 0 when no payments exist yet.
+    /// </summary>
+    Task<decimal> GetTotalPaidByInvoice(
+        int purchaseInvoiceId,
+        int? excludePaymentId = null
+    );
 }
 
 public class PurchasePaymentRepo
@@ -384,6 +395,39 @@ public class PurchasePaymentRepo
         object? result = await command.ExecuteScalarAsync();
         if (result == null || result == DBNull.Value) return null;
         return Convert.ToInt32(result);
+    }
+
+    // GET TOTAL PAID BY INVOICE
+    // Returns the sum of all payment amounts already recorded for the given
+    // invoice. Pass excludePaymentId when editing an existing payment so the
+    // row being updated is not counted against itself.
+    // Returns 0 when no other payments exist.
+    public async Task<decimal> GetTotalPaidByInvoice(
+        int purchaseInvoiceId,
+        int? excludePaymentId = null
+    )
+    {
+        const string query = @"
+            SELECT ISNULL(SUM(amount), 0)
+            FROM purchase_payment
+            WHERE purchase_invoice_id = @purchase_invoice_id
+              AND (@exclude_id IS NULL
+                   OR purchase_payment_id <> @exclude_id)";
+
+        using SqlConnection connection = new SqlConnection(_connectionString);
+        using SqlCommand command = new SqlCommand(query, connection);
+        await connection.OpenAsync();
+
+        command.Parameters.AddWithValue("@purchase_invoice_id", purchaseInvoiceId);
+        command.Parameters.AddWithValue(
+            "@exclude_id",
+            excludePaymentId.HasValue ? (object)excludePaymentId.Value : DBNull.Value
+        );
+
+        object? result = await command.ExecuteScalarAsync();
+        return result == null || result == DBNull.Value
+            ? 0m
+            : Convert.ToDecimal(result);
     }
 
     // IS DUPLICATE PAYMENT

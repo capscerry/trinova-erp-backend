@@ -6,16 +6,19 @@ namespace trinova_erp_backend.Controllers.Pembelian
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
     public class GoodsReceiptController : ControllerBase
     {
         private readonly IGoodsReceiptUsecase _goodsReceiptUsecase;
+        private readonly ILogger<GoodsReceiptController> _logger;
 
         public GoodsReceiptController(
-            IGoodsReceiptUsecase goodsReceiptUsecase
+            IGoodsReceiptUsecase goodsReceiptUsecase,
+            ILogger<GoodsReceiptController> logger
         )
         {
             _goodsReceiptUsecase = goodsReceiptUsecase;
+            _logger = logger;
         }
 
         [HttpPost("/api/goods-receipt")]
@@ -23,24 +26,43 @@ namespace trinova_erp_backend.Controllers.Pembelian
             [FromBody] GoodsReceipt goodsReceipt
         )
         {
-            var goodsReceiptId =
-                await _goodsReceiptUsecase
-                    .InsertGoodsReceipt(goodsReceipt);
+            try
+            {
+                var goodsReceiptId =
+                    await _goodsReceiptUsecase
+                        .InsertGoodsReceipt(goodsReceipt);
 
-            if (goodsReceiptId <= 0)
+                if (goodsReceiptId <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        status = false,
+                        message = "Insert Failed"
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = true,
+                    goods_receipt_id = goodsReceiptId
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new
                 {
                     status = false,
-                    message = "Insert Failed"
+                    message = ex.Message
                 });
             }
-
-            return Ok(new
-            {
-                status = true,
-                goods_receipt_id = goodsReceiptId
-            });
         }
 
         [HttpGet("/api/goods-receipt/next-number")]
@@ -89,6 +111,93 @@ namespace trinova_erp_backend.Controllers.Pembelian
             {
                 status = true,
                 data = result
+            });
+        }
+
+        /// <summary>
+        /// Returns only Goods Receipts that have at least one detail line
+        /// with remaining_qty &gt; 0. This is the list the Purchase Return
+        /// creation modal must use — exhausted GRs are excluded entirely.
+        /// </summary>
+        [HttpGet("/api/goods-receipt/for-purchase-return")]
+        public async Task<IActionResult> GetAllAvailableForReturn()
+        {
+            try
+            {
+                var result = await _goodsReceiptUsecase
+                    .GetAllAvailableForReturn();
+
+                return Ok(new
+                {
+                    status = true,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to load Goods Receipts available for Purchase Return.");
+
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    status = false,
+                    message = "Gagal memuat daftar Goods Receipt untuk retur."
+                });
+            }
+        }
+
+        /// <summary>
+        /// Header + item lines for one Goods Receipt (used by the detail page
+        /// and the print page). Fixes the 405 that was triggered when the
+        /// frontend called GET /goods-receipt/{id} and found no matching route
+        /// (only PUT/DELETE existed for this URL template).
+        /// </summary>
+        [HttpGet("/api/goods-receipt/{id}")]
+        public async Task<IActionResult> GetGoodsReceiptById(int id)
+        {
+            var result = await _goodsReceiptUsecase.GetGoodsReceiptById(id);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    status = false,
+                    message = "Goods Receipt tidak ditemukan"
+                });
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Updates a Goods Receipt header (receipt_number, receipt_date,
+        /// received_by, status).  Fixes the 405 that was triggered when the
+        /// frontend called PUT /goods-receipt/{id} and found no matching route.
+        /// </summary>
+        [HttpPut("/api/goods-receipt/{id}")]
+        public async Task<IActionResult> UpdateGoodsReceipt(
+            int id,
+            [FromBody] GoodsReceipt goodsReceipt
+        )
+        {
+            goodsReceipt.goods_receipt_id = id;
+
+            var result = await _goodsReceiptUsecase
+                .UpdateGoodsReceipt(goodsReceipt);
+
+            if (!result)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = "Update Failed"
+                });
+            }
+
+            return Ok(new
+            {
+                status = true,
+                message = "Goods Receipt updated successfully"
             });
         }
 

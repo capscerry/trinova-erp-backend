@@ -6,7 +6,7 @@ namespace trinova_erp_backend.Controllers.Pembelian
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Purchasing,purchasing,Pembelian,pembelian,Procurement Manager")]
     public class PurchaseInvoiceController : ControllerBase
     {
         private readonly IPurchaseInvoiceUsecase
@@ -42,8 +42,29 @@ namespace trinova_erp_backend.Controllers.Pembelian
                         purchaseInvoiceId
                 });
             }
+            catch (InvalidOperationException ex)
+            {
+                // Duplicate invoice for the same Goods Receipt
+                return Conflict(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
+                // Check if the message is a known duplicate-record message
+                // thrown as a plain Exception from the usecase layer.
+                if (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase) ||
+                    ex.Message.Contains("Invoice already", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Conflict(new
+                    {
+                        status = false,
+                        message = ex.Message
+                    });
+                }
+
                 return BadRequest(new
                 {
                     status = false,
@@ -79,6 +100,29 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 status = true,
                 data = result
             });
+        }
+
+        /// <summary>
+        /// Single invoice (header + supplier + dp_paid/payment_paid/outstanding).
+        /// Fixes the 405 that was triggered when the frontend called
+        /// GET /purchase-invoice/{id} and found no matching route (only
+        /// PUT/DELETE existed for this URL template).
+        /// </summary>
+        [HttpGet("/api/purchase-invoice/{id}")]
+        public async Task<IActionResult> GetPurchaseInvoiceById(int id)
+        {
+            var result = await _purchaseInvoiceUsecase.GetPurchaseInvoiceById(id);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    status = false,
+                    message = "Purchase Invoice tidak ditemukan"
+                });
+            }
+
+            return Ok(result);
         }
 
         /// <summary>

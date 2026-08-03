@@ -2,6 +2,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using trinova_erp_backend.Config;
 using trinova_erp_backend.Models;
+using trinova_erp_backend.Models.DTO;
 
 namespace trinova_erp_backend.Repositories.Pembelian
 {
@@ -12,6 +13,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
         Task<List<PurchaseOrderDetail>> GetAllPurchaseOrderDetail();
 
         Task<List<PurchaseOrderDetail>> GetDetailsByPurchaseOrderId(int purchaseOrderId);
+
+        Task<List<PurchaseOrderDetailWithProductDTO>> GetDetailsWithProductByPurchaseOrderId(int purchaseOrderId);
 
         Task<bool> UpdatePurchaseOrderDetail(PurchaseOrderDetail model);
 
@@ -341,6 +344,57 @@ namespace trinova_erp_backend.Repositories.Pembelian
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
+            }
+
+            return response;
+        }
+
+        // GET BY PURCHASE ORDER ID — ENRICHED WITH PRODUCT NAME/CODE + UOM
+        // Used exclusively to build the PDF/email Purchase Order document.
+        // GetDetailsByPurchaseOrderId above is NOT changed so existing features
+        // that depend on its shape are unaffected.
+        public async Task<List<PurchaseOrderDetailWithProductDTO>> GetDetailsWithProductByPurchaseOrderId(int purchaseOrderId)
+        {
+            const string query = @"
+                SELECT
+                    pod.product_id,
+                    p.product_code,
+                    p.product_name,
+                    pod.quantity,
+                    mu.uom_code,
+                    pod.price,
+                    pod.tax_amount,
+                    pod.subtotal
+                FROM purchase_order_detail pod
+                LEFT JOIN master_product p ON p.product_id = pod.product_id
+                LEFT JOIN master_uom mu ON mu.uom_id = pod.uom_id
+                WHERE pod.purchase_order_id = @purchase_order_id";
+
+            var response = new List<PurchaseOrderDetailWithProductDTO>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                await connection.OpenAsync();
+                command.Parameters.AddWithValue("@purchase_order_id", purchaseOrderId);
+
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        response.Add(new PurchaseOrderDetailWithProductDTO
+                        {
+                            ProductId   = reader["product_id"] != DBNull.Value ? Convert.ToInt32(reader["product_id"]) : 0,
+                            ProductCode = reader["product_code"] != DBNull.Value ? reader["product_code"].ToString() : null,
+                            ProductName = reader["product_name"] != DBNull.Value ? reader["product_name"].ToString() : null,
+                            Quantity    = reader.GetInt32(reader.GetOrdinal("quantity")),
+                            UomCode     = reader["uom_code"] != DBNull.Value ? reader["uom_code"].ToString() : null,
+                            Price       = reader["price"] != DBNull.Value ? Convert.ToDecimal(reader["price"]) : 0,
+                            TaxAmount   = reader["tax_amount"] != DBNull.Value ? Convert.ToDecimal(reader["tax_amount"]) : null,
+                            Subtotal    = reader["subtotal"] != DBNull.Value ? Convert.ToDecimal(reader["subtotal"]) : 0
+                        });
+                    }
+                }
             }
 
             return response;

@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using trinova_erp_backend.Models.Persediaan;
+using trinova_erp_backend.Security;
 using trinova_erp_backend.Usecase.Persediaan;
 
 namespace trinova_erp_backend.Controllers.Persediaan
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,admin,Inventory,inventory,Warehouse,warehouse,Persediaan,persediaan,Purchasing,purchasing,Pembelian,pembelian")]
+    [Authorize(Roles = Roles.PurchasingAndInventoryAccess)]
     public class PurchaseRequisitionController : ControllerBase
     {
         private readonly PurchaseRequisitionUsecase _purchaseRequisitionUsecase;

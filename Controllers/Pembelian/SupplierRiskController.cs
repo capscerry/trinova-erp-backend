@@ -1,17 +1,34 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using trinova_erp_backend.Models;
 using trinova_erp_backend.Models.DTO;
+using trinova_erp_backend.Security;
+using trinova_erp_backend.Services;
 using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
 {
     [ApiController]
+    // NOTE: this controller previously had no [Authorize] attribute at all,
+    // so any authenticated user of ANY role (Sales, Warehouse, etc.) could
+    // retrain the supplier-risk ML model. Scoped to Admin/Purchasing to match
+    // SupplierProductController's convention — this is a broken-access-control
+    // fix, not just a file-upload hardening change.
+    [Authorize(Roles = Roles.PurchasingAccess)]
     public class SupplierRiskController : ControllerBase
     {
         private readonly ISupplierRiskUsecase _supplierRiskUsecase;
+        private readonly IConfiguration _configuration;
+        private readonly IActivityLogService _activityLogService;
 
-        public SupplierRiskController(ISupplierRiskUsecase supplierRiskUsecase)
+        public SupplierRiskController(
+            ISupplierRiskUsecase supplierRiskUsecase,
+            IConfiguration configuration,
+            IActivityLogService activityLogService)
         {
             _supplierRiskUsecase = supplierRiskUsecase;
+            _configuration = configuration;
+            _activityLogService = activityLogService;
         }
 
         // ── Predict ───────────────────────────────────────────────────────────
@@ -38,6 +55,56 @@ namespace trinova_erp_backend.Controllers.Pembelian
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { status = false, message = ex.Message });
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(502, new { status = false, message = $"XGBoost service error: {ex.Message}" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = false, message = ex.Message });
+            }
+        }
+
+        // ── Unified recommendation (single source of truth) ──────────────────────
+
+        /// <summary>
+        /// Single source of truth for all purchasing recommendation screens.
+        ///
+        /// Runs: batch ML predict → AHP-TOPSIS ranking → profile derivation.
+        /// No model retraining. No independent scoring on the frontend.
+        ///
+        /// Response shape:
+        /// {
+        ///   "ranking": {
+        ///     "total": ..., "consistency_ratio": ..., "ahp_weights": {...},
+        ///     "ranked_suppliers": [ { topsis_rank, topsis_score, supplier_name, ... }, ... ]
+        ///   },
+        ///   "profiles": {
+        ///     "Balanced":        { profile, supplier_id, supplier_name, topsis_score, topsis_rank, ... },
+        ///     "High Urgency":    { ... },
+        ///     "Budget Priority": { ... },
+        ///     "Quality Focus":   { ... }
+        ///   }
+        /// }
+        ///
+        /// Every purchasing screen — Dashboard, Supplier Recommendation page, and
+        /// Purchase Order modal — must consume this endpoint and display its data
+        /// as-is. No re-ranking, no re-scoring, no profile recalculation in the UI.
+        ///
+        /// Optional query param: pass ahp_matrix as JSON body to override AHP weights.
+        /// </summary>
+        [HttpGet("/api/supplier-risk/recommendation")]
+        public async Task<IActionResult> GetRecommendation()
+        {
+            try
+            {
+                var result = await _supplierRiskUsecase.GetRecommendation();
+                return Ok(new { status = true, message = "Supplier recommendation successful", data = result });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { status = false, message = ex.Message });
             }
             catch (HttpRequestException ex)
             {
@@ -289,11 +356,23 @@ namespace trinova_erp_backend.Controllers.Pembelian
         [HttpPost("/api/supplier-risk/train/from-csv-upload")]
         public async Task<IActionResult> TrainFromCsvUpload(IFormFile file)
         {
-            if (file == null || file.Length == 0)
-                return BadRequest(new { status = false, message = "A CSV file is required." });
+            var maxBytes = _configuration.GetValue<long>(
+                "FileUploadSecurity:MaxCsvSizeBytes", 10 * 1024 * 1024);
 
-            if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
-                return BadRequest(new { status = false, message = "Only .csv files are accepted." });
+            var validation = FileUploadSecurity.ValidateCsv(file, maxBytes);
+            if (!validation.IsValid)
+            {
+                await _activityLogService.LogAsync(new ActivityLogCreate
+                {
+                    Module = "security",
+                    ActivityType = "file_upload_rejected",
+                    Title = $"Supplier-risk CSV upload rejected: {validation.ErrorMessage}",
+                    Description = $"FileName={file?.FileName}, Size={file?.Length}, ContentType={file?.ContentType}",
+                    RefTable = "supplier_risk_model"
+                });
+
+                return StatusCode(validation.StatusCode, new { status = false, message = validation.ErrorMessage });
+            }
 
             try
             {

@@ -13,6 +13,10 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
         Task<List<PurchaseOrder>> GetAllPurchaseOrder();
 
+        Task<List<PurchaseOrder>> GetPurchaseOrdersByStatus(string status);
+
+        Task<List<PurchaseOrder>> GetApprovedAndCompletedPurchaseOrders();
+
         Task<PurchaseOrder?> GetPurchaseOrderById(int id);
 
         Task<bool> UpdatePurchaseOrder(PurchaseOrder model);
@@ -229,40 +233,242 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
                     using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
+                        // Performance: cache ordinal positions before the read loop.
+                        // GetOrdinal does a linear scan — calling it per-row per-column
+                        // wastes CPU for lists of POs. SQL query and returned model
+                        // are completely unchanged.
+                        int ord_purchase_order_id  = reader.GetOrdinal("purchase_order_id");
+                        int ord_po_number          = reader.GetOrdinal("po_number");
+                        int ord_supplier_id        = reader.GetOrdinal("supplier_id");
+                        int ord_order_date         = reader.GetOrdinal("order_date");
+                        int ord_status             = reader.GetOrdinal("status");
+                        int ord_tax_percentage     = reader.GetOrdinal("tax_percentage");
+                        int ord_tax_amount         = reader.GetOrdinal("tax_amount");
+                        int ord_total_amount       = reader.GetOrdinal("total_amount");
+                        int ord_transaction_name   = reader.GetOrdinal("transaction_name");
+                        int ord_transaction_detail = reader.GetOrdinal("transaction_detail");
+                        int ord_expected_date      = reader.GetOrdinal("expected_date");
+                        int ord_nomor_faktur_pajak = reader.GetOrdinal("nomor_faktur_pajak");
+                        int ord_supplier_name      = reader.GetOrdinal("supplier_name");
+
                         while (await reader.ReadAsync())
                         {
                             var purchaseOrder = new PurchaseOrder()
                             {
-                                purchase_order_id = reader.GetInt32(reader.GetOrdinal("purchase_order_id")),
-                                po_number = reader["po_number"].ToString(),
-                                supplier_id = reader.GetInt32(reader.GetOrdinal("supplier_id")),
-                                order_date = reader.GetDateTime(reader.GetOrdinal("order_date")),
-                                status = reader["status"].ToString(),
-                                tax_percentage = reader["tax_percentage"] != DBNull.Value
-                                    ? Convert.ToDecimal(reader["tax_percentage"])
+                                purchase_order_id = reader.GetInt32(ord_purchase_order_id),
+                                po_number = reader[ord_po_number].ToString(),
+                                supplier_id = reader.GetInt32(ord_supplier_id),
+                                order_date = reader.GetDateTime(ord_order_date),
+                                status = reader[ord_status].ToString(),
+                                tax_percentage = reader[ord_tax_percentage] != DBNull.Value
+                                    ? Convert.ToDecimal(reader[ord_tax_percentage])
                                     : null,
-                                tax_amount = reader["tax_amount"] != DBNull.Value
-                                    ? Convert.ToDecimal(reader["tax_amount"])
+                                tax_amount = reader[ord_tax_amount] != DBNull.Value
+                                    ? Convert.ToDecimal(reader[ord_tax_amount])
                                     : null,
-                                total_amount = reader.GetDecimal(reader.GetOrdinal("total_amount")),
-                                transaction_name = reader["transaction_name"] != DBNull.Value
-                                    ? reader["transaction_name"].ToString()
+                                total_amount = reader.GetDecimal(ord_total_amount),
+                                transaction_name = reader[ord_transaction_name] != DBNull.Value
+                                    ? reader[ord_transaction_name].ToString()
                                     : null,
-                                transaction_detail = reader["transaction_detail"] != DBNull.Value
-                                    ? reader["transaction_detail"].ToString()
+                                transaction_detail = reader[ord_transaction_detail] != DBNull.Value
+                                    ? reader[ord_transaction_detail].ToString()
                                     : null,
-                                expected_date = reader["expected_date"] != DBNull.Value
-                                    ? Convert.ToDateTime(reader["expected_date"])
+                                expected_date = reader[ord_expected_date] != DBNull.Value
+                                    ? Convert.ToDateTime(reader[ord_expected_date])
                                     : null,
-                                nomor_faktur_pajak = reader["nomor_faktur_pajak"] != DBNull.Value
-                                    ? reader["nomor_faktur_pajak"].ToString()
+                                nomor_faktur_pajak = reader[ord_nomor_faktur_pajak] != DBNull.Value
+                                    ? reader[ord_nomor_faktur_pajak].ToString()
                                     : null
                             };
 
                             purchaseOrder.Supplier = new Supplier
                             {
                                 supplier_id = purchaseOrder.supplier_id,
-                                supplier_name = reader["supplier_name"]?.ToString() ?? ""
+                                supplier_name = reader[ord_supplier_name]?.ToString() ?? ""
+                            };
+
+                            response.Add(purchaseOrder);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var msg = ex.Message;
+                throw new Exception(msg);
+            }
+
+            return response;
+        }
+
+        // GET BY STATUS
+        public async Task<List<PurchaseOrder>> GetPurchaseOrdersByStatus(string status)
+        {
+            const string query = @"
+            SELECT
+                po.*,
+                s.supplier_name
+            FROM purchase_order po
+            LEFT JOIN master_supplier s
+                ON po.supplier_id = s.supplier_id
+            WHERE po.status = @status
+            ";
+
+            var response = new List<PurchaseOrder>();
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    await connection.OpenAsync();
+
+                    command.Parameters.AddWithValue("@status", status);
+
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        // Performance: same ordinal-caching pattern as GetAllPurchaseOrder.
+                        // Avoids per-row GetOrdinal string scans. Query and model unchanged.
+                        int ord_purchase_order_id  = reader.GetOrdinal("purchase_order_id");
+                        int ord_po_number          = reader.GetOrdinal("po_number");
+                        int ord_supplier_id        = reader.GetOrdinal("supplier_id");
+                        int ord_order_date         = reader.GetOrdinal("order_date");
+                        int ord_status             = reader.GetOrdinal("status");
+                        int ord_tax_percentage     = reader.GetOrdinal("tax_percentage");
+                        int ord_tax_amount         = reader.GetOrdinal("tax_amount");
+                        int ord_total_amount       = reader.GetOrdinal("total_amount");
+                        int ord_transaction_name   = reader.GetOrdinal("transaction_name");
+                        int ord_transaction_detail = reader.GetOrdinal("transaction_detail");
+                        int ord_expected_date      = reader.GetOrdinal("expected_date");
+                        int ord_nomor_faktur_pajak = reader.GetOrdinal("nomor_faktur_pajak");
+                        int ord_supplier_name      = reader.GetOrdinal("supplier_name");
+
+                        while (await reader.ReadAsync())
+                        {
+                            var purchaseOrder = new PurchaseOrder()
+                            {
+                                purchase_order_id = reader.GetInt32(ord_purchase_order_id),
+                                po_number = reader[ord_po_number].ToString(),
+                                supplier_id = reader.GetInt32(ord_supplier_id),
+                                order_date = reader.GetDateTime(ord_order_date),
+                                status = reader[ord_status].ToString(),
+                                tax_percentage = reader[ord_tax_percentage] != DBNull.Value
+                                    ? Convert.ToDecimal(reader[ord_tax_percentage])
+                                    : null,
+                                tax_amount = reader[ord_tax_amount] != DBNull.Value
+                                    ? Convert.ToDecimal(reader[ord_tax_amount])
+                                    : null,
+                                total_amount = reader.GetDecimal(ord_total_amount),
+                                transaction_name = reader[ord_transaction_name] != DBNull.Value
+                                    ? reader[ord_transaction_name].ToString()
+                                    : null,
+                                transaction_detail = reader[ord_transaction_detail] != DBNull.Value
+                                    ? reader[ord_transaction_detail].ToString()
+                                    : null,
+                                expected_date = reader[ord_expected_date] != DBNull.Value
+                                    ? Convert.ToDateTime(reader[ord_expected_date])
+                                    : null,
+                                nomor_faktur_pajak = reader[ord_nomor_faktur_pajak] != DBNull.Value
+                                    ? reader[ord_nomor_faktur_pajak].ToString()
+                                    : null
+                            };
+
+                            purchaseOrder.Supplier = new Supplier
+                            {
+                                supplier_id = purchaseOrder.supplier_id,
+                                supplier_name = reader[ord_supplier_name]?.ToString() ?? ""
+                            };
+
+                            response.Add(purchaseOrder);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var msg = ex.Message;
+                throw new Exception(msg);
+            }
+
+            return response;
+        }
+
+        // GET APPROVED AND COMPLETED
+        public async Task<List<PurchaseOrder>> GetApprovedAndCompletedPurchaseOrders()
+        {
+            const string query = @"
+            SELECT
+                po.*,
+                s.supplier_name
+            FROM purchase_order po
+            LEFT JOIN master_supplier s
+                ON po.supplier_id = s.supplier_id
+            WHERE po.status IN (@s1, @s2)
+            ";
+
+            var response = new List<PurchaseOrder>();
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    await connection.OpenAsync();
+
+                    command.Parameters.AddWithValue("@s1", "Approved");
+                    command.Parameters.AddWithValue("@s2", "Completed");
+
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        // Performance: same ordinal-caching pattern. Query and model unchanged.
+                        int ord_purchase_order_id  = reader.GetOrdinal("purchase_order_id");
+                        int ord_po_number          = reader.GetOrdinal("po_number");
+                        int ord_supplier_id        = reader.GetOrdinal("supplier_id");
+                        int ord_order_date         = reader.GetOrdinal("order_date");
+                        int ord_status             = reader.GetOrdinal("status");
+                        int ord_tax_percentage     = reader.GetOrdinal("tax_percentage");
+                        int ord_tax_amount         = reader.GetOrdinal("tax_amount");
+                        int ord_total_amount       = reader.GetOrdinal("total_amount");
+                        int ord_transaction_name   = reader.GetOrdinal("transaction_name");
+                        int ord_transaction_detail = reader.GetOrdinal("transaction_detail");
+                        int ord_expected_date      = reader.GetOrdinal("expected_date");
+                        int ord_nomor_faktur_pajak = reader.GetOrdinal("nomor_faktur_pajak");
+                        int ord_supplier_name      = reader.GetOrdinal("supplier_name");
+
+                        while (await reader.ReadAsync())
+                        {
+                            var purchaseOrder = new PurchaseOrder()
+                            {
+                                purchase_order_id = reader.GetInt32(ord_purchase_order_id),
+                                po_number = reader[ord_po_number].ToString(),
+                                supplier_id = reader.GetInt32(ord_supplier_id),
+                                order_date = reader.GetDateTime(ord_order_date),
+                                status = reader[ord_status].ToString(),
+                                tax_percentage = reader[ord_tax_percentage] != DBNull.Value
+                                    ? Convert.ToDecimal(reader[ord_tax_percentage])
+                                    : null,
+                                tax_amount = reader[ord_tax_amount] != DBNull.Value
+                                    ? Convert.ToDecimal(reader[ord_tax_amount])
+                                    : null,
+                                total_amount = reader.GetDecimal(ord_total_amount),
+                                transaction_name = reader[ord_transaction_name] != DBNull.Value
+                                    ? reader[ord_transaction_name].ToString()
+                                    : null,
+                                transaction_detail = reader[ord_transaction_detail] != DBNull.Value
+                                    ? reader[ord_transaction_detail].ToString()
+                                    : null,
+                                expected_date = reader[ord_expected_date] != DBNull.Value
+                                    ? Convert.ToDateTime(reader[ord_expected_date])
+                                    : null,
+                                nomor_faktur_pajak = reader[ord_nomor_faktur_pajak] != DBNull.Value
+                                    ? reader[ord_nomor_faktur_pajak].ToString()
+                                    : null
+                            };
+
+                            purchaseOrder.Supplier = new Supplier
+                            {
+                                supplier_id = purchaseOrder.supplier_id,
+                                supplier_name = reader[ord_supplier_name]?.ToString() ?? ""
                             };
 
                             response.Add(purchaseOrder);
@@ -299,31 +505,47 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     {
                         if (await reader.ReadAsync())
                         {
+                            // Performance: cache ordinals before column access.
+                            // Even single-row reads benefit from avoiding repeated
+                            // string scans across 12 columns. Logic unchanged.
+                            int ord_purchase_order_id  = reader.GetOrdinal("purchase_order_id");
+                            int ord_po_number          = reader.GetOrdinal("po_number");
+                            int ord_supplier_id        = reader.GetOrdinal("supplier_id");
+                            int ord_order_date         = reader.GetOrdinal("order_date");
+                            int ord_status             = reader.GetOrdinal("status");
+                            int ord_tax_percentage     = reader.GetOrdinal("tax_percentage");
+                            int ord_tax_amount         = reader.GetOrdinal("tax_amount");
+                            int ord_total_amount       = reader.GetOrdinal("total_amount");
+                            int ord_transaction_name   = reader.GetOrdinal("transaction_name");
+                            int ord_transaction_detail = reader.GetOrdinal("transaction_detail");
+                            int ord_expected_date      = reader.GetOrdinal("expected_date");
+                            int ord_nomor_faktur_pajak = reader.GetOrdinal("nomor_faktur_pajak");
+
                             return new PurchaseOrder()
                             {
-                                purchase_order_id = reader.GetInt32(reader.GetOrdinal("purchase_order_id")),
-                                po_number = reader["po_number"].ToString(),
-                                supplier_id = reader.GetInt32(reader.GetOrdinal("supplier_id")),
-                                order_date = reader.GetDateTime(reader.GetOrdinal("order_date")),
-                                status = reader["status"].ToString(),
-                                tax_percentage = reader["tax_percentage"] != DBNull.Value
-                                    ? Convert.ToDecimal(reader["tax_percentage"])
+                                purchase_order_id = reader.GetInt32(ord_purchase_order_id),
+                                po_number = reader[ord_po_number].ToString(),
+                                supplier_id = reader.GetInt32(ord_supplier_id),
+                                order_date = reader.GetDateTime(ord_order_date),
+                                status = reader[ord_status].ToString(),
+                                tax_percentage = reader[ord_tax_percentage] != DBNull.Value
+                                    ? Convert.ToDecimal(reader[ord_tax_percentage])
                                     : null,
-                                tax_amount = reader["tax_amount"] != DBNull.Value
-                                    ? Convert.ToDecimal(reader["tax_amount"])
+                                tax_amount = reader[ord_tax_amount] != DBNull.Value
+                                    ? Convert.ToDecimal(reader[ord_tax_amount])
                                     : null,
-                                total_amount = reader.GetDecimal(reader.GetOrdinal("total_amount")),
-                                transaction_name = reader["transaction_name"] != DBNull.Value
-                                    ? reader["transaction_name"].ToString()
+                                total_amount = reader.GetDecimal(ord_total_amount),
+                                transaction_name = reader[ord_transaction_name] != DBNull.Value
+                                    ? reader[ord_transaction_name].ToString()
                                     : null,
-                                transaction_detail = reader["transaction_detail"] != DBNull.Value
-                                    ? reader["transaction_detail"].ToString()
+                                transaction_detail = reader[ord_transaction_detail] != DBNull.Value
+                                    ? reader[ord_transaction_detail].ToString()
                                     : null,
-                                expected_date = reader["expected_date"] != DBNull.Value
-                                    ? Convert.ToDateTime(reader["expected_date"])
+                                expected_date = reader[ord_expected_date] != DBNull.Value
+                                    ? Convert.ToDateTime(reader[ord_expected_date])
                                     : null,
-                                nomor_faktur_pajak = reader["nomor_faktur_pajak"] != DBNull.Value
-                                    ? reader["nomor_faktur_pajak"].ToString()
+                                nomor_faktur_pajak = reader[ord_nomor_faktur_pajak] != DBNull.Value
+                                    ? reader[ord_nomor_faktur_pajak].ToString()
                                     : null
                             };
                         }

@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using trinova_erp_backend.Models;
+using trinova_erp_backend.Security;
 using trinova_erp_backend.Usecase.Pembelian;
 
 namespace trinova_erp_backend.Controllers.Pembelian
@@ -22,15 +24,19 @@ namespace trinova_erp_backend.Controllers.Pembelian
 
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = Roles.PurchasingAccess)]
     public class PurchaseReturnController : ControllerBase
     {
         private readonly IPurchaseReturnUsecase _purchaseReturnUsecase;
+        private readonly ILogger<PurchaseReturnController> _logger;
 
         public PurchaseReturnController(
-            IPurchaseReturnUsecase purchaseReturnUsecase
+            IPurchaseReturnUsecase purchaseReturnUsecase,
+            ILogger<PurchaseReturnController> logger
         )
         {
             _purchaseReturnUsecase = purchaseReturnUsecase;
+            _logger = logger;
         }
 
         [HttpGet("/api/purchase-return/next-number")]
@@ -59,6 +65,14 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 {
                     status = true,
                     purchase_return_id = id
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    status = false,
+                    message = ex.Message
                 });
             }
             catch (Exception ex)
@@ -108,6 +122,44 @@ namespace trinova_erp_backend.Controllers.Pembelian
                 {
                     status = false,
                     message = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Returns only the GR detail lines where remaining_qty &gt; 0 for the
+        /// given goods_receipt_id.  The Purchase Return creation form calls
+        /// this to populate its product selection table, ensuring the user
+        /// only sees items that can still be returned.
+        ///
+        /// Each line carries:
+        ///   product_name   — display name
+        ///   quantity       — original received qty (read-only reference)
+        ///   remaining_qty  — maximum the user may enter as Return Qty
+        /// </summary>
+        [HttpGet("/api/purchase-return/gr/{grId}/available-details")]
+        public async Task<IActionResult> GetAvailableReturnDetails(int grId)
+        {
+            try
+            {
+                var result = await _purchaseReturnUsecase
+                    .GetAvailableReturnDetails(grId);
+
+                return Ok(new
+                {
+                    status = true,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to load available return details for GoodsReceiptId={GrId}.", grId);
+
+                return BadRequest(new
+                {
+                    status = false,
+                    message = "Gagal memuat item yang bisa diretur dari Goods Receipt ini."
                 });
             }
         }

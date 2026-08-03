@@ -99,67 +99,66 @@ namespace trinova_erp_backend.Repositories.Pembelian
         public async Task<string>
             GenerateSupplierCode()
         {
-            // Find the highest numeric suffix across ALL well-formed SUP- codes,
-            // then keep incrementing until we land on a code that doesn't yet
-            // exist in the table.  This handles gaps and out-of-sequence rows
-            // left by manual inserts or failed migrations.
-            const string maxQuery = @"
-                SELECT ISNULL(
-                    (
-                        SELECT MAX(
-                            CAST(SUBSTRING(supplier_code, 5, 10) AS BIGINT)
-                        )
-                        FROM master_supplier
-                        WHERE supplier_code LIKE
-                            'SUP-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
-                    ),
-                    (
-                        SELECT MAX(supplier_id)
-                        FROM master_supplier
-                    )
-                )";
+            // Atomically increment the counter table inside a SERIALIZABLE
+            // transaction with UPDLOCK + HOLDLOCK. This guarantees that
+            // concurrent sessions queue up behind the lock — no two
+            // sessions can ever read the same counter value.
+            //
+            // Strategy:
+            // 1. Start SERIALIZABLE transaction
+            // 2. Read counter row WITH (UPDLOCK, HOLDLOCK)
+            // 3. Increment counter
+            // 4. Update counter table
+            // 5. Commit
+            // 6. Format as SUP-XXXXXXXXXX
 
-            const string existsQuery = @"
-                SELECT COUNT(1)
-                FROM master_supplier
-                WHERE supplier_code = @code";
+            const string incrementQuery = @"
+                SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+                DECLARE @next BIGINT;
+
+                BEGIN TRANSACTION;
+                BEGIN TRY
+
+                    -- Lock the counter row to prevent concurrent reads
+                    SELECT @next = last_value + 1
+                    FROM   dbo.supplier_code_counter WITH (UPDLOCK, HOLDLOCK)
+                    WHERE  id = 1;
+
+                    -- Persist the incremented value
+                    UPDATE dbo.supplier_code_counter
+                    SET    last_value = @next
+                    WHERE  id = 1;
+
+                    COMMIT TRANSACTION;
+
+                END TRY
+                BEGIN CATCH
+                    IF @@TRANCOUNT > 0
+                        ROLLBACK TRANSACTION;
+                    THROW;
+                END CATCH;
+
+                -- Return the new code (outside the transaction — read-only)
+                SELECT 'SUP-' + RIGHT('0000000000' + CAST(@next AS NVARCHAR(20)), 10);
+            ";
 
             using SqlConnection connection =
                 new SqlConnection(_connectionString);
 
             await connection.OpenAsync();
 
-            long nextNumber;
+            using var cmd = new SqlCommand(incrementQuery, connection);
+            
+            object? result = await cmd.ExecuteScalarAsync();
+            
+            if (result == null || result == DBNull.Value)
+                throw new InvalidOperationException(
+                    "Failed to generate supplier code: counter table may not be initialized. " +
+                    "Run Migrations/add_supplier_code_sequence.sql first."
+                );
 
-            using (var cmd = new SqlCommand(maxQuery, connection))
-            {
-                object? result = await cmd.ExecuteScalarAsync();
-                nextNumber = (result != null && result != DBNull.Value)
-                    ? Convert.ToInt64(result) + 1
-                    : 1;
-            }
-
-            // Advance past any codes that already exist (handles duplicates
-            // caused by manual inserts or out-of-sequence data).
-            using (var cmd = new SqlCommand(existsQuery, connection))
-            {
-                cmd.Parameters.Add("@code", System.Data.SqlDbType.NVarChar, 20);
-
-                while (true)
-                {
-                    string candidate = $"SUP-{nextNumber:D10}";
-                    cmd.Parameters["@code"].Value = candidate;
-
-                    int count = Convert.ToInt32(
-                        await cmd.ExecuteScalarAsync()
-                    );
-
-                    if (count == 0)
-                        return candidate;
-
-                    nextNumber++;
-                }
-            }
+            return result.ToString()!;
         }
 
         // ─── INSERT ─────────────────────────────
@@ -197,117 +196,117 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 Supplier model
             )
         {
-            // Always ensure a properly formatted code is stored
-            model.supplier_code = string.IsNullOrWhiteSpace(model.supplier_code)
-                ? await GenerateSupplierCode()
-                : FormatSupplierCode(model.supplier_code);
+            // Always generate the supplier code atomically inside the INSERT
+            // transaction. Any supplier_code value arriving from the request
+            // body is intentionally discarded here.
+            //
+            // Root-cause note: the /api/supplier/next-code endpoint calls
+            // GenerateSupplierCode() which permanently increments the counter.
+            // The frontend then populates the form with that code and sends it
+            // back in the POST body. If we trusted model.supplier_code here,
+            // InsertSupplier would attempt to re-use a code that the counter
+            // already committed — colliding with the row that was inserted on
+            // a previous increment, producing the UNIQUE KEY violation.
+            //
+            // Generating the code fresh inside this transaction is the only
+            // correct path. The counter guarantees uniqueness; the caller
+            // must never supply the code.
 
-            const string query = @"
+            const string insertWithGeneratedCode = @"
+                SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
-                INSERT INTO master_supplier
-                (
-                    supplier_code,
-                    supplier_name,
-                    category_supplier,
-                    no_telp_bisnis,
-                    alamat,
-                    email,
-                    status
-                )
+                DECLARE @next         BIGINT;
+                DECLARE @generatedCode NVARCHAR(20);
+                DECLARE @newId        INT;
 
-                VALUES
-                (
-                    @supplier_code,
-                    @supplier_name,
-                    @category_supplier,
-                    @no_telp_bisnis,
-                    @alamat,
-                    @email,
-                    @status
-                );
+                BEGIN TRANSACTION;
+                BEGIN TRY
 
-                SELECT CAST(
-                    SCOPE_IDENTITY()
-                    AS INT
-                );
+                    -- Atomically increment the counter
+                    SELECT @next = last_value + 1
+                    FROM   dbo.supplier_code_counter WITH (UPDLOCK, HOLDLOCK)
+                    WHERE  id = 1;
+
+                    UPDATE dbo.supplier_code_counter
+                    SET    last_value = @next
+                    WHERE  id = 1;
+
+                    SET @generatedCode = 'SUP-' + RIGHT('0000000000' + CAST(@next AS NVARCHAR(20)), 10);
+
+                    -- Insert the supplier row with the generated code
+                    INSERT INTO master_supplier
+                    (
+                        supplier_code,
+                        supplier_name,
+                        category_supplier,
+                        no_telp_bisnis,
+                        alamat,
+                        email,
+                        status
+                    )
+                    VALUES
+                    (
+                        @generatedCode,
+                        @supplier_name,
+                        @category_supplier,
+                        @no_telp_bisnis,
+                        @alamat,
+                        @email,
+                        @status
+                    );
+
+                    SET @newId = CAST(SCOPE_IDENTITY() AS INT);
+
+                    COMMIT TRANSACTION;
+
+                END TRY
+                BEGIN CATCH
+                    IF @@TRANCOUNT > 0
+                        ROLLBACK TRANSACTION;
+                    THROW;
+                END CATCH;
+
+                -- Return both the new ID and the generated code (outside transaction)
+                SELECT @newId AS supplier_id, @generatedCode AS supplier_code;
             ";
 
             try
             {
-                using (
-                    SqlConnection connection =
-                        new SqlConnection(
-                            _connectionString
-                        )
-                )
+                using SqlConnection connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
 
-                using (
-                    SqlCommand command =
-                        new SqlCommand(
-                            query,
-                            connection
-                        )
-                )
+                using SqlCommand command = new SqlCommand(insertWithGeneratedCode, connection);
+
+                command.Parameters.AddWithValue("@supplier_name", model.supplier_name);
+                command.Parameters.AddWithValue("@category_supplier", (object?)model.category_supplier ?? DBNull.Value);
+                command.Parameters.AddWithValue("@no_telp_bisnis", model.no_telp_bisnis ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@alamat", model.alamat ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@email", model.email ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@status", model.status ?? (object)DBNull.Value);
+
+                using SqlDataReader reader = await command.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
                 {
-                    await connection.OpenAsync();
+                    model.supplier_id   = reader.GetInt32(0);
+                    model.supplier_code = reader.GetString(1);
 
-                    command.Parameters.AddWithValue(
-                        "@supplier_code",
-                        model.supplier_code
+                    Console.WriteLine(
+                        $"[InsertSupplier] Generated supplier_code: {model.supplier_code} | " +
+                        $"supplier_id: {model.supplier_id}"
                     );
-
-                    command.Parameters.AddWithValue(
-                        "@supplier_name",
-                        model.supplier_name
-                    );
-
-                    command.Parameters.AddWithValue(
-                        "@category_supplier",
-                        (object?)model.category_supplier
-                        ?? DBNull.Value
-                    );
-
-                    command.Parameters.AddWithValue(
-                        "@no_telp_bisnis",
-                        model.no_telp_bisnis
-                        ?? (object)DBNull.Value
-                    );
-
-                    command.Parameters.AddWithValue(
-                        "@alamat",
-                        model.alamat
-                        ?? (object)DBNull.Value
-                    );
-
-                    command.Parameters.AddWithValue(
-                        "@email",
-                        model.email
-                        ?? (object)DBNull.Value
-                    );
-
-                    command.Parameters.AddWithValue(
-                        "@status",
-                        model.status
-                        ?? (object)DBNull.Value
-                    );
-
-                    int newId =
-                        Convert.ToInt32(
-                            await command.ExecuteScalarAsync()
-                        );
-
-                    model.supplier_id =
-                        newId;
-
-                    return model;
                 }
-            }
+                else
+                {
+                    throw new InvalidOperationException(
+                        "Failed to insert supplier: no result returned from INSERT."
+                    );
+                }
 
+                return model;
+            }
             catch (Exception ex)
             {
-                Console.WriteLine(
-                    $"[InsertSupplier] {ex.Message}"
-                );
+                Console.WriteLine($"[InsertSupplier] ERROR: {ex.Message}");
                 throw;
             }
         }
@@ -565,6 +564,18 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             await command.ExecuteReaderAsync()
                     )
                     {
+                        // Performance: cache ordinal positions once before the
+                        // read loop — avoids a string scan per row per column.
+                        // Mapping behaviour and returned model are unchanged.
+                        int ord_supplier_id       = reader.GetOrdinal("supplier_id");
+                        int ord_supplier_code     = reader.GetOrdinal("supplier_code");
+                        int ord_supplier_name     = reader.GetOrdinal("supplier_name");
+                        int ord_category_supplier = reader.GetOrdinal("category_supplier");
+                        int ord_no_telp_bisnis    = reader.GetOrdinal("no_telp_bisnis");
+                        int ord_alamat            = reader.GetOrdinal("alamat");
+                        int ord_email             = reader.GetOrdinal("email");
+                        int ord_status            = reader.GetOrdinal("status");
+
                         while (
                             await reader.ReadAsync()
                         )
@@ -573,47 +584,33 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 new Supplier()
                                 {
                                     supplier_id =
-                                        reader.GetInt32(
-                                            reader.GetOrdinal(
-                                                "supplier_id"
-                                            )
-                                        ),
+                                        reader.GetInt32(ord_supplier_id),
 
                                     supplier_code =
-                                        reader.GetString(
-                                            reader.GetOrdinal(
-                                                "supplier_code"
-                                            )
-                                        ),
+                                        reader[ord_supplier_code]
+                                            .ToString(),
 
                                     supplier_name =
-                                        reader.GetString(
-                                            reader.GetOrdinal(
-                                                "supplier_name"
-                                            )
-                                        ),
+                                        reader[ord_supplier_name]
+                                            .ToString(),
 
                                     category_supplier =
-                                        reader.GetInt32(
-                                            reader.GetOrdinal(
-                                                "category_supplier"
-                                            )
-                                        ),
+                                        reader.GetInt32(ord_category_supplier),
 
                                     no_telp_bisnis =
-                                        reader["no_telp_bisnis"]
+                                        reader[ord_no_telp_bisnis]
                                             .ToString(),
 
                                     alamat =
-                                        reader["alamat"]
+                                        reader[ord_alamat]
                                             .ToString(),
 
                                     email =
-                                        reader["email"]
+                                        reader[ord_email]
                                             .ToString(),
 
                                     status =
-                                        reader["status"]
+                                        reader[ord_status]
                                             .ToString()
                                 };
 
@@ -684,44 +681,48 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             await reader.ReadAsync()
                         )
                         {
+                            // Performance: cache ordinals before accessing columns
+                            // even for a single-row result — avoids repeated string
+                            // scans across multiple column accesses. Logic unchanged.
+                            int ord_supplier_id       = reader.GetOrdinal("supplier_id");
+                            int ord_supplier_code     = reader.GetOrdinal("supplier_code");
+                            int ord_supplier_name     = reader.GetOrdinal("supplier_name");
+                            int ord_category_supplier = reader.GetOrdinal("category_supplier");
+                            int ord_no_telp_bisnis    = reader.GetOrdinal("no_telp_bisnis");
+                            int ord_alamat            = reader.GetOrdinal("alamat");
+                            int ord_email             = reader.GetOrdinal("email");
+                            int ord_status            = reader.GetOrdinal("status");
+
                             return new Supplier()
                             {
                                 supplier_id =
-                                    reader.GetInt32(
-                                        reader.GetOrdinal(
-                                            "supplier_id"
-                                        )
-                                    ),
+                                    reader.GetInt32(ord_supplier_id),
 
                                 supplier_code =
-                                    reader["supplier_code"]
+                                    reader[ord_supplier_code]
                                         .ToString(),
 
                                 supplier_name =
-                                    reader["supplier_name"]
+                                    reader[ord_supplier_name]
                                         .ToString(),
 
                                 category_supplier =
-                                    reader.GetInt32(
-                                        reader.GetOrdinal(
-                                            "category_supplier"
-                                        )
-                                    ),
+                                    reader.GetInt32(ord_category_supplier),
 
                                 no_telp_bisnis =
-                                    reader["no_telp_bisnis"]
+                                    reader[ord_no_telp_bisnis]
                                         .ToString(),
 
                                 alamat =
-                                    reader["alamat"]
+                                    reader[ord_alamat]
                                         .ToString(),
 
                                 email =
-                                    reader["email"]
+                                    reader[ord_email]
                                         .ToString(),
 
                                 status =
-                                    reader["status"]
+                                    reader[ord_status]
                                         .ToString()
                             };
                         }

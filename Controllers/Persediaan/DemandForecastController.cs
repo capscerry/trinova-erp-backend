@@ -55,5 +55,6 @@ namespace trinova_erp_backend.Controllers.Persediaan
                 $"DemandForecast_{DateTime.Now:yyyyMMddHHmmss}.xlsx"
             );
         }
+
     }
 }

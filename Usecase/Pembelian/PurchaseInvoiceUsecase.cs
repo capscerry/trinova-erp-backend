@@ -14,6 +14,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
         Task<List<PurchaseInvoice>>
             GetAllPurchaseInvoice();
 
+        Task<PurchaseInvoice?> GetPurchaseInvoiceById(int id);
+
         Task<List<PurchaseInvoice>> GetUnpaidInvoicesBySupplier(
             int supplierId
         );
@@ -26,16 +28,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
             int id
         );
 
-        /// <summary>
-        /// Recalculates the outstanding_amount for one invoice and updates
-        /// its status to 'Paid' or 'Unpaid'. Cancelled invoices are skipped.
-        /// </summary>
         Task SyncInvoiceStatus(int purchaseInvoiceId);
 
-        /// <summary>
-        /// Recalculates outstanding_amount for every non-Cancelled invoice
-        /// and bulk-updates their status. Used for the one-time backfill.
-        /// </summary>
         Task SyncAllInvoiceStatuses();
     }
 
@@ -77,8 +71,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
 
             if (isExist)
             {
-                throw new Exception(
-                    "Invoice already exists for this Goods Receipt"
+                throw new InvalidOperationException(
+                    "Purchase Invoice already exists for this Goods Receipt."
                 );
             }
 
@@ -91,6 +85,11 @@ namespace trinova_erp_backend.Usecase.Pembelian
         {
             return await _purchaseInvoiceRepo
                 .GetAllPurchaseInvoice();
+        }
+
+        public async Task<PurchaseInvoice?> GetPurchaseInvoiceById(int id)
+        {
+            return await _purchaseInvoiceRepo.GetPurchaseInvoiceById(id);
         }
 
         public async Task<List<PurchaseInvoice>> GetUnpaidInvoicesBySupplier(
@@ -116,6 +115,13 @@ namespace trinova_erp_backend.Usecase.Pembelian
             {
                 throw new KeyNotFoundException(
                     $"Purchase Invoice with id {model.purchase_invoice_id} not found"
+                );
+            }
+
+            if (existing.status == "Paid")
+            {
+                throw new InvalidOperationException(
+                    "Paid invoices cannot be updated"
                 );
             }
 
