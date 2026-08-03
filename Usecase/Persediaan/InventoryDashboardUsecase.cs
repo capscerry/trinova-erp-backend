@@ -6,18 +6,18 @@ namespace trinova_erp_backend.Usecase.Persediaan
 {
     public class InventoryDashboardUsecase
     {
-        private readonly InventoryStockRepo  _stockRepo;
+        private readonly InventoryStockRepo _stockRepo;
         private readonly IInventoryAIService _inventoryAIService;
-        private readonly MasterProductRepo   _productRepo;
+        private readonly MasterProductRepo _productRepo;
 
         public InventoryDashboardUsecase(
-            InventoryStockRepo  stockRepo,
+            InventoryStockRepo stockRepo,
             IInventoryAIService inventoryAIService,
-            MasterProductRepo   productRepo)
+            MasterProductRepo productRepo)
         {
-            _stockRepo          = stockRepo;
+            _stockRepo = stockRepo;
             _inventoryAIService = inventoryAIService;
-            _productRepo        = productRepo;
+            _productRepo = productRepo;
         }
 
         public async Task<InventoryDashboard> GetDashboard()
@@ -25,9 +25,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
             var stocks = await _stockRepo.GetAllAsync();
 
             // IInventoryAIService never throws -- it degrades gracefully and
-            // reports failure via `success = false` (see InventoryAIService.cs).
-            // So the dashboard's core numbers (products, stock) always render
-            // even when the AI service is down; only the AI section is skipped.
+            // reports failure via `success = false`.
             var forecastResult = await _inventoryAIService.GetForecastAsync();
 
             if (!forecastResult.success || forecastResult.data is null || forecastResult.data.Count == 0)
@@ -84,15 +82,10 @@ namespace trinova_erp_backend.Usecase.Persediaan
             dashboard.AiSummary = new InventoryAiSummary
             {
                 ForecastMonth = highestForecast.ForecastMonth,
-
                 GeneratedAt = highestForecast.GeneratedAt,
-
                 ForecastedProducts = forecastedProducts,
-
                 AverageForecast = Math.Round((decimal)averageForecast, 2),
-
                 NeedRestock = dashboard.CriticalStock,
-
                 TopForecastProducts = topForecastProducts,
 
                 HighestDemand = new ForecastProduct

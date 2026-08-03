@@ -20,8 +20,8 @@ namespace trinova_erp_backend.Models.Persediaan
     {
         public string ForecastMonth { get; set; } = string.Empty;
 
-        public DateTime GeneratedAt { get; set; }
-
+        public string GeneratedAt { get; set; } = string.Empty;
+        
         public int ForecastedProducts { get; set; }
 
         public decimal AverageForecast { get; set; }

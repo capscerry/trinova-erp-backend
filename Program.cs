@@ -456,12 +456,6 @@ builder.Services.AddScoped<MasterProductSubcategoryUsecase>();
 builder.Services.AddScoped<StockMovementRepo>();
 builder.Services.AddScoped<StockTransferUsecase>();
 builder.Services.AddScoped<OrderFulfillmentUsecase>();
-<<<<<<< HEAD
-builder.Services.AddHttpClient<ForecastClient>(client =>{client.BaseAddress = new Uri("http://127.0.0.1:8000");});
-builder.Services.AddScoped<ForecastDatasetRepository>();
-builder.Services.AddScoped<ForecastHistoryRepository>();
-=======
->>>>>>> origin/development-update-2
 builder.Services.AddScoped<DemandForecastUsecase>();
 builder.Services.AddScoped<ForecastExcelExporter>();
 builder.Services.AddScoped<PurchaseRequisitionDetailRepo>();
