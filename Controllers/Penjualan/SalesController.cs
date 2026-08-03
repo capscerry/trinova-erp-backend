@@ -425,7 +425,8 @@ namespace trinova_erp_backend.Controllers.Penjualan
                 isTaxAble = so.IsTaxAble ?? false,
                 isTaxIncluded = so.IsTaxIncluded,
                 taxTotal = so.TaxTotal ?? 0,
-                status = so.Status ?? "Draft"
+                status = so.Status ?? "Draft",
+                isIndent = so.IsIndent
             });
 
             return Ok(new
