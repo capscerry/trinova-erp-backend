@@ -103,6 +103,12 @@ namespace trinova_erp_backend.Usecase.Penjualan
                 "sales_quotation",
                 header.Id,
                 header.QuotationNumber);
+
+            // Draft -> Sent sekarang benar-benar dipicu oleh aksi kirim email
+            // (sebelumnya status "Sent" ada di daftar pilihan tapi tidak pernah
+            // di-set oleh kode manapun). Tidak menyentuh quotation yang sudah
+            // Approved/Processed/Rejected/Cancelled meski di-kirim ulang.
+            await _salesQuotationRepo.MarkAsSentAsync(quotationId);
         }
 
         private static string BuildQuotationEmailHtml(QuotationHeaderDTO header, string? customMessage)

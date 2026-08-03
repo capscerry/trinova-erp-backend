@@ -25,6 +25,16 @@ namespace trinova_erp_backend.Usecase.Pembelian
             int supplierId,
             int quantity
         );
+
+        Task<bool> UpdateSupplierProduct(
+            int supplierProductId,
+            decimal supplierPrice,
+            int availableStock,
+            int leadTimeDays,
+            bool isAvailable
+        );
+
+        Task<bool> DeleteSupplierProduct(int supplierProductId);
     }
 
     public class SupplierProductUsecase
@@ -119,6 +129,28 @@ namespace trinova_erp_backend.Usecase.Pembelian
         {
             return await _supplierProductRepo
                 .RestoreStock(productId, supplierId, quantity);
+        }
+
+        public async Task<bool> UpdateSupplierProduct(
+            int supplierProductId,
+            decimal supplierPrice,
+            int availableStock,
+            int leadTimeDays,
+            bool isAvailable
+        )
+        {
+            return await _supplierProductRepo.UpdateSupplierProduct(
+                supplierProductId,
+                supplierPrice,
+                availableStock,
+                leadTimeDays,
+                isAvailable
+            );
+        }
+
+        public async Task<bool> DeleteSupplierProduct(int supplierProductId)
+        {
+            return await _supplierProductRepo.DeleteSupplierProduct(supplierProductId);
         }
     }
 }

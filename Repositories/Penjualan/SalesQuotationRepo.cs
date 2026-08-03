@@ -27,6 +27,14 @@ namespace trinova_erp_backend.Repositories.Penjualan
             SqlConnection conn,
             SqlTransaction transaction
         );
+
+        /// <summary>
+        /// Moves a quotation from Draft to Sent once it has actually been emailed
+        /// to the customer. Only transitions FROM Draft -- a quotation that has
+        /// already moved on (Approved/Processed/Rejected/Cancelled) must not be
+        /// regressed back to Sent just because it was re-sent by email.
+        /// </summary>
+        Task MarkAsSentAsync(int quotationId);
     }
 
     public class SalesQuotationRepo : ISalesQuotationRepo
@@ -335,6 +343,16 @@ namespace trinova_erp_backend.Repositories.Penjualan
             }
         }
 
+        public async Task MarkAsSentAsync(int quotationId)
+        {
+            const string query = @"
+                UPDATE sales_quotation
+                SET status = 'Sent'
+                WHERE quotation_id = @QuotationId
+                  AND status = 'Draft';";
 
+            using var connection = new SqlConnection(_connectionString);
+            await connection.ExecuteAsync(query, new { QuotationId = quotationId });
+        }
     }
 }

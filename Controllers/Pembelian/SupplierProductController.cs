@@ -20,6 +20,14 @@ namespace trinova_erp_backend.Controllers.Pembelian
         public int quantity    { get; set; }
     }
 
+    public class UpdateSupplierProductRequest
+    {
+        public decimal supplier_price  { get; set; }
+        public int      available_stock { get; set; }
+        public int      lead_time_days  { get; set; }
+        public bool     is_available    { get; set; } = true;
+    }
+
     [Route("api/[controller]")]
     [ApiController]
 
@@ -309,6 +317,79 @@ namespace trinova_erp_backend.Controllers.Pembelian
                             ex.Message
                     }
                 );
+            }
+        }
+
+        // ─── UPDATE (fix a duplicate/incorrect catalog row) ──────────────
+
+        [HttpPut("/api/supplier-product/{id}")]
+        public async Task<IActionResult> UpdateSupplierProduct(
+            int id,
+            [FromBody] UpdateSupplierProductRequest request
+        )
+        {
+            try
+            {
+                var result = await _supplierProductUsecase.UpdateSupplierProduct(
+                    id,
+                    request.supplier_price,
+                    request.available_stock,
+                    request.lead_time_days,
+                    request.is_available
+                );
+
+                if (!result)
+                    return NotFound(new
+                    {
+                        status = false,
+                        message = $"Supplier product {id} not found"
+                    });
+
+                return Ok(new
+                {
+                    status = true,
+                    message = "Catalog entry updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+        // ─── DELETE (remove a stray duplicate catalog row) ────────────────
+
+        [HttpDelete("/api/supplier-product/{id}")]
+        public async Task<IActionResult> DeleteSupplierProduct(int id)
+        {
+            try
+            {
+                var result = await _supplierProductUsecase.DeleteSupplierProduct(id);
+
+                if (!result)
+                    return NotFound(new
+                    {
+                        status = false,
+                        message = $"Supplier product {id} not found"
+                    });
+
+                return Ok(new
+                {
+                    status = true,
+                    message = "Catalog entry deleted successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    status = false,
+                    message = ex.Message
+                });
             }
         }
     }

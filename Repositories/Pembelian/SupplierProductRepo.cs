@@ -40,6 +40,16 @@ namespace trinova_erp_backend.Repositories.Pembelian
         Task<DeductStockResult> DeductStock(int productId, int supplierId, int quantity);
 
         Task<bool> RestoreStock(int productId, int supplierId, int quantity);
+
+        Task<bool> UpdateSupplierProduct(
+            int supplierProductId,
+            decimal supplierPrice,
+            int availableStock,
+            int leadTimeDays,
+            bool isAvailable
+        );
+
+        Task<bool> DeleteSupplierProduct(int supplierProductId);
     }
 
     public class SupplierProductRepo
@@ -662,6 +672,58 @@ namespace trinova_erp_backend.Repositories.Pembelian
             command.Parameters.AddWithValue("@product_id",  productId);
             command.Parameters.AddWithValue("@supplier_id", supplierId);
             command.Parameters.AddWithValue("@quantity",    quantity);
+
+            int rows = await command.ExecuteNonQueryAsync();
+            return rows > 0;
+        }
+
+        // ─── UPDATE (fix a duplicate/incorrect catalog row) ──────────────
+
+        public async Task<bool> UpdateSupplierProduct(
+            int supplierProductId,
+            decimal supplierPrice,
+            int availableStock,
+            int leadTimeDays,
+            bool isAvailable
+        )
+        {
+            const string query = @"
+                UPDATE supplier_products
+                SET supplier_price  = @supplier_price,
+                    available_stock = @available_stock,
+                    lead_time_days  = @lead_time_days,
+                    is_available    = @is_available
+                WHERE supplier_product_id = @supplier_product_id";
+
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlCommand command = new SqlCommand(query, connection);
+
+            await connection.OpenAsync();
+
+            command.Parameters.AddWithValue("@supplier_product_id", supplierProductId);
+            command.Parameters.AddWithValue("@supplier_price", supplierPrice);
+            command.Parameters.AddWithValue("@available_stock", availableStock);
+            command.Parameters.AddWithValue("@lead_time_days", leadTimeDays);
+            command.Parameters.AddWithValue("@is_available", isAvailable);
+
+            int rows = await command.ExecuteNonQueryAsync();
+            return rows > 0;
+        }
+
+        // ─── DELETE (remove a stray duplicate catalog row) ────────────────
+
+        public async Task<bool> DeleteSupplierProduct(int supplierProductId)
+        {
+            const string query = @"
+                DELETE FROM supplier_products
+                WHERE supplier_product_id = @supplier_product_id";
+
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlCommand command = new SqlCommand(query, connection);
+
+            await connection.OpenAsync();
+
+            command.Parameters.AddWithValue("@supplier_product_id", supplierProductId);
 
             int rows = await command.ExecuteNonQueryAsync();
             return rows > 0;

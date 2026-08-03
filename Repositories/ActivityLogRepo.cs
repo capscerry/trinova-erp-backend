@@ -10,6 +10,7 @@ namespace trinova_erp_backend.Repositories
     {
         Task InsertAsync(ActivityLog log);
         Task<IEnumerable<ActivityLog>> GetSecurityAlertsAsync(int take = 12);
+        Task<IEnumerable<ActivityLog>> GetRecentAsync(int take = 20);
     }
 
     public class ActivityLogRepo : IActivityLogRepo
@@ -78,6 +79,31 @@ namespace trinova_erp_backend.Repositories
                       'unauthorized_access',
                       'authentication_required'
                   )
+                ORDER BY CreatedAt DESC;";
+
+            using var connection = new SqlConnection(_connectionString);
+            return await connection.QueryAsync<ActivityLog>(query, new { Take = take });
+        }
+
+        // Dashboard "Aktivitas Terkini" timeline -- across every module (Purchasing,
+        // Sales, Inventory, etc.), not scoped like GetSecurityAlertsAsync above.
+        public async Task<IEnumerable<ActivityLog>> GetRecentAsync(int take = 20)
+        {
+            const string query = @"
+                SELECT TOP (@Take)
+                    Id,
+                    Module,
+                    ActivityType,
+                    Title,
+                    Description,
+                    RefTable,
+                    RefId,
+                    RefNumber,
+                    UserId,
+                    UserName,
+                    IpAddress,
+                    CreatedAt
+                FROM ActivityLogs
                 ORDER BY CreatedAt DESC;";
 
             using var connection = new SqlConnection(_connectionString);
