@@ -32,14 +32,6 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     "Database connection string is not configured.");
         }
 
-        /// <summary>
-        /// Returns all product/month usage rows for the AI forecast model.
-        ///
-        /// Only OUT and TRANSFER_OUT transactions are counted — these represent
-        /// actual demand drawn from inventory (goods out the door).
-        /// IN, TRANSFER_IN, and ADJUSTMENT rows are excluded because they
-        /// represent replenishment, not demand.
-        /// </summary>
         public async Task<List<ForecastDatasetItem>> GetForecastDatasetAsync()
         {
             const string sql = @"

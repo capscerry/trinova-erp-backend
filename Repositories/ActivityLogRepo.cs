@@ -87,6 +87,9 @@ namespace trinova_erp_backend.Repositories
 
         // Dashboard "Aktivitas Terkini" timeline -- across every module (Purchasing,
         // Sales, Inventory, etc.), not scoped like GetSecurityAlertsAsync above.
+        // Always excludes Module='security' -- login/auth/upload-rejected noise
+        // belongs in the separate Security Alert panel (GetSecurityAlertsAsync),
+        // not mixed into the business activity feed.
         public async Task<IEnumerable<ActivityLog>> GetRecentAsync(int take = 20)
         {
             const string query = @"
@@ -104,6 +107,7 @@ namespace trinova_erp_backend.Repositories
                     IpAddress,
                     CreatedAt
                 FROM ActivityLogs
+                WHERE Module <> 'security'
                 ORDER BY CreatedAt DESC;";
 
             using var connection = new SqlConnection(_connectionString);

@@ -5,18 +5,7 @@ using ExcelDataReader;
 
 namespace trinova_erp_backend.Security
 {
-    /// <summary>
-    /// Centralized file-upload validation shared by every endpoint that accepts
-    /// a file (Excel catalog import, CSV training upload). Performs extension
-    /// allow-listing, declared Content-Type allow-listing, magic-byte (file
-    /// signature) verification, size limits, and — for CSV — a formula/CSVinjection scan.
-    ///
-    /// This is a signature/heuristic layer, not a substitute for a real
-    /// anti-malware engine. It is designed to reject the common cases of an
-    /// upload lying about its own type (e.g. an .exe renamed to .xlsx) or
-    /// containing content that is dangerous to open downstream (e.g. an Excel
-    /// formula-injection payload inside a CSV).
-    /// </summary>
+
     public static class FileUploadSecurity
     {
         public sealed record FileValidationResult(bool IsValid, string? ErrorMessage, int StatusCode = 400)
@@ -32,9 +21,7 @@ namespace trinova_erp_backend.Security
         private static readonly byte[] ZipSignature = { 0x50, 0x4B, 0x03, 0x04 };
         private static readonly byte[] OleSignature = { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 };
 
-        // Signatures that must never appear at the start of a CSV/plain-text
-        // upload. Their presence means the content is not really text, no
-        // matter what extension or Content-Type the client claims.
+
         private static readonly (byte[] Signature, string Description)[] BlockedTextSignatures =
         {
             (new byte[] { 0x4D, 0x5A },                                     "Windows executable (MZ header)"),
@@ -56,27 +43,23 @@ namespace trinova_erp_backend.Security
         private static readonly string[] CsvAllowedContentTypes =
         {
             "text/csv",
-            "application/vnd.ms-excel", // Excel sometimes labels a saved .csv this way
+            "application/vnd.ms-excel",
             "text/plain",
             "application/octet-stream",
         };
 
-        // Characters that Excel/Google Sheets treat as the start of a formula
-        // when they are the first character of a cell — the classic CSV/formula
-        // injection vector (e.g. "=CMD|'/c calc'!A1").
+
         private static readonly char[] FormulaInjectionPrefixes = { '=', '+', '-', '@' };
 
-        // Substrings that indicate embedded script/markup content inside a
-        // cell value — a stored-XSS payload smuggled through otherwise
-        // well-formed spreadsheet/CSV data. Matched case-insensitively.
+
+
         private static readonly string[] SuspiciousContentPatterns =
         {
             "<script", "javascript:", "vbscript:", "onerror=", "onload=",
             "onclick=", "<iframe", "<object", "<embed", "data:text/html",
         };
 
-        // ExcelDataReader needs this registered to read legacy .xls code
-        // pages. Runs once per process via the static field initializer.
+
         private static readonly bool _codePagesRegistered = RegisterCodePagesOnce();
 
         private static bool RegisterCodePagesOnce()
@@ -85,7 +68,7 @@ namespace trinova_erp_backend.Security
             return true;
         }
 
-        // ─── Public API ─────────────────────────────────────────────────────────
+
 
         public static FileValidationResult ValidateExcel(IFormFile? file, long maxSizeBytes)
         {
@@ -241,9 +224,6 @@ namespace trinova_erp_backend.Security
 
         private static string? ScanForFormulaInjection(string content)
         {
-            // Cap how many lines we scan so a very large legitimate file can't
-            // be used to stall the request — the header and first data rows
-            // are enough to catch an injected formula in practice.
             const int maxLinesToScan = 5000;
 
             var lines = content.Split('\n');
@@ -304,21 +284,11 @@ namespace trinova_erp_backend.Security
             }
             catch
             {
-                // If the workbook can't be parsed here, the magic-byte check
-                // above already caught a mismatched format; let the caller's
-                // own parse attempt surface a clearer error instead of
-                // failing the validation step itself on a parse exception.
                 return null;
             }
 
             return null;
         }
-
-        // An .xlsx is a ZIP archive of OOXML parts. A macro-enabled workbook
-        // (normally saved as .xlsm) adds an "xl/vbaProject.bin" part holding
-        // the compiled VBA project. Renaming a .xlsm to .xlsx does not remove
-        // that part, so checking for its presence catches the disguise even
-        // though the magic bytes (PK..) are identical for both formats.
         private static string? ScanExcelForMacroContent(IFormFile file)
         {
             try
@@ -335,8 +305,7 @@ namespace trinova_erp_backend.Security
             }
             catch
             {
-                // Not a valid ZIP archive at all — the magic-byte check above
-                // already handles that case; nothing further to flag here.
+
                 return null;
             }
 
