@@ -39,6 +39,33 @@ namespace trinova_erp_backend.Controllers.Penjualan
             });
         }
 
+        // All DO detail lines across every delivery order -- used by the Sales
+        // dashboard to compute a qty-based Fulfillment Rate. Must be registered
+        // before the {deliveryOrderId} route below or routing would try to
+        // parse "all" as an int and 404.
+        [HttpGet("/api/do-detail/all")]
+        public async Task<IActionResult> GetAllDoDetail()
+        {
+            try
+            {
+                var result = await _pengirimanUsecase.GetAllDoDetails();
+                return Ok(new
+                {
+                    status = true,
+                    message = "Success Fetch Data",
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    status = false,
+                    message = ex.Message
+                });
+            }
+        }
+
         [HttpGet("/api/do-detail/{deliveryOrderId}")]
         public async Task<IActionResult> GetDoDetail(int deliveryOrderId)
         {

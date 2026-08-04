@@ -14,6 +14,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
         Task<List<ShippingDTO>> GetShippingCategory();
         Task<List<DeliveryOrderHeaderDTO>> GetDoHeader();
         Task<List<DeliveryOrderDetailDTO>> GetDoDetail(int deliveryOrderId);
+        Task<List<DeliveryOrderDetailDTO>> GetAllDoDetails();
         Task InsertDeliveryOrder(PengirimanPenjualan model);
         Task UpdateDeliveryOrder(int id, PengirimanPenjualan model);
         Task MarkDeliveryOrderReceivedAsync(int id);
@@ -62,6 +63,11 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
             var result = await _pengirimanRepo.GetDoDetail(deliveryOrderId);
             return result;
+        }
+
+        public async Task<List<DeliveryOrderDetailDTO>> GetAllDoDetails()
+        {
+            return await _pengirimanRepo.GetAllDoDetails();
         }
 
         public async Task InsertDeliveryOrder(PengirimanPenjualan model)
@@ -326,10 +332,24 @@ namespace trinova_erp_backend.Usecase.Penjualan
 
                 await _pengirimanRepo.UpdateDeliveryOrderStatusAsync(id, "Received", connection, transaction);
 
+                // An SO can have more than one DO (partial shipments over time),
+                // so whether receiving THIS DO finishes the order depends on the
+                // total shipped across all of its (non-Cancelled) DOs, not just
+                // this one. Only flip to "Completed" once everything ordered has
+                // actually been shipped; otherwise the SO stays "Partially
+                // Fulfilled" so it doesn't read as done when it isn't.
+                bool isFullyFulfilled = true;
                 if (current.SoId.HasValue && current.SoId.Value > 0)
                 {
+                    var fulfillment = await _pengirimanRepo.GetSalesOrderFulfillmentAsync(
+                        current.SoId.Value, connection, transaction);
+
+                    isFullyFulfilled = fulfillment.TotalShipped >= fulfillment.TotalOrdered;
+
                     await _pengirimanRepo.UpdateSalesOrderStatusAsync(
-                        current.SoId.Value, "Completed", connection, transaction);
+                        current.SoId.Value,
+                        isFullyFulfilled ? "Completed" : "Partially Fulfilled",
+                        connection, transaction);
                 }
 
                 await transaction.CommitAsync();
@@ -338,7 +358,9 @@ namespace trinova_erp_backend.Usecase.Penjualan
                     "delivery_order_received",
                     $"Delivery Order #{id} ditandai diterima",
                     current.SoId.HasValue
-                        ? "Sales Order terkait otomatis diselesaikan (Completed)."
+                        ? (isFullyFulfilled
+                            ? "Sales Order terkait otomatis diselesaikan (Completed)."
+                            : "Sebagian barang Sales Order terkait belum terkirim (Partially Fulfilled).")
                         : null,
                     "delivery_order_header",
                     id,

@@ -12,6 +12,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
         Task<List<ShippingDTO>> GetShippingCategory();
         Task<List<DeliveryOrderHeaderDTO>> GetDoHeader();
         Task<List<DeliveryOrderDetailDTO>> GetDoDetail(int deliveryOrderId);
+        Task<List<DeliveryOrderDetailDTO>> GetAllDoDetails();
         Task<int?> GetSalesOrderLineWarehouseAsync(
             int soId,
             int productId,
@@ -37,6 +38,18 @@ namespace trinova_erp_backend.Repositories.Penjualan
         Task UpdateSalesOrderStatusAsync(
             int soId,
             string status,
+            SqlConnection connection,
+            SqlTransaction transaction);
+
+        /// <summary>
+        /// Aggregate qty_dipesan/qty_dikirim across every non-Cancelled Delivery
+        /// Order tied to this SO. Used to decide whether marking one DO as
+        /// received should finish the SO ("Completed") or leave it as
+        /// "Partially Fulfilled" -- an SO can have more than one DO (partial
+        /// shipments), so a single DO's own qty isn't enough to tell.
+        /// </summary>
+        Task<(int TotalOrdered, int TotalShipped)> GetSalesOrderFulfillmentAsync(
+            int soId,
             SqlConnection connection,
             SqlTransaction transaction);
 
@@ -137,6 +150,38 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 query,
                 new { DeliveryOrderId = deliveryOrderId });
 
+            return result.ToList();
+        }
+
+        // All delivery order detail lines across every DO -- used by the Sales
+        // dashboard to compute a true qty-based Fulfillment Rate (qty shipped
+        // vs qty ordered), instead of relying on the SO's header status alone.
+        public async Task<List<DeliveryOrderDetailDTO>> GetAllDoDetails()
+        {
+            const string query = @"
+                SELECT
+                    dod.delivery_id AS DoId,
+                    dod.product_id AS ProductId,
+                    mp.product_code AS ProductCode,
+                    mp.product_name AS ProductName,
+                    dod.qty_dikirim AS QtyDikirim,
+                    dod.qty_dipesan AS QtyDipesan,
+                    dod.warehouse_id AS WarehouseId,
+                    mw.warehouse_name AS WarehouseName,
+                    sod.uom_id AS UomId,
+                    mu.uom_code AS UomName
+                FROM delivery_order_detail dod
+                LEFT JOIN master_product mp ON mp.product_id = dod.product_id
+                LEFT JOIN delivery_order_header doh ON doh.id = dod.delivery_id
+                LEFT JOIN sales_order_detail sod
+                    ON sod.order_id = doh.so_id
+                   AND sod.product_id = dod.product_id
+                LEFT JOIN master_uom mu ON mu.uom_id = sod.uom_id
+                LEFT JOIN master_warehouse mw ON mw.warehouse_id = dod.warehouse_id
+                ORDER BY dod.delivery_id ASC, dod.product_id ASC";
+
+            using var connection = new SqlConnection(_connectionString);
+            var result = await connection.QueryAsync<DeliveryOrderDetailDTO>(query);
             return result.ToList();
         }
 
@@ -254,6 +299,28 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 query,
                 new { SoId = soId, Status = status },
                 transaction);
+        }
+
+        public async Task<(int TotalOrdered, int TotalShipped)> GetSalesOrderFulfillmentAsync(
+            int soId,
+            SqlConnection connection,
+            SqlTransaction transaction)
+        {
+            const string query = @"
+                SELECT
+                    ISNULL(SUM(dod.qty_dipesan), 0) AS TotalOrdered,
+                    ISNULL(SUM(dod.qty_dikirim), 0) AS TotalShipped
+                FROM delivery_order_detail dod
+                JOIN delivery_order_header doh ON doh.id = dod.delivery_id
+                WHERE doh.so_id = @SoId
+                  AND doh.status <> 'Cancelled'";
+
+            var row = await connection.QuerySingleAsync(
+                query,
+                new { SoId = soId },
+                transaction);
+
+            return ((int)row.TotalOrdered, (int)row.TotalShipped);
         }
 
         public async Task<int> InsertDeliveryOrderHeader(
