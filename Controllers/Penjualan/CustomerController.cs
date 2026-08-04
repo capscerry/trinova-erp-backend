@@ -101,14 +101,6 @@ namespace trinova_erp_backend.Controllers.Penjualan
 
         }
 
-        //[HttpPost("/api/customer")]
-        //public async Task<IActionResult> InsertCustomer(Customer model)
-        //{
-
-        //}
-
-
-
         [HttpGet("api/customer")]
         public async Task<IActionResult> GetCustomerData()
         {
@@ -117,7 +109,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
             return Ok(new
             {
                 status = true,
-                data = customerList ?? new List<Customer>() // 🔥 jaga-jaga null
+                data = customerList ?? new List<Customer>()
             });
         }
 
