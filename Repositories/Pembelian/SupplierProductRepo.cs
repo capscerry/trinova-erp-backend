@@ -6,21 +6,6 @@ using trinova_erp_backend.Models;
 
 namespace trinova_erp_backend.Repositories.Pembelian
 {
-    /// <summary>
-    /// Result of a DeductStock call.
-    /// <list type="bullet">
-    ///   <item><term>Deducted</term><description>Row found and stock successfully decremented.</description></item>
-    ///   <item><term>InsufficientStock</term><description>Row found but available_stock &lt; requested quantity.</description></item>
-    ///   <item><term>RowNotFound</term><description>No supplier_products row exists for this (product_id, supplier_id) pair — skip silently.</description></item>
-    /// </list>
-    /// </summary>
-    public enum DeductStockResult
-    {
-        Deducted,
-        InsufficientStock,
-        RowNotFound,
-    }
-
     public interface ISupplierProductRepo
     {
         Task<bool> InsertSupplierProduct(
@@ -37,9 +22,15 @@ namespace trinova_erp_backend.Repositories.Pembelian
             List<SupplierProduct> models
         );
 
-        Task<DeductStockResult> DeductStock(int productId, int supplierId, int quantity);
-
         Task<bool> RestoreStock(int productId, int supplierId, int quantity);
+
+        /// <summary>
+        /// Outstanding quantity reserved against this supplier+product by
+        /// Approved/Completed Purchase Orders that have not been fully
+        /// received yet: SUM(PO qty - GR received qty), clamped at 0 per line.
+        /// Does not read or write supplier_products.available_stock.
+        /// </summary>
+        Task<int> GetReservedQuantity(int supplierId, int productId);
 
         Task<bool> UpdateSupplierProduct(
             int supplierProductId,
@@ -56,6 +47,35 @@ namespace trinova_erp_backend.Repositories.Pembelian
         : ISupplierProductRepo
     {
         private readonly string _connectionString;
+
+        // Correlated scalar subquery: outstanding qty reserved against the outer
+        // row's (supplier_id, product_id) by Approved/Completed POs that have
+        // not been fully received. References sp.supplier_id / sp.product_id
+        // from whatever outer query embeds it -- the outer query must alias
+        // supplier_products as "sp". Only one Goods Receipt per PO is possible
+        // today (enforced elsewhere), so summing goods_receipt_detail.quantity
+        // per (purchase_order_id, product_id) is safe.
+        private const string ReservedQuantityCorrelatedSubquery = @"
+            (
+                SELECT ISNULL(SUM(
+                    CASE WHEN (pod.quantity - ISNULL(grq.received_qty, 0)) > 0
+                         THEN (pod.quantity - ISNULL(grq.received_qty, 0))
+                         ELSE 0
+                    END
+                ), 0)
+                FROM purchase_order_detail pod
+                JOIN purchase_order po ON po.purchase_order_id = pod.purchase_order_id
+                OUTER APPLY (
+                    SELECT SUM(grd.quantity) AS received_qty
+                    FROM goods_receipt gr
+                    JOIN goods_receipt_detail grd ON grd.goods_receipt_id = gr.goods_receipt_id
+                    WHERE gr.purchase_order_id = pod.purchase_order_id
+                      AND grd.product_id = pod.product_id
+                ) grq
+                WHERE po.supplier_id = sp.supplier_id
+                  AND pod.product_id = sp.product_id
+                  AND po.status IN ('Approved', 'Completed')
+            )";
 
         public SupplierProductRepo(
             IOptionsSnapshot<DatabaseConnection> options
@@ -226,53 +246,66 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 {
                     await connection.OpenAsync();
 
-                    foreach (var model in models)
+                    // Single transaction for the whole batch instead of one
+                    // implicit auto-commit per row -- large catalogs (hundreds
+                    // of rows) were slow to upload because every MERGE round-tripped
+                    // its own commit to Azure SQL individually.
+                    using (
+                        SqlTransaction transaction =
+                            connection.BeginTransaction()
+                    )
                     {
-                        using (
-                            SqlCommand command =
-                                new SqlCommand(
-                                    query,
-                                    connection
-                                )
-                        )
+                        foreach (var model in models)
                         {
-                            command.Parameters.AddWithValue(
-                                "@supplier_id",
-                                model.supplier_id
-                            );
+                            using (
+                                SqlCommand command =
+                                    new SqlCommand(
+                                        query,
+                                        connection,
+                                        transaction
+                                    )
+                            )
+                            {
+                                command.Parameters.AddWithValue(
+                                    "@supplier_id",
+                                    model.supplier_id
+                                );
 
-                            command.Parameters.AddWithValue(
-                                "@product_id",
-                                model.product_id
-                            );
+                                command.Parameters.AddWithValue(
+                                    "@product_id",
+                                    model.product_id
+                                );
 
-                            command.Parameters.AddWithValue(
-                                "@supplier_price",
-                                model.supplier_price
-                            );
+                                command.Parameters.AddWithValue(
+                                    "@supplier_price",
+                                    model.supplier_price
+                                );
 
-                            command.Parameters.AddWithValue(
-                                "@available_stock",
-                                model.available_stock
-                            );
+                                command.Parameters.AddWithValue(
+                                    "@available_stock",
+                                    model.available_stock
+                                );
 
-                            command.Parameters.AddWithValue(
-                                "@lead_time_days",
-                                model.lead_time_days
-                            );
+                                command.Parameters.AddWithValue(
+                                    "@lead_time_days",
+                                    model.lead_time_days
+                                );
 
-                            command.Parameters.AddWithValue(
-                                "@is_available",
-                                model.is_available
-                            );
+                                command.Parameters.AddWithValue(
+                                    "@is_available",
+                                    model.is_available
+                                );
 
-                            command.Parameters.AddWithValue(
-                                "@created_at",
-                                model.created_at
-                            );
+                                command.Parameters.AddWithValue(
+                                    "@created_at",
+                                    model.created_at
+                                );
 
-                            await command.ExecuteNonQueryAsync();
+                                await command.ExecuteNonQueryAsync();
+                            }
                         }
+
+                        transaction.Commit();
                     }
                 }
 
@@ -290,7 +323,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
         public async Task<List<SupplierProduct>>
             GetAllSupplierProduct()
         {
-            const string query = @"
+            string query = @"
 
                 SELECT
                     sp.*,
@@ -299,7 +332,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
                     p.uom_id,
 
-                    s.supplier_name
+                    s.supplier_name,
+
+                    " + ReservedQuantityCorrelatedSubquery + @" AS reserved_quantity
 
                 FROM supplier_products sp
 
@@ -352,11 +387,22 @@ namespace trinova_erp_backend.Repositories.Pembelian
                         int ord_product_name        = reader.GetOrdinal("product_name");
                         int ord_supplier_name       = reader.GetOrdinal("supplier_name");
                         int ord_uom_id              = reader.GetOrdinal("uom_id");
+                        int ord_reserved_quantity   = reader.GetOrdinal("reserved_quantity");
 
                         while (
                             await reader.ReadAsync()
                         )
                         {
+                            var availableStock =
+                                reader[ord_available_stock] != DBNull.Value
+                                ? Convert.ToInt32(reader[ord_available_stock])
+                                : 0;
+
+                            var reservedQuantity =
+                                reader[ord_reserved_quantity] != DBNull.Value
+                                ? Convert.ToInt32(reader[ord_reserved_quantity])
+                                : 0;
+
                             var data =
                                 new SupplierProduct()
                                 {
@@ -388,12 +434,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                         )
                                         : 0,
 
-                                    available_stock =
-                                        reader[ord_available_stock] != DBNull.Value
-                                        ? Convert.ToInt32(
-                                            reader[ord_available_stock]
-                                        )
-                                        : 0,
+                                    available_stock = availableStock,
 
                                     lead_time_days =
                                         reader[ord_lead_time_days] != DBNull.Value
@@ -426,7 +467,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                         ? Convert.ToInt32(
                                             reader[ord_uom_id]
                                         )
-                                        : 0
+                                        : 0,
+
+                                    reserved_quantity = reservedQuantity,
+
+                                    available_to_order =
+                                        Math.Max(availableStock - reservedQuantity, 0)
                                 };
 
                             response.Add(data);
@@ -450,7 +496,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
         public async Task<List<SupplierProduct>>
             GetProductsBySupplier(int supplierId)
         {
-            const string query = @"
+            string query = @"
 
                 SELECT
                     sp.*,
@@ -459,7 +505,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
                     p.uom_id,
 
-                    s.supplier_name
+                    s.supplier_name,
+
+                    " + ReservedQuantityCorrelatedSubquery + @" AS reserved_quantity
 
                 FROM supplier_products sp
 
@@ -518,11 +566,22 @@ namespace trinova_erp_backend.Repositories.Pembelian
                         int ord_product_name        = reader.GetOrdinal("product_name");
                         int ord_supplier_name       = reader.GetOrdinal("supplier_name");
                         int ord_uom_id              = reader.GetOrdinal("uom_id");
+                        int ord_reserved_quantity   = reader.GetOrdinal("reserved_quantity");
 
                         while (
                             await reader.ReadAsync()
                         )
                         {
+                            var availableStock =
+                                reader[ord_available_stock] != DBNull.Value
+                                ? Convert.ToInt32(reader[ord_available_stock])
+                                : 0;
+
+                            var reservedQuantity =
+                                reader[ord_reserved_quantity] != DBNull.Value
+                                ? Convert.ToInt32(reader[ord_reserved_quantity])
+                                : 0;
+
                             var data =
                                 new SupplierProduct()
                                 {
@@ -554,12 +613,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                         )
                                         : 0,
 
-                                    available_stock =
-                                        reader[ord_available_stock] != DBNull.Value
-                                        ? Convert.ToInt32(
-                                            reader[ord_available_stock]
-                                        )
-                                        : 0,
+                                    available_stock = availableStock,
 
                                     lead_time_days =
                                         reader[ord_lead_time_days] != DBNull.Value
@@ -592,7 +646,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                         ? Convert.ToInt32(
                                             reader[ord_uom_id]
                                         )
-                                        : 0
+                                        : 0,
+
+                                    reserved_quantity = reservedQuantity,
+
+                                    available_to_order =
+                                        Math.Max(availableStock - reservedQuantity, 0)
                                 };
 
                             response.Add(data);
@@ -611,50 +670,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
             return response;
         }
 
-        // ─── DEDUCT STOCK (hard reserve on PO approval) ──────────────────
-
-        public async Task<DeductStockResult> DeductStock(int productId, int supplierId, int quantity)
-        {
-            using SqlConnection connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync();
-
-            // First check whether a row even exists for this (product, supplier) pair.
-            const string existsQuery = @"
-                SELECT COUNT(1)
-                FROM supplier_products
-                WHERE product_id  = @product_id
-                  AND supplier_id = @supplier_id";
-
-            using (SqlCommand existsCmd = new SqlCommand(existsQuery, connection))
-            {
-                existsCmd.Parameters.AddWithValue("@product_id",  productId);
-                existsCmd.Parameters.AddWithValue("@supplier_id", supplierId);
-
-                var count = Convert.ToInt32(await existsCmd.ExecuteScalarAsync());
-                if (count == 0)
-                    return DeductStockResult.RowNotFound;
-            }
-
-            // Row exists — attempt the conditional deduction.
-            // The WHERE clause only matches when available_stock >= quantity,
-            // so 0 rows affected means insufficient stock (not a missing row).
-            const string deductQuery = @"
-                UPDATE supplier_products
-                SET available_stock = available_stock - @quantity
-                WHERE product_id  = @product_id
-                  AND supplier_id = @supplier_id
-                  AND available_stock >= @quantity";
-
-            using SqlCommand deductCmd = new SqlCommand(deductQuery, connection);
-            deductCmd.Parameters.AddWithValue("@product_id",  productId);
-            deductCmd.Parameters.AddWithValue("@supplier_id", supplierId);
-            deductCmd.Parameters.AddWithValue("@quantity",    quantity);
-
-            int rows = await deductCmd.ExecuteNonQueryAsync();
-            return rows > 0 ? DeductStockResult.Deducted : DeductStockResult.InsufficientStock;
-        }
-
-        // ─── RESTORE STOCK (undo reservation on return / unapprove) ──────
+        // ─── RESTORE STOCK (manual admin action via /restore-stock) ──────
 
         public async Task<bool> RestoreStock(int productId, int supplierId, int quantity)
         {
@@ -675,6 +691,44 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
             int rows = await command.ExecuteNonQueryAsync();
             return rows > 0;
+        }
+
+        // ─── RESERVED QUANTITY (open PO qty not yet received) ────────────
+        // Same logic as ReservedQuantityCorrelatedSubquery, but as a standalone
+        // parameterized query for a single (supplier_id, product_id) pair.
+
+        public async Task<int> GetReservedQuantity(int supplierId, int productId)
+        {
+            const string query = @"
+                SELECT ISNULL(SUM(
+                    CASE WHEN (pod.quantity - ISNULL(grq.received_qty, 0)) > 0
+                         THEN (pod.quantity - ISNULL(grq.received_qty, 0))
+                         ELSE 0
+                    END
+                ), 0)
+                FROM purchase_order_detail pod
+                JOIN purchase_order po ON po.purchase_order_id = pod.purchase_order_id
+                OUTER APPLY (
+                    SELECT SUM(grd.quantity) AS received_qty
+                    FROM goods_receipt gr
+                    JOIN goods_receipt_detail grd ON grd.goods_receipt_id = gr.goods_receipt_id
+                    WHERE gr.purchase_order_id = pod.purchase_order_id
+                      AND grd.product_id = pod.product_id
+                ) grq
+                WHERE po.supplier_id = @supplier_id
+                  AND pod.product_id = @product_id
+                  AND po.status IN ('Approved', 'Completed')";
+
+            using SqlConnection connection = new SqlConnection(_connectionString);
+            using SqlCommand command = new SqlCommand(query, connection);
+
+            await connection.OpenAsync();
+
+            command.Parameters.AddWithValue("@supplier_id", supplierId);
+            command.Parameters.AddWithValue("@product_id", productId);
+
+            var result = await command.ExecuteScalarAsync();
+            return result != null && result != DBNull.Value ? Convert.ToInt32(result) : 0;
         }
 
         // ─── UPDATE (fix a duplicate/incorrect catalog row) ──────────────

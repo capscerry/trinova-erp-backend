@@ -183,29 +183,14 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             }
                         }
 
-                        // ────────────────────────────────────────────────
-                        // SYNC inventory totals → supplier_products
-                        // so the PO form's available_stock stays current.
-                        // ────────────────────────────────────────────────
-                        const string syncSupplierQuery = @"
-                            UPDATE supplier_products
-                            SET
-                                available_stock = (
-                                    SELECT ISNULL(SUM(qty_available), 0)
-                                    FROM inventory_stock
-                                    WHERE product_id = @product_id
-                                )
-                            WHERE product_id = @product_id";
-
-                        using (SqlCommand syncCommand =
-                               new SqlCommand(syncSupplierQuery, connection))
-                        {
-                            syncCommand.Parameters.AddWithValue(
-                                "@product_id",
-                                model.product_id);
-
-                            await syncCommand.ExecuteNonQueryAsync();
-                        }
+                        // Note: supplier_products.available_stock is intentionally
+                        // NOT synced from inventory_stock here anymore -- it used to
+                        // overwrite available_stock for every supplier selling this
+                        // product_id (not just the one on this GR's PO), which kept
+                        // clobbering freshly-uploaded catalog values. available_stock
+                        // is now a pure snapshot maintained only by Excel upload;
+                        // the effect of this GR on ordering capacity shows up via
+                        // the live-computed reserved/available_to_order fields.
                     }
 
                     // ====================================================
@@ -544,15 +529,18 @@ namespace trinova_erp_backend.Repositories.Pembelian
             return rows > 0;
         }
 
-        // ─── DEDUCT INVENTORY STOCK (used by Purchase Return) ───────────        // Mirrors the inverse of what InsertGoodsReceiptDetail does:
-        // reduces inventory_stock and re-syncs the supplier_products mirror.
+        // ─── DEDUCT INVENTORY STOCK (used by Purchase Return) ───────────
+        // Reduces inventory_stock only. supplier_products.available_stock is no
+        // longer re-synced here -- it's a pure catalog snapshot maintained only
+        // by Excel upload; syncing it from inventory_stock by product_id alone
+        // used to overwrite every supplier's row for that product, not just the
+        // one on the originating PO/GR.
 
         public async Task<bool> DeductInventoryStock(int productId, int quantity)
         {
             using SqlConnection connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            // 1. Deduct from inventory_stock (clamp at 0 to avoid negatives)
             const string deductQuery = @"
                 UPDATE inventory_stock
                 SET
@@ -561,40 +549,21 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     updated_at    = GETDATE()
                 WHERE product_id = @product_id";
 
-            using (SqlCommand cmd = new SqlCommand(deductQuery, connection))
-            {
-                cmd.Parameters.AddWithValue("@product_id", productId);
-                cmd.Parameters.AddWithValue("@quantity",   quantity);
-                await cmd.ExecuteNonQueryAsync();
-            }
-
-            // 2. Re-sync supplier_products.available_stock to match inventory total
-            const string syncQuery = @"
-                UPDATE supplier_products
-                SET available_stock = (
-                    SELECT ISNULL(SUM(qty_available), 0)
-                    FROM inventory_stock
-                    WHERE product_id = @product_id
-                )
-                WHERE product_id = @product_id";
-
-            using (SqlCommand cmd = new SqlCommand(syncQuery, connection))
-            {
-                cmd.Parameters.AddWithValue("@product_id", productId);
-                int rows = await cmd.ExecuteNonQueryAsync();
-                return rows >= 0; // 0 rows is fine if no supplier_products row exists
-            }
+            using SqlCommand cmd = new SqlCommand(deductQuery, connection);
+            cmd.Parameters.AddWithValue("@product_id", productId);
+            cmd.Parameters.AddWithValue("@quantity",   quantity);
+            int rows = await cmd.ExecuteNonQueryAsync();
+            return rows >= 0;
         }
 
-        // Adds stock back to inventory_stock and re-syncs supplier_products.
-        // Mirrors DeductInventoryStock in reverse — used for Accept Loss settlement
-        // when the supplier returns the same fixed goods.
+        // Adds stock back to inventory_stock -- used for Accept Loss settlement
+        // when the supplier returns the same fixed goods. Mirrors
+        // DeductInventoryStock in reverse (see note above re: supplier_products).
         public async Task<bool> RestoreInventoryStock(int productId, int quantity)
         {
             using SqlConnection connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            // 1. Add back to inventory_stock
             const string restoreQuery = @"
                 UPDATE inventory_stock
                 SET
@@ -603,29 +572,11 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     updated_at    = GETDATE()
                 WHERE product_id = @product_id";
 
-            using (SqlCommand cmd = new SqlCommand(restoreQuery, connection))
-            {
-                cmd.Parameters.AddWithValue("@product_id", productId);
-                cmd.Parameters.AddWithValue("@quantity",   quantity);
-                await cmd.ExecuteNonQueryAsync();
-            }
-
-            // 2. Re-sync supplier_products.available_stock
-            const string syncQuery = @"
-                UPDATE supplier_products
-                SET available_stock = (
-                    SELECT ISNULL(SUM(qty_available), 0)
-                    FROM inventory_stock
-                    WHERE product_id = @product_id
-                )
-                WHERE product_id = @product_id";
-
-            using (SqlCommand cmd = new SqlCommand(syncQuery, connection))
-            {
-                cmd.Parameters.AddWithValue("@product_id", productId);
-                int rows = await cmd.ExecuteNonQueryAsync();
-                return rows >= 0;
-            }
+            using SqlCommand cmd = new SqlCommand(restoreQuery, connection);
+            cmd.Parameters.AddWithValue("@product_id", productId);
+            cmd.Parameters.AddWithValue("@quantity",   quantity);
+            int rows = await cmd.ExecuteNonQueryAsync();
+            return rows >= 0;
         }
     }
 }

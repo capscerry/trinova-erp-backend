@@ -1,3 +1,4 @@
+using System.Linq;
 using trinova_erp_backend.Models;
 using trinova_erp_backend.Models.DTO;
 using trinova_erp_backend.Repositories.Pembelian;
@@ -325,35 +326,26 @@ namespace trinova_erp_backend.Usecase.Pembelian
             if (details.Count == 0)
                 return (false, $"Purchase Order (id={id}, po_number={po.po_number}) has no detail lines");
 
-            // Hard-reserve stock for each line. Track what was actually deducted
-            // so we can roll back if a later line has insufficient stock.
-            var deducted = new List<(int productId, int quantity)>();
+            // Stock is no longer physically deducted from supplier_products here --
+            // that column is now a pure catalog snapshot maintained solely by
+            // Excel upload. Reservation against open POs is computed live, so we
+            // just validate against it: block approval if this PO would push a
+            // line's reservation past what the supplier has actually reported.
+            var catalog = await _supplierProductRepo.GetProductsBySupplier(po.supplier_id);
+            var catalogByProduct = catalog.ToDictionary(c => c.product_id, c => c);
 
             foreach (var line in details)
             {
-                var result = await _supplierProductRepo
-                    .DeductStock(line.product_id, po.supplier_id, line.quantity);
-
-                switch (result)
+                if (catalogByProduct.TryGetValue(line.product_id, out var entry)
+                    && line.quantity > entry.available_to_order)
                 {
-                    case DeductStockResult.Deducted:
-                        deducted.Add((line.product_id, line.quantity));
-                        break;
-
-                    case DeductStockResult.RowNotFound:
-                        break;
-
-                    case DeductStockResult.InsufficientStock:
-                        foreach (var (pid, qty) in deducted)
-                            await _supplierProductRepo
-                                .RestoreStock(pid, po.supplier_id, qty);
-
-                        return (false,
-                            $"Insufficient stock for product_id {line.product_id}. Approval cancelled.");
+                    return (false,
+                        $"Insufficient stock for product_id {line.product_id}. Approval cancelled.");
                 }
             }
 
-            // All lines processed — flip status to Approved.
+            // All lines validated — flip status to Approved. Reservation now
+            // shows up automatically via GetReservedQuantity/available_to_order.
             po.status = "Approved";
             await _purchaseOrderRepo.UpdatePurchaseOrder(po);
 
@@ -388,13 +380,9 @@ namespace trinova_erp_backend.Usecase.Pembelian
             if (po == null || po.status != "Approved")
                 return false;
 
-            var details =
-                await _purchaseOrderDetailRepo.GetDetailsByPurchaseOrderId(id);
-
-            foreach (var line in details)
-                await _supplierProductRepo
-                    .RestoreStock(line.product_id, po.supplier_id, line.quantity);
-
+            // Nothing to restore -- Approve no longer deducts supplier_products,
+            // so reverting to Draft simply drops this PO out of the
+            // Approved/Completed reservation query on its own.
             po.status = "Draft";
             return await _purchaseOrderRepo.UpdatePurchaseOrder(po);
         }
