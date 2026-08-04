@@ -29,6 +29,11 @@ namespace trinova_erp_backend.Usecase.Persediaan
 
         public async Task<string> InsertMasterProduct(MasterProduct model)
         {
+            if (await _masterProductRepo.ProductNameExists(model.product_name!))
+            {
+                throw new Exception("Product name already exists.");
+            }
+
             model.created_at = DateTime.Now;
             model.updated_at = DateTime.Now;
 
@@ -65,6 +70,16 @@ namespace trinova_erp_backend.Usecase.Persediaan
 
         public async Task<bool> UpdateMasterProduct(MasterProduct model)
         {
+            if (
+                await _masterProductRepo.ProductNameExists(
+                    model.product_id,
+                    model.product_name!
+                )
+            )
+            {
+                throw new Exception("Product name already exists.");
+            }
+
             model.updated_at = DateTime.Now;
 
             var result = await _masterProductRepo.UpdateMasterProduct(model);
