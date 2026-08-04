@@ -472,6 +472,73 @@ namespace trinova_erp_backend.Repositories.Persediaan
             return response;
         }
 
+        public async Task<bool> ProductNameExists(
+            string productName
+        )
+        {
+            const string query = @"
+                SELECT COUNT(*)
+                FROM master_product
+                WHERE LOWER(product_name) = LOWER(@product_name)";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            command.Parameters.AddWithValue(
+                "@product_name",
+                productName.Trim()
+            );
+
+            await connection.OpenAsync();
+
+            int total =
+                Convert.ToInt32(
+                    await command.ExecuteScalarAsync()
+                );
+
+            return total > 0;
+        }
+
+        public async Task<bool> ProductNameExists(
+            int productId,
+            string productName
+        )
+        {
+            const string query = @"
+                SELECT COUNT(*)
+                FROM master_product
+                WHERE LOWER(product_name) = LOWER(@product_name)
+                AND product_id <> @product_id";
+
+            using SqlConnection connection =
+                new SqlConnection(_connectionString);
+
+            using SqlCommand command =
+                new SqlCommand(query, connection);
+
+            command.Parameters.AddWithValue(
+                "@product_name",
+                productName.Trim()
+            );
+
+            command.Parameters.AddWithValue(
+                "@product_id",
+                productId
+            );
+
+            await connection.OpenAsync();
+
+            int total =
+                Convert.ToInt32(
+                    await command.ExecuteScalarAsync()
+                );
+
+            return total > 0;
+        }
+
         // =========================================================
         // UPDATE
         public async Task<bool> UpdateMasterProduct(

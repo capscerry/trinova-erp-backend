@@ -296,7 +296,9 @@ builder.Services.AddScoped<DemandForecastUsecase>();
 builder.Services.AddScoped<ForecastExcelExporter>();
 builder.Services.AddScoped<PurchaseRequisitionDetailRepo>();
 builder.Services.AddScoped<InventoryDashboardUsecase>();
+builder.Services.AddScoped<ForecastDatasetRepository>();
 builder.Services.AddScoped<ForecastDatasetRepo>();
+builder.Services.AddScoped<ForecastHistoryRepository>();
 
 // ── Single call to AddControllers ────────────────────────────────────────────
 builder.Services.AddControllers();
