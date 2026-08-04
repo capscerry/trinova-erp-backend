@@ -67,18 +67,23 @@ namespace trinova_erp_backend.Repositories.Penjualan
             result.Kpis.TotalRevenuePrevMonth = await connection.ExecuteScalarAsync<decimal>(revenueQuery,
                 new { From = q.PrevFrom, To = q.PrevTo, q.CustomerId, q.Category });
 
-            // ── Outstanding Receivable (current snapshot, not date-ranged) ──
+            // ── Outstanding Receivable (invoices raised within the selected
+            // period that are still unpaid) -- date-ranged the same way as
+            // every other KPI card and as the Outstanding Trend chart below,
+            // so an empty period consistently shows 0 across the whole
+            // dashboard instead of this card alone showing an all-time balance.
             const string outstandingQuery = @"
                 SELECT ISNULL(SUM(si.remaining_amount), 0)
                 FROM sales_invoice si
                 JOIN master_customer c ON c.customer_id = si.customer_id
                 LEFT JOIN master_customer_category cat ON cat.id = c.category_id
-                WHERE si.status NOT IN ('Paid', 'Cancelled')
+                WHERE si.invoice_date BETWEEN @From AND @To
+                  AND si.status NOT IN ('Paid', 'Cancelled')
                   AND (@CustomerId IS NULL OR si.customer_id = @CustomerId)
                   AND (@Category IS NULL OR cat.category_name = @Category)";
 
             result.Kpis.OutstandingReceivable = await connection.ExecuteScalarAsync<decimal>(outstandingQuery,
-                new { q.CustomerId, q.Category });
+                new { q.From, q.To, q.CustomerId, q.Category });
 
             // ── Fulfillment Rate: qty shipped / qty ordered, DOs in range ───
             const string fulfillmentQuery = @"

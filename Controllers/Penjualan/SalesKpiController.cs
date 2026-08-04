@@ -16,10 +16,6 @@ namespace trinova_erp_backend.Controllers.Penjualan
             _salesKpiUsecase = salesKpiUsecase;
         }
 
-        // Sales executive-dashboard KPI cards, charts, funnel and leaderboard,
-        // computed server-side in one shot. from/to/prevFrom/prevTo are
-        // supplied by the frontend (it already knows what "last6m" etc. means);
-        // this endpoint just aggregates whatever range it's given.
         [HttpGet("/api/sales-kpi")]
         public async Task<IActionResult> GetSalesKpi(
             [FromQuery] DateTime from,

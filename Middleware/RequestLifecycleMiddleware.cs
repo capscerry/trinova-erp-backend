@@ -2,17 +2,7 @@ using System.Diagnostics;
 
 namespace trinova_erp_backend.Middleware
 {
-    /// <summary>
-    /// Diagnostic middleware that logs the full request/response lifecycle.
-    ///
-    /// Covers Tasks 1–4 from the HTTP/2 diagnostic prompt:
-    ///   Task 1 — verifies exactly one HTTP response is written (logs HasStarted before/after)
-    ///   Task 2 — logs the complete lifecycle: Request Started → Controller → Response Completed
-    ///   Task 3 — detects client disconnection via HttpContext.RequestAborted
-    ///   Task 4 — logs HTTP protocol version, response status, content-length, HasStarted
-    ///
-    /// No business logic is touched. This middleware is purely observational.
-    /// </summary>
+
     public class RequestLifecycleMiddleware
     {
         private readonly RequestDelegate              _next;
@@ -28,10 +18,7 @@ namespace trinova_erp_backend.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // ── Only instrument the send-email endpoint to keep noise low ──────
-            // The middleware is registered globally but only emits detailed logs
-            // for paths that match the problematic endpoint.  Other paths get a
-            // single one-line summary so correlation IDs are still visible.
+
             bool isSendEmail = context.Request.Path.Value?.Contains("send-email",
                 StringComparison.OrdinalIgnoreCase) == true;
 
@@ -39,10 +26,9 @@ namespace trinova_erp_backend.Middleware
             var traceId    = context.TraceIdentifier;
             var method     = context.Request.Method;
             var path       = context.Request.Path;
-            var protocol   = context.Request.Protocol;   // HTTP/1.1 or HTTP/2
+            var protocol   = context.Request.Protocol;   
             var requestSize = context.Request.ContentLength;
 
-            // ── Task 2: Request Started ──────────────────────────────────────
             if (isSendEmail)
             {
                 _logger.LogInformation(
@@ -60,9 +46,6 @@ namespace trinova_erp_backend.Middleware
                     DateTime.UtcNow.ToString("O"));
             }
 
-            // ── Task 3: Register RequestAborted callback ─────────────────────
-            // Fires if the client disconnects (browser cancel, Railway proxy RST)
-            // before we finish writing the response.
             var ct = context.RequestAborted;
             await using var abortReg = ct.Register(() =>
             {
@@ -83,7 +66,6 @@ namespace trinova_erp_backend.Middleware
                 }
             });
 
-            // ── Task 1: Log HasStarted before calling next ───────────────────
             if (isSendEmail)
             {
                 _logger.LogInformation(
@@ -105,7 +87,6 @@ namespace trinova_erp_backend.Middleware
             {
                 sw.Stop();
 
-                // ── Task 1 & 4: Response written / HasStarted ────────────────
                 if (isSendEmail)
                 {
                     _logger.LogInformation(
@@ -151,7 +132,6 @@ namespace trinova_erp_backend.Middleware
                 }
                 else
                 {
-                    // Terse one-liner for all other routes
                     _logger.LogDebug(
                         "[LIFECYCLE] {Method} {Path} → {Status} in {Elapsed} ms [{Protocol}] TraceId={TraceId}",
                         method, path, context.Response.StatusCode,
@@ -161,7 +141,6 @@ namespace trinova_erp_backend.Middleware
         }
     }
 
-    /// <summary>Extension to register the middleware in Program.cs with one call.</summary>
     public static class RequestLifecycleMiddlewareExtensions
     {
         public static IApplicationBuilder UseRequestLifecycleLogging(
