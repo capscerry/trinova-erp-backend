@@ -51,7 +51,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
                     throw new Exception("Nilai pembayaran harus lebih dari 0.");
 
                 if (dto.TanggalBayar == default)
-                    dto.TanggalBayar = DateTime.Now;
+                    dto.TanggalBayar = DateTime.UtcNow.AddHours(7);
 
                 var result = await _penerimaanRepo.InsertSalesReceipt(dto);
 
@@ -136,7 +136,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
                     throw new Exception("Nilai pembayaran harus lebih dari 0.");
 
                 if (dto.TanggalBayar == default)
-                    dto.TanggalBayar = DateTime.Now;
+                    dto.TanggalBayar = DateTime.UtcNow.AddHours(7);
 
                 var result = await _penerimaanRepo.UpdateSalesReceipt(id, dto);
 

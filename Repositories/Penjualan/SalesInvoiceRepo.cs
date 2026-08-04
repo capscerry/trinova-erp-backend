@@ -260,8 +260,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @Notes,
                     @ProformaStage,
                     @CreatedBy,
-                    GETDATE(),
-                    GETDATE()
+                    DATEADD(HOUR, 7, GETUTCDATE()),
+                    DATEADD(HOUR, 7, GETUTCDATE())
                 )";
 
             return await connection.ExecuteScalarAsync<int>(query, header, transaction);
@@ -289,7 +289,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     remaining_amount = @RemainingAmount,
                     notes = @Notes,
                     proforma_stage = @ProformaStage,
-                    updated_at = GETDATE()
+                    updated_at = DATEADD(HOUR, 7, GETUTCDATE())
                 WHERE id = @Id";
 
             await connection.ExecuteAsync(query, header, transaction);
@@ -329,8 +329,8 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @SalesOrderItemId,
                     @DeliveryOrderItemId,
                     @WarehouseId,
-                    GETDATE(),
-                    GETDATE()
+                    DATEADD(HOUR, 7, GETUTCDATE()),
+                    DATEADD(HOUR, 7, GETUTCDATE())
                 )";
 
             await connection.ExecuteAsync(query, detail, transaction);
@@ -374,7 +374,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         WHEN paid_amount > 0 THEN 'Partially Paid'
                         ELSE 'Issued'
                     END,
-                    updated_at = GETDATE()
+                    updated_at = DATEADD(HOUR, 7, GETUTCDATE())
                 WHERE id = @Id";
 
             using var connection = new SqlConnection(_connectionString);

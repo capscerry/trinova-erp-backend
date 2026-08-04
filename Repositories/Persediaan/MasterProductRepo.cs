@@ -174,12 +174,12 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
                 command.Parameters.AddWithValue(
                     "@created_at",
-                    model.created_at ?? DateTime.Now
+                    model.created_at ?? DateTime.UtcNow.AddHours(7)
                 );
 
                 command.Parameters.AddWithValue(
                     "@updated_at",
-                    model.updated_at ?? DateTime.Now
+                    model.updated_at ?? DateTime.UtcNow.AddHours(7)
                 );
 
                 Console.WriteLine(
@@ -599,7 +599,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
                 command.Parameters.AddWithValue(
                     "@updated_at",
-                    DateTime.Now
+                    DateTime.UtcNow.AddHours(7)
                 );
 
                 int result =

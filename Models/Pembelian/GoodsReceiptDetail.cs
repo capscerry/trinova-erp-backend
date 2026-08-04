@@ -32,6 +32,13 @@ namespace trinova_erp_backend.Models
         [NotMapped]
         public string? product_name { get; set; }
 
+        /// <summary>
+        /// Not stored in the table — joined via master_product.uom_id so the
+        /// GR detail page can show the unit (e.g. "Pcs") alongside quantity.
+        /// </summary>
+        [NotMapped]
+        public string? uom_code { get; set; }
+
         [ForeignKey("goods_receipt_id")]
         public GoodsReceipt? GoodsReceipt { get; set; }
     }

@@ -219,8 +219,8 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@qty_on_hand", stock.qty_on_hand);
             command.Parameters.AddWithValue("@qty_reserved", stock.qty_reserved);
             command.Parameters.AddWithValue("@qty_available", stock.qty_available);
-            command.Parameters.AddWithValue("@created_at", stock.created_at ?? DateTime.Now);
-            command.Parameters.AddWithValue("@updated_at", stock.updated_at ?? DateTime.Now);
+            command.Parameters.AddWithValue("@created_at", stock.created_at ?? DateTime.UtcNow.AddHours(7));
+            command.Parameters.AddWithValue("@updated_at", stock.updated_at ?? DateTime.UtcNow.AddHours(7));
 
             await connection.OpenAsync();
 
@@ -259,7 +259,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@qty_on_hand", stock.qty_on_hand);
             command.Parameters.AddWithValue("@qty_reserved", stock.qty_reserved);
             command.Parameters.AddWithValue("@qty_available", stock.qty_available);
-            command.Parameters.AddWithValue("@updated_at", DateTime.Now);
+            command.Parameters.AddWithValue("@updated_at", DateTime.UtcNow.AddHours(7));
 
             await connection.OpenAsync();
 
@@ -425,8 +425,8 @@ namespace trinova_erp_backend.Repositories.Persediaan
                 qty_on_hand  = qtyToAdd,
                 qty_reserved = 0,
                 qty_available = qtyToAdd,
-                created_at   = DateTime.Now,
-                updated_at   = DateTime.Now
+                created_at   = DateTime.UtcNow.AddHours(7),
+                updated_at   = DateTime.UtcNow.AddHours(7)
             };
 
             return await CreateAsync(newStock);
@@ -463,7 +463,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@qty", qty);
             command.Parameters.AddWithValue("@product_id", productId);
             command.Parameters.AddWithValue("@warehouse_id", warehouseId);
-            command.Parameters.AddWithValue("@updated_at", DateTime.Now);
+            command.Parameters.AddWithValue("@updated_at", DateTime.UtcNow.AddHours(7));
 
             await command.ExecuteNonQueryAsync();
         }
@@ -514,7 +514,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
             updateCommand.Parameters.AddWithValue("@qty", qty);
             updateCommand.Parameters.AddWithValue("@product_id", productId);
             updateCommand.Parameters.AddWithValue("@warehouse_id", warehouseId);
-            updateCommand.Parameters.AddWithValue("@updated_at", DateTime.Now);
+            updateCommand.Parameters.AddWithValue("@updated_at", DateTime.UtcNow.AddHours(7));
 
             await updateCommand.ExecuteNonQueryAsync();
         }
@@ -570,7 +570,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
             updateCommand.Parameters.AddWithValue("@qty", releaseQty);
             updateCommand.Parameters.AddWithValue("@product_id", productId);
             updateCommand.Parameters.AddWithValue("@warehouse_id", warehouseId);
-            updateCommand.Parameters.AddWithValue("@updated_at", DateTime.Now);
+            updateCommand.Parameters.AddWithValue("@updated_at", DateTime.UtcNow.AddHours(7));
 
             await updateCommand.ExecuteNonQueryAsync();
         }
@@ -604,7 +604,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@qty", qty);
             command.Parameters.AddWithValue("@product_id", productId);
             command.Parameters.AddWithValue("@warehouse_id", warehouseId);
-            command.Parameters.AddWithValue("@updated_at", DateTime.Now);
+            command.Parameters.AddWithValue("@updated_at", DateTime.UtcNow.AddHours(7));
 
             await command.ExecuteNonQueryAsync();
         }
@@ -634,7 +634,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@qty", qty);
             command.Parameters.AddWithValue("@product_id", productId);
             command.Parameters.AddWithValue("@warehouse_id", warehouseId);
-            command.Parameters.AddWithValue("@updated_at", DateTime.Now);
+            command.Parameters.AddWithValue("@updated_at", DateTime.UtcNow.AddHours(7));
 
             var rowsAffected = await command.ExecuteNonQueryAsync();
             if (rowsAffected == 0)

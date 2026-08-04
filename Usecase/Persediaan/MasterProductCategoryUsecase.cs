@@ -29,8 +29,8 @@ namespace trinova_erp_backend.Usecase.Persediaan
             MasterProductCategory model
         )
         {
-            model.created_at = DateTime.Now;
-            model.updated_at = DateTime.Now;
+            model.created_at = DateTime.UtcNow.AddHours(7);
+            model.updated_at = DateTime.UtcNow.AddHours(7);
             model.is_active = true;
 
             var result = await _masterProductCategoryRepo
@@ -51,7 +51,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
             MasterProductCategory model
         )
         {
-            model.updated_at = DateTime.Now;
+            model.updated_at = DateTime.UtcNow.AddHours(7);
 
             var result = await _masterProductCategoryRepo
                 .UpdateMasterProductCategory(model);

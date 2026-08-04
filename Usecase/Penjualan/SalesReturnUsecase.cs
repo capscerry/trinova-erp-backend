@@ -114,7 +114,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
                             reference_module = "SALES_RETURN",
                             reference_id = returnId,
                             remarks = "Stok masuk kembali dari retur penjualan",
-                            created_at = DateTime.Now
+                            created_at = DateTime.UtcNow.AddHours(7)
                         },
                         connection,
                         tx);
@@ -127,8 +127,8 @@ namespace trinova_erp_backend.Usecase.Penjualan
                             quantity = line.Qty,
                             reference_number = model.Header.ReturnNumber,
                             notes = "Sales Return created",
-                            movement_date = DateTime.Now,
-                            created_at = DateTime.Now,
+                            movement_date = DateTime.UtcNow.AddHours(7),
+                            created_at = DateTime.UtcNow.AddHours(7),
                             destination_warehouse_id = line.WarehouseId
                         },
                         connection,

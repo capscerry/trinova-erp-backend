@@ -166,7 +166,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     @category_name,
                     @is_active,
                     @created_by,
-                    GETDATE()
+                    DATEADD(HOUR, 7, GETUTCDATE())
                 )";
 
             try
@@ -195,7 +195,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     category_name = @category_name,
                     is_active     = @is_active,
                     update_by     = @update_by,
-                    update_date   = GETDATE()
+                    update_date   = DATEADD(HOUR, 7, GETUTCDATE())
                 WHERE category_id = @category_id";
 
             try
@@ -220,7 +220,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
         {
             const string query = @"
                 SELECT COUNT(*) FROM master_supplier
-                WHERE supplier_category_id = @categoryId";
+                WHERE category_supplier = @categoryId";
 
             using SqlConnection connection = new SqlConnection(_connectionString);
             using SqlCommand command = new SqlCommand(query, connection);

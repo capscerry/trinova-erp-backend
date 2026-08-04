@@ -22,7 +22,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
 
         public async Task Fulfill(OrderFulfillmentRequest request)
         {
-            var referenceNo = $"FUL-{DateTime.Now:yyyyMMddHHmmss}";
+            var referenceNo = $"FUL-{DateTime.UtcNow.AddHours(7):yyyyMMddHHmmss}";
 
             var stock =
                 await _stockRepo.GetByProductWarehouseAsync(
@@ -50,7 +50,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
                     reference_no = referenceNo,
                     reference_module = "ORDER_FULFILLMENT",
                     remarks = request.notes,
-                    created_at = DateTime.Now
+                    created_at = DateTime.UtcNow.AddHours(7)
                 }
             );
 
@@ -61,14 +61,14 @@ namespace trinova_erp_backend.Usecase.Persediaan
                     movement_type = "OUTBOUND",
                     quantity = request.quantity,
                     notes = request.notes,
-                    movement_date = DateTime.Now,
-                    created_at = DateTime.Now,
+                    movement_date = DateTime.UtcNow.AddHours(7),
+                    created_at = DateTime.UtcNow.AddHours(7),
                     created_by = request.created_by,
                     source_warehouse_id = request.warehouse_id,
                     reference_number = referenceNo,
 
                     status = "PROCESSED",
-                    processed_at = DateTime.Now
+                    processed_at = DateTime.UtcNow.AddHours(7)
                 }
             );
         }

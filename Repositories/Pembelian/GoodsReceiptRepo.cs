@@ -282,7 +282,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 receipt_date =
                                     reader["receipt_date"] != DBNull.Value
                                     ? Convert.ToDateTime(reader["receipt_date"])
-                                    : DateTime.Now,
+                                    : DateTime.UtcNow.AddHours(7),
 
                                 received_by =
                                     reader["received_by"]?.ToString() ?? "",
@@ -404,7 +404,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
 
                                 receipt_date =
                                     reader["receipt_date"] != DBNull.Value
-                                    ? Convert.ToDateTime(reader["receipt_date"]) : DateTime.Now,
+                                    ? Convert.ToDateTime(reader["receipt_date"]) : DateTime.UtcNow.AddHours(7),
 
                                 received_by =
                                     reader["received_by"]?.ToString() ?? "",
@@ -491,7 +491,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 receipt_date =
                                     reader["receipt_date"] != DBNull.Value
                                     ? Convert.ToDateTime(reader["receipt_date"])
-                                    : DateTime.Now,
+                                    : DateTime.UtcNow.AddHours(7),
                                 received_by =
                                     reader["received_by"]?.ToString() ?? "",
                                 status =
@@ -584,7 +584,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 receipt_date =
                                     reader["receipt_date"] != DBNull.Value
                                     ? Convert.ToDateTime(reader["receipt_date"])
-                                    : DateTime.Now,
+                                    : DateTime.UtcNow.AddHours(7),
 
                                 received_by =
                                     reader["received_by"]?.ToString() ?? "",

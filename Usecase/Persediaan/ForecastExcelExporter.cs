@@ -55,7 +55,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
             summarySheet.Cell("A1").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
             summarySheet.Cell("A3").Value = "Generated At";
-            summarySheet.Cell("B3").Value = DateTime.Now;
+            summarySheet.Cell("B3").Value = DateTime.UtcNow.AddHours(7);
 
             summarySheet.Cell("A4").Value = "Forecast Month";
             summarySheet.Cell("B4").Value = forecastMonthDisplay;

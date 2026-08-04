@@ -19,7 +19,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
         // GENERATE TRF NUMBER
         public async Task<string> GenerateTRFNumber()
         {
-            return $"TRF-{DateTime.Now:yyyyMMddHHmmss}";
+            return $"TRF-{DateTime.UtcNow.AddHours(7):yyyyMMddHHmmss}";
         }
 
         public async Task InsertAsync(
@@ -72,9 +72,9 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@quantity", movement.quantity);
             command.Parameters.AddWithValue("@reference_number", movement.reference_number ?? "");
             command.Parameters.AddWithValue("@notes", movement.notes ?? "");
-            command.Parameters.AddWithValue("@movement_date", movement.movement_date ?? DateTime.Now);
+            command.Parameters.AddWithValue("@movement_date", movement.movement_date ?? DateTime.UtcNow.AddHours(7));
             command.Parameters.AddWithValue("@created_by", movement.created_by ?? "");
-            command.Parameters.AddWithValue("@created_at", movement.created_at ?? DateTime.Now);
+            command.Parameters.AddWithValue("@created_at", movement.created_at ?? DateTime.UtcNow.AddHours(7));
             command.Parameters.AddWithValue("@source_warehouse_id", movement.source_warehouse_id);
             command.Parameters.AddWithValue("@destination_warehouse_id", movement.destination_warehouse_id ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@status", movement.status ?? "CREATED");
@@ -142,9 +142,9 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@quantity", movement.quantity);
             command.Parameters.AddWithValue("@reference_number", movement.reference_number ?? "");
             command.Parameters.AddWithValue("@notes", movement.notes ?? "");
-            command.Parameters.AddWithValue("@movement_date", movement.movement_date ?? DateTime.Now);
+            command.Parameters.AddWithValue("@movement_date", movement.movement_date ?? DateTime.UtcNow.AddHours(7));
             command.Parameters.AddWithValue("@created_by", movement.created_by ?? "");
-            command.Parameters.AddWithValue("@created_at", movement.created_at ?? DateTime.Now);
+            command.Parameters.AddWithValue("@created_at", movement.created_at ?? DateTime.UtcNow.AddHours(7));
             command.Parameters.AddWithValue("@source_warehouse_id", (object?)movement.source_warehouse_id ?? DBNull.Value);
             command.Parameters.AddWithValue("@destination_warehouse_id", (object?)movement.destination_warehouse_id ?? DBNull.Value);
             command.Parameters.AddWithValue("@status", movement.status ?? "PROCESSED");
@@ -520,7 +520,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
 
             command.Parameters.AddWithValue("@movement_id", movementId);
             command.Parameters.AddWithValue("@status", status);
-            command.Parameters.AddWithValue("@current_time", DateTime.Now);
+            command.Parameters.AddWithValue("@current_time", DateTime.UtcNow.AddHours(7));
 
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();

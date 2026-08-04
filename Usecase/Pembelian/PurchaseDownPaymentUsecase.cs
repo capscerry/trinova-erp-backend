@@ -85,7 +85,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
             }
 
             model.created_at =
-                DateTime.Now;
+                DateTime.UtcNow.AddHours(7);
 
             model.status = "Paid";
 

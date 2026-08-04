@@ -48,7 +48,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
 
             model.status = "REQUESTED";
 
-            model.created_at = DateTime.Now;
+            model.created_at = DateTime.UtcNow.AddHours(7);
 
             foreach (var detail in model.Details)
             {
@@ -91,7 +91,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
             existing.pr_date = model.pr_date;
             existing.warehouse_id = model.warehouse_id;
             existing.remarks = model.remarks;
-            existing.updated_at = DateTime.Now;
+            existing.updated_at = DateTime.UtcNow.AddHours(7);
 
             await _purchaseRequisitionRepo.UpdateAsync(existing);
 

@@ -57,7 +57,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
             )
         {
             model.created_at =
-                DateTime.Now;
+                DateTime.UtcNow.AddHours(7);
 
             return await _supplierProductRepo
                 .InsertSupplierProduct(model);
@@ -110,7 +110,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
                             true,
 
                         created_at =
-                            DateTime.Now
+                            DateTime.UtcNow.AddHours(7)
                     }
                 );
             }

@@ -107,7 +107,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     @closing_condition,
                     @transaction_name,
                     @transaction_detail,
-                    GETDATE()
+                    DATEADD(HOUR, 7, GETUTCDATE())
                 );
 
                 SELECT CAST(SCOPE_IDENTITY() AS INT);";

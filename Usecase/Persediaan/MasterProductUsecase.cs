@@ -34,8 +34,8 @@ namespace trinova_erp_backend.Usecase.Persediaan
                 throw new Exception("Product name already exists.");
             }
 
-            model.created_at = DateTime.Now;
-            model.updated_at = DateTime.Now;
+            model.created_at = DateTime.UtcNow.AddHours(7);
+            model.updated_at = DateTime.UtcNow.AddHours(7);
 
             model.product_code =
             await _masterProductRepo.GenerateProductCode(
@@ -80,7 +80,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
                 throw new Exception("Product name already exists.");
             }
 
-            model.updated_at = DateTime.Now;
+            model.updated_at = DateTime.UtcNow.AddHours(7);
 
             var result = await _masterProductRepo.UpdateMasterProduct(model);
 

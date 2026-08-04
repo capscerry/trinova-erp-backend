@@ -69,7 +69,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 );
             }
 
-            model.created_at = DateTime.Now;
+            model.created_at = DateTime.UtcNow.AddHours(7);
             model.status = "Received";
             model.receipt_number =
                 await _goodsReceiptRepo.GenerateGRNumber();
@@ -163,6 +163,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
                         i.goods_receipt_detail_id,
                         i.product_id,
                         i.product_name,
+                        i.uom_code,
                         i.quantity,
                         price,
                         subtotal = price * i.quantity,

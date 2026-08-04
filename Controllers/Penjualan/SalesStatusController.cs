@@ -59,7 +59,7 @@ namespace trinova_erp_backend.Controllers.Penjualan
             var affectedRows = await connection.ExecuteAsync($@"
                 UPDATE {target.TableName}
                 SET {target.StatusColumn} = @Status,
-                    {target.UpdatedAtColumn} = GETDATE()
+                    {target.UpdatedAtColumn} = DATEADD(HOUR, 7, GETUTCDATE())
                 WHERE {target.IdColumn} = @Id",
                 new
                 {

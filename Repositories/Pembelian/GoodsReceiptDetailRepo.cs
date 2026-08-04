@@ -82,7 +82,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     @product_id,
                     @quantity,
                     @quantity,
-                    GETDATE()
+                    DATEADD(HOUR, 7, GETUTCDATE())
                 )";
 
             try
@@ -124,7 +124,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                 SET
                                     qty_on_hand = qty_on_hand + @quantity,
                                     qty_available = qty_available + @quantity,
-                                    updated_at = GETDATE()
+                                    updated_at = DATEADD(HOUR, 7, GETUTCDATE())
                                 WHERE product_id = @product_id";
 
                             using (SqlCommand updateCommand =
@@ -164,8 +164,8 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                     @quantity,
                                     0,
                                     @quantity,
-                                    GETDATE(),
-                                    GETDATE()
+                                    DATEADD(HOUR, 7, GETUTCDATE()),
+                                    DATEADD(HOUR, 7, GETUTCDATE())
                                 )";
 
                             using (SqlCommand insertCommand =
@@ -248,7 +248,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             'Goods Receipt',
                             @reference_id,
                             @remarks,
-                            GETDATE()
+                            DATEADD(HOUR, 7, GETUTCDATE())
                         )";
 
                     using (SqlCommand transactionCommand =
@@ -343,10 +343,13 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     grd.product_id,
                     grd.quantity,
                     grd.remaining_qty,
-                    mp.product_name
+                    mp.product_name,
+                    mu.uom_code
                 FROM goods_receipt_detail grd
                 INNER JOIN master_product mp
                     ON grd.product_id = mp.product_id
+                LEFT JOIN master_uom mu
+                    ON mu.uom_id = mp.uom_id
                 WHERE grd.goods_receipt_id = @goods_receipt_id";
 
             var response = new List<GoodsReceiptDetail>();
@@ -374,7 +377,9 @@ namespace trinova_erp_backend.Repositories.Pembelian
                             remaining_qty =
                                 reader.GetInt32(reader.GetOrdinal("remaining_qty")),
                             product_name =
-                                reader["product_name"]?.ToString() ?? ""
+                                reader["product_name"]?.ToString() ?? "",
+                            uom_code =
+                                reader["uom_code"]?.ToString() ?? ""
                         });
                     }
                 }
@@ -546,7 +551,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 SET
                     qty_on_hand   = CASE WHEN qty_on_hand   >= @quantity THEN qty_on_hand   - @quantity ELSE 0 END,
                     qty_available = CASE WHEN qty_available >= @quantity THEN qty_available - @quantity ELSE 0 END,
-                    updated_at    = GETDATE()
+                    updated_at    = DATEADD(HOUR, 7, GETUTCDATE())
                 WHERE product_id = @product_id";
 
             using SqlCommand cmd = new SqlCommand(deductQuery, connection);
@@ -569,7 +574,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 SET
                     qty_on_hand   = qty_on_hand   + @quantity,
                     qty_available = qty_available + @quantity,
-                    updated_at    = GETDATE()
+                    updated_at    = DATEADD(HOUR, 7, GETUTCDATE())
                 WHERE product_id = @product_id";
 
             using SqlCommand cmd = new SqlCommand(restoreQuery, connection);

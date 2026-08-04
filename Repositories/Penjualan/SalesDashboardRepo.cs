@@ -88,15 +88,15 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         si.invoice_number AS RefNumber,
                         CAST(si.due_date AS DATETIME) AS ActivityDate,
                         CASE
-                            WHEN DATEDIFF(DAY, CAST(GETDATE() AS DATE), CAST(si.due_date AS DATE)) <= 0 THEN 'danger'
-                            WHEN DATEDIFF(DAY, CAST(GETDATE() AS DATE), CAST(si.due_date AS DATE)) <= 3 THEN 'warning'
+                            WHEN DATEDIFF(DAY, CAST(DATEADD(HOUR, 7, GETUTCDATE()) AS DATE), CAST(si.due_date AS DATE)) <= 0 THEN 'danger'
+                            WHEN DATEDIFF(DAY, CAST(DATEADD(HOUR, 7, GETUTCDATE()) AS DATE), CAST(si.due_date AS DATE)) <= 3 THEN 'warning'
                             ELSE 'normal'
                         END AS Priority
                     FROM sales_invoice si
                     WHERE si.due_date IS NOT NULL
                       AND ISNULL(si.remaining_amount, 0) > 0
                       AND ISNULL(si.status, 'Issued') IN ('Issued', 'Partially Paid', 'Overdue', 'Terbit', 'Dibayar Sebagian')
-                      AND CAST(si.due_date AS DATE) >= CAST(GETDATE() AS DATE)
+                      AND CAST(si.due_date AS DATE) >= CAST(DATEADD(HOUR, 7, GETUTCDATE()) AS DATE)
 
                     UNION ALL
 
@@ -109,15 +109,15 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         so.so_number AS RefNumber,
                         CAST(so.tanggal_kirim AS DATETIME) AS ActivityDate,
                         CASE
-                            WHEN DATEDIFF(DAY, CAST(GETDATE() AS DATE), CAST(so.tanggal_kirim AS DATE)) <= 0 THEN 'danger'
-                            WHEN DATEDIFF(DAY, CAST(GETDATE() AS DATE), CAST(so.tanggal_kirim AS DATE)) <= 3 THEN 'warning'
+                            WHEN DATEDIFF(DAY, CAST(DATEADD(HOUR, 7, GETUTCDATE()) AS DATE), CAST(so.tanggal_kirim AS DATE)) <= 0 THEN 'danger'
+                            WHEN DATEDIFF(DAY, CAST(DATEADD(HOUR, 7, GETUTCDATE()) AS DATE), CAST(so.tanggal_kirim AS DATE)) <= 3 THEN 'warning'
                             ELSE 'normal'
                         END AS Priority
                     FROM sales_order so
                     LEFT JOIN master_customer mc ON mc.customer_id = so.customer_id
                     WHERE so.tanggal_kirim IS NOT NULL
                       AND ISNULL(so.status, 'Draft') IN ('Draft', 'Approved', 'Confirmed', 'Processing')
-                      AND CAST(so.tanggal_kirim AS DATE) >= CAST(GETDATE() AS DATE)
+                      AND CAST(so.tanggal_kirim AS DATE) >= CAST(DATEADD(HOUR, 7, GETUTCDATE()) AS DATE)
 
                     UNION ALL
 
@@ -130,15 +130,15 @@ namespace trinova_erp_backend.Repositories.Penjualan
                         doh.do_number AS RefNumber,
                         CAST(doh.do_date AS DATETIME) AS ActivityDate,
                         CASE
-                            WHEN DATEDIFF(DAY, CAST(GETDATE() AS DATE), CAST(doh.do_date AS DATE)) <= 0 THEN 'danger'
-                            WHEN DATEDIFF(DAY, CAST(GETDATE() AS DATE), CAST(doh.do_date AS DATE)) <= 3 THEN 'warning'
+                            WHEN DATEDIFF(DAY, CAST(DATEADD(HOUR, 7, GETUTCDATE()) AS DATE), CAST(doh.do_date AS DATE)) <= 0 THEN 'danger'
+                            WHEN DATEDIFF(DAY, CAST(DATEADD(HOUR, 7, GETUTCDATE()) AS DATE), CAST(doh.do_date AS DATE)) <= 3 THEN 'warning'
                             ELSE 'normal'
                         END AS Priority
                     FROM delivery_order_header doh
                     LEFT JOIN master_customer mc ON mc.customer_id = doh.customer_id
                     WHERE doh.do_date IS NOT NULL
                       AND ISNULL(doh.status, 'Draft') IN ('Draft', 'Approved', 'Shipped', 'Received')
-                      AND CAST(doh.do_date AS DATE) >= CAST(GETDATE() AS DATE)
+                      AND CAST(doh.do_date AS DATE) >= CAST(DATEADD(HOUR, 7, GETUTCDATE()) AS DATE)
                 ) upcoming
                 ORDER BY ActivityDate ASC;";
 

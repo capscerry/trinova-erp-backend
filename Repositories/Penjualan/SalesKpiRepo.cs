@@ -38,10 +38,6 @@ namespace trinova_erp_backend.Repositories.Penjualan
 
             var result = new SalesKpiResult();
 
-            // ── Sales Order count (current vs prev period) ──────────────────
-            // Mirrors old frontend `filterSO`: only status + category filter,
-            // NOT customerId (Sales Order doesn't carry a category filter join
-            // directly -- go through master_customer/master_customer_category).
             const string soCountQuery = @"
                 SELECT COUNT(*)
                 FROM sales_order so

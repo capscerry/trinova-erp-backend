@@ -28,8 +28,8 @@ namespace trinova_erp_backend.Usecase.Persediaan
                 throw new Exception("Stock cannot be negative");
 
             stock.qty_available = stock.qty_on_hand - stock.qty_reserved;
-            stock.created_at    = DateTime.Now;
-            stock.updated_at    = DateTime.Now;
+            stock.created_at    = DateTime.UtcNow.AddHours(7);
+            stock.updated_at    = DateTime.UtcNow.AddHours(7);
 
             var result = await _repo.CreateAsync(stock);
 
@@ -46,7 +46,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
                 throw new Exception("Stock cannot be negative");
 
             stock.qty_available = stock.qty_on_hand - stock.qty_reserved;
-            stock.updated_at    = DateTime.Now;
+            stock.updated_at    = DateTime.UtcNow.AddHours(7);
 
             await _repo.UpdateAsync(stock);
 

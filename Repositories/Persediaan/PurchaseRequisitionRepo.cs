@@ -203,7 +203,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
                     @warehouse_id,
                     @remarks,
                     @status,
-                    GETDATE()
+                    DATEADD(HOUR, 7, GETUTCDATE())
                 )";
 
             var result = await connection.QuerySingleAsync<PurchaseRequisition>(

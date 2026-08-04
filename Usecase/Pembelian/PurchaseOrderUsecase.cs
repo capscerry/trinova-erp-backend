@@ -206,7 +206,7 @@ namespace trinova_erp_backend.Usecase.Pembelian
             if (supplier.status != "Active")
                 return 0;
 
-            model.created_at = DateTime.Now;
+            model.created_at = DateTime.UtcNow.AddHours(7);
             model.status     = "Draft";
             model.po_number  = await _purchaseOrderRepo.GeneratePONumber();
 

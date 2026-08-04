@@ -213,7 +213,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     @total_amount,
                     @status,
                     @nomor_faktur_pajak,
-                    GETDATE()
+                    DATEADD(HOUR, 7, GETUTCDATE())
                 );
 
                 SELECT CAST(SCOPE_IDENTITY() AS INT);";
@@ -633,12 +633,12 @@ namespace trinova_erp_backend.Repositories.Pembelian
                 (
                     @payment_number,
                     @purchase_invoice_id,
-                    GETDATE(),
+                    DATEADD(HOUR, 7, GETUTCDATE()),
                     @amount,
                     'Cash Refund Credit',
                     'Confirmed',
                     @notes,
-                    GETDATE()
+                    DATEADD(HOUR, 7, GETUTCDATE())
                 );
                 SELECT CAST(SCOPE_IDENTITY() AS INT);";
 

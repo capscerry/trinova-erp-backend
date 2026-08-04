@@ -183,7 +183,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
                             reference_module = "DELIVERY_ORDER",
                             reference_id = doId,
                             remarks = "Stok keluar saat Delivery Order dibuat",
-                            created_at = DateTime.Now
+                            created_at = DateTime.UtcNow.AddHours(7)
                         },
                         connection,
                         transaction);
@@ -196,8 +196,8 @@ namespace trinova_erp_backend.Usecase.Penjualan
                             quantity = detail.QtyDikirim,
                             reference_number = header.DoNumber,
                             notes = "Delivery Order created",
-                            movement_date = DateTime.Now,
-                            created_at = DateTime.Now,
+                            movement_date = DateTime.UtcNow.AddHours(7),
+                            created_at = DateTime.UtcNow.AddHours(7),
                             source_warehouse_id = warehouseId.Value
                         },
                         connection,

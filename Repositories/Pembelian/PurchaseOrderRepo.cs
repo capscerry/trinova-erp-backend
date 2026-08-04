@@ -91,7 +91,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     @transaction_detail,
                     @expected_date,
                     @nomor_faktur_pajak,
-                    GETDATE()
+                    DATEADD(HOUR, 7, GETUTCDATE())
                 )";
 
             try

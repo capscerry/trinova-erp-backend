@@ -127,7 +127,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 email = @Email,
                 alamat = @Alamat,
                 no_telp_bisnis = @NoTelpBisnis,
-                update_date = GETDATE(),
+                update_date = DATEADD(HOUR, 7, GETUTCDATE()),
                 update_by = @UpdateBy
             WHERE customer_id = @CustomerId";
 

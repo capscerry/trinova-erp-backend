@@ -67,19 +67,19 @@ namespace trinova_erp_backend.Usecase.Persediaan
                     movement_type = "TRANSFER",
                     quantity = request.quantity,
                     notes = request.notes,
-                    movement_date = DateTime.Now,
-                    created_at = DateTime.Now,
+                    movement_date = DateTime.UtcNow.AddHours(7),
+                    created_at = DateTime.UtcNow.AddHours(7),
                     created_by = request.created_by,
                     source_warehouse_id = request.source_warehouse_id,
                     destination_warehouse_id = request.destination_warehouse_id,
                     reference_number = referenceNumber,
                     status = status,
                     processed_at = status == "PROCESSED"
-                        ? DateTime.Now
+                        ? DateTime.UtcNow.AddHours(7)
                         : null,
 
                     completed_at = status == "COMPLETED"
-                        ? DateTime.Now
+                        ? DateTime.UtcNow.AddHours(7)
                         : null,
 
                     canceled_at = null,
@@ -127,7 +127,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
                     reference_module = "Stock Transfer",
                     reference_id = movement.movement_id,
                     remarks = "Stock transferred to destination warehouse",
-                    created_at = DateTime.Now
+                    created_at = DateTime.UtcNow.AddHours(7)
                 }
             );
             await _movementRepo.UpdateStatusAsync(
@@ -183,7 +183,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
                     reference_module = "Stock Transfer",
                     reference_id = movement.movement_id,
                     remarks = "Stock received from source warehouse",
-                    created_at = DateTime.Now
+                    created_at = DateTime.UtcNow.AddHours(7)
                 }
             );
 

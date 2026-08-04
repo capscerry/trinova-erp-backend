@@ -57,8 +57,8 @@ namespace trinova_erp_backend.Usecase.Pembelian
                 PurchaseInvoice model
             )
         {
-            model.created_at   = DateTime.Now;
-            model.invoice_date = DateTime.Now;
+            model.created_at   = DateTime.UtcNow.AddHours(7);
+            model.invoice_date = DateTime.UtcNow.AddHours(7);
             model.status       = "Unpaid";
 
             model.invoice_number =

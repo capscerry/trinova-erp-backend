@@ -127,9 +127,9 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@description", model.description ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@warehouse_address", model.warehouse_address ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@warehouse_type", model.warehouse_type ?? (object)DBNull.Value);
-            command.Parameters.AddWithValue("@created_at", model.created_at ?? DateTime.Now);
+            command.Parameters.AddWithValue("@created_at", model.created_at ?? DateTime.UtcNow.AddHours(7));
             command.Parameters.AddWithValue("@created_by", model.created_by ?? "system");
-            command.Parameters.AddWithValue("@updated_at", model.updated_at ?? DateTime.Now);
+            command.Parameters.AddWithValue("@updated_at", model.updated_at ?? DateTime.UtcNow.AddHours(7));
             command.Parameters.AddWithValue("@updated_by", model.updated_by ?? "system");
             command.Parameters.AddWithValue("@is_active", model.is_active ?? true);
 
@@ -162,7 +162,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
             command.Parameters.AddWithValue("@description", model.description ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@warehouse_address", model.warehouse_address ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@warehouse_type", model.warehouse_type ?? (object)DBNull.Value);
-            command.Parameters.AddWithValue("@updated_at", DateTime.Now);
+            command.Parameters.AddWithValue("@updated_at", DateTime.UtcNow.AddHours(7));
             command.Parameters.AddWithValue("@updated_by", model.updated_by ?? "system");
 
             await connection.OpenAsync();
@@ -186,7 +186,7 @@ namespace trinova_erp_backend.Repositories.Persediaan
             using SqlCommand command = new SqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@warehouse_id", warehouseId);
-            command.Parameters.AddWithValue("@updated_at", DateTime.Now);
+            command.Parameters.AddWithValue("@updated_at", DateTime.UtcNow.AddHours(7));
 
             await connection.OpenAsync();
 

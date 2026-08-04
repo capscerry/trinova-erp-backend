@@ -104,7 +104,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     @amount,
                     @status,
                     @notes,
-                    GETDATE()
+                    DATEADD(HOUR, 7, GETUTCDATE())
                 )";
 
             try

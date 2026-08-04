@@ -138,7 +138,7 @@ public class PurchasePaymentRepo
             @payment_method,
             @status,
             @notes,
-            GETDATE()
+            DATEADD(HOUR, 7, GETUTCDATE())
         );
 
         SELECT CAST(

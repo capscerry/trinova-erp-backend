@@ -203,7 +203,7 @@ namespace trinova_erp_backend.Usecase
                 issuer: _jwtSettings.Issuer,
                 audience: _jwtSettings.Audience,
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(_jwtSettings.ExpirationMinutes),
+                expires: DateTime.UtcNow.AddHours(7).AddMinutes(_jwtSettings.ExpirationMinutes),
                 signingCredentials: creds
             );
 

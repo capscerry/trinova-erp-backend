@@ -52,7 +52,7 @@ namespace trinova_erp_backend.Controllers.Persediaan
             return File(
                 file,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                $"DemandForecast_{DateTime.Now:yyyyMMddHHmmss}.xlsx"
+                $"DemandForecast_{DateTime.UtcNow.AddHours(7):yyyyMMddHHmmss}.xlsx"
             );
         }
 

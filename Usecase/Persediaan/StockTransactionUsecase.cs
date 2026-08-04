@@ -44,7 +44,7 @@ namespace trinova_erp_backend.Usecase.Persediaan
                 );
             }
 
-            transaction.created_at = DateTime.Now;
+            transaction.created_at = DateTime.UtcNow.AddHours(7);
 
             return await _repo.CreateAsync(transaction);
         }

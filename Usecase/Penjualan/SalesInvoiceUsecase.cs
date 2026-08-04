@@ -218,7 +218,7 @@ namespace trinova_erp_backend.Usecase.Penjualan
                             reference_module = "SALES_INVOICE",
                             reference_id = invoiceId,
                             remarks = "Stok keluar saat Sales Invoice (cash sale) dibuat",
-                            created_at = DateTime.Now
+                            created_at = DateTime.UtcNow.AddHours(7)
                         },
                         connection,
                         transaction);
@@ -231,8 +231,8 @@ namespace trinova_erp_backend.Usecase.Penjualan
                             quantity = detail.Quantity,
                             reference_number = model.Header.InvoiceNumber,
                             notes = "Sales Invoice (cash sale) created",
-                            movement_date = DateTime.Now,
-                            created_at = DateTime.Now,
+                            movement_date = DateTime.UtcNow.AddHours(7),
+                            created_at = DateTime.UtcNow.AddHours(7),
                             source_warehouse_id = detail.WarehouseId.Value
                         },
                         connection,

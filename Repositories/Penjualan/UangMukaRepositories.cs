@@ -156,7 +156,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     Keterangan = @Keterangan,
                     Status = @Status,
                     UpdatedBy = @UpdatedBy,
-                    UpdatedAt = GETDATE()
+                    UpdatedAt = DATEADD(HOUR, 7, GETUTCDATE())
                 WHERE Id = @Id;";
 
             using var connection = new SqlConnection(_connectionString);
@@ -171,7 +171,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                 UPDATE uang_muka
                 SET
                     Status = 'Received',
-                    UpdatedAt = GETDATE()
+                    UpdatedAt = DATEADD(HOUR, 7, GETUTCDATE())
                 WHERE Id = @Id;";
 
             await connection.ExecuteAsync(query, new { Id = id }, transaction);
@@ -199,7 +199,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                             THEN 'Partially Paid'
                         ELSE 'Unpaid'
                     END,
-                    UpdatedAt = GETDATE()
+                    UpdatedAt = DATEADD(HOUR, 7, GETUTCDATE())
                 WHERE Id = @Id;";
 
             await connection.ExecuteAsync(query, new { Id = id }, transaction);

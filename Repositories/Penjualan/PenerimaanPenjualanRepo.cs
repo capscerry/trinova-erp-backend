@@ -495,7 +495,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                             WHEN ISNULL(remaining_amount, 0) - @PaymentApplied <= 0 THEN 'Paid'
                             ELSE 'Partially Paid'
                         END,
-                        updated_at = GETDATE()
+                        updated_at = DATEADD(HOUR, 7, GETUTCDATE())
                     WHERE id = @InvoiceId;";
 
                 await connection.ExecuteAsync(

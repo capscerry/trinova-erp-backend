@@ -197,7 +197,7 @@ namespace trinova_erp_backend.Repositories.Penjualan
                     @SalesOrderId,
                     @Notes,
                     @Status,
-                    GETDATE()
+                    DATEADD(HOUR, 7, GETUTCDATE())
                 )";
 
             return await connection.ExecuteScalarAsync<int>(query, header, transaction);

@@ -116,7 +116,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                     @available_stock,
                     @lead_time_days,
                     @is_available,
-                    GETDATE()
+                    DATEADD(HOUR, 7, GETUTCDATE())
                 )";
 
             try
@@ -454,7 +454,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                         ? Convert.ToDateTime(
                                             reader[ord_created_at]
                                         )
-                                        : DateTime.Now,
+                                        : DateTime.UtcNow.AddHours(7),
 
                                     product_name =
                                         reader[ord_product_name]?.ToString(),
@@ -633,7 +633,7 @@ namespace trinova_erp_backend.Repositories.Pembelian
                                         ? Convert.ToDateTime(
                                             reader[ord_created_at]
                                         )
-                                        : DateTime.Now,
+                                        : DateTime.UtcNow.AddHours(7),
 
                                     product_name =
                                         reader[ord_product_name]?.ToString(),
