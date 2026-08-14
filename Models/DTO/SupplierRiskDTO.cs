@@ -137,6 +137,13 @@ public class SupplierRiskCVResults
 
         public int    samples_trained { get; set; }
         public int    samples_tested  { get; set; }
+        public int?   total_samples   { get; set; }
+
+        /// <summary>Deterministic SHA-256 fingerprint (first 16 hex chars) of the dataset.</summary>
+        public string? dataset_fingerprint { get; set; }
+
+        public List<string>? feature_columns { get; set; }
+        public string? label_column { get; set; }
 
         /// <summary>Number of XGBoost trees used after early stopping.</summary>
         public int    best_round      { get; set; }
