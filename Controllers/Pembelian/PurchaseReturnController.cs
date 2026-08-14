@@ -98,6 +98,26 @@ namespace trinova_erp_backend.Controllers.Pembelian
         }
 
         /// <summary>
+        /// Returns the return line items (product_name, qty_return, unit_price, subtotal)
+        /// for the given purchase return. Prefers persisted child-table rows, then
+        /// transaction_detail JSON, then GR lines as a legacy fallback.
+        /// Used by the settlement modal so it always shows the correct qty_return values.
+        /// </summary>
+        [HttpGet("/api/purchase-return/{id}/items")]
+        public async Task<IActionResult> GetReturnItems(int id)
+        {
+            try
+            {
+                var result = await _purchaseReturnUsecase.GetReturnDetails(id);
+                return Ok(new { status = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { status = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Returns the product lines (product_name + quantity) for the Goods
         /// Receipt linked to this purchase return.
         /// The Accept Loss modal calls this to display the correct items and

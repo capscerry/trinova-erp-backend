@@ -58,6 +58,7 @@ namespace trinova_erp_backend.Config
             services.AddScoped<IPurchaseDownPaymentRepo, PurchaseDownPaymentRepo>();
             services.AddScoped<IPurchasePaymentRepo, PurchasePaymentRepo>();
             services.AddScoped<IPurchaseReturnRepo, PurchaseReturnRepo>();
+            services.AddScoped<IPurchaseReturnItemRepo, PurchaseReturnItemRepo>();
 
             // PEMBELIAN USECASE
             services.AddScoped<ISupplierUsecase, SupplierUsecase>();

@@ -6,6 +6,12 @@ namespace trinova_erp_backend.Models
     [Table("purchase_return")]
     public class PurchaseReturn
     {
+        // ── NOT persisted to purchase_return — held in purchase_return_item ──
+        // Populated from the POST body so the usecase can insert child rows
+        // and use the correct qty_return for stock operations.
+        [NotMapped]
+        public List<PurchaseReturnItem> return_items { get; set; } = new();
+
         [Key]
         public int purchase_return_id { get; set; }
 
