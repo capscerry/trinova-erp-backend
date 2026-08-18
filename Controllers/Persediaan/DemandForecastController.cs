@@ -1,11 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using trinova_erp_backend.Usecase.Persediaan;
+using Microsoft.AspNetCore.Http.Timeouts;
 
 namespace trinova_erp_backend.Controllers.Persediaan
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Microsoft.AspNetCore.Authorization.Authorize(
+    [Authorize(
         Roles = "Admin,admin,Inventory,inventory,Warehouse,warehouse,Persediaan,persediaan"
     )]
     public class DemandForecastController : ControllerBase
@@ -19,35 +21,58 @@ namespace trinova_erp_backend.Controllers.Persediaan
             _usecase = usecase;
         }
 
-        // Realtime Forecast (langsung dari AI)
+
+        // =====================================================================
+        // REALTIME FORECAST
+        // =====================================================================
+
         [HttpGet]
         public async Task<IActionResult> GetForecast()
         {
-            var result = await _usecase.GetRealtimeForecast();
+            var result =
+                await _usecase.GetRealtimeForecast();
+
             return Ok(result);
         }
 
-        // Generate Forecast Bulanan + Simpan ke forecast_history
+
+        // =====================================================================
+        // GENERATE MONTHLY FORECAST
+        // =====================================================================
+
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateMonthlyForecast()
         {
-            var result = await _usecase.GenerateMonthlyForecast();
+            var result =
+                await _usecase.GenerateMonthlyForecast();
+
             return Ok(result);
         }
 
-        // Ambil forecast terakhir dari forecast_history
+
+        // =====================================================================
+        // LATEST MONTHLY FORECAST
+        // =====================================================================
+
         [HttpGet("latest")]
         public async Task<IActionResult> GetLatestForecast()
         {
-            var result = await _usecase.GetLatestMonthlyForecast();
+            var result =
+                await _usecase.GetLatestMonthlyForecast();
+
             return Ok(result);
         }
 
-        // Download forecast terakhir ke Excel
+
+        // =====================================================================
+        // DOWNLOAD FORECAST
+        // =====================================================================
+
         [HttpGet("download")]
         public async Task<IActionResult> DownloadForecast()
         {
-            var file = await _usecase.DownloadForecast();
+            var file =
+                await _usecase.DownloadForecast();
 
             return File(
                 file,
@@ -56,5 +81,18 @@ namespace trinova_erp_backend.Controllers.Persediaan
             );
         }
 
+
+        // =====================================================================
+        // AI MODEL COMPARISON
+        // =====================================================================
+
+        [HttpGet("model-comparison")]
+        [RequestTimeout("model-comparison")]
+        public async Task<IActionResult> GetModelComparison()
+        {
+            var result = await _usecase.GetModelComparison();
+
+            return Ok(result);
+        }
     }
 }

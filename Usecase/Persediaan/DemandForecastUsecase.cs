@@ -4,13 +4,18 @@ using trinova_erp_backend.Repositories.Persediaan;
 namespace trinova_erp_backend.Usecase.Persediaan
 {
     /// <summary>
-    /// Orchestrates demand forecast generation:
-    ///   1. Fetch the stock-usage dataset from SQL Server via ForecastDatasetRepo.
-    ///   2. POST the dataset to the Inventory AI service via ForecastClient.
-    ///   3. Return the ForecastResult list to the controller.
+    /// Orchestrates demand forecast generation and AI model comparison:
     ///
-    /// The AI service is called with a POST /forecast payload so it always trains
-    /// on fresh SQL Server data rather than reading the database directly.
+    /// Forecast:
+    ///   1. Fetch the stock-usage dataset from SQL Server.
+    ///   2. POST the dataset to the Inventory AI service.
+    ///   3. Return the forecast result.
+    ///
+    /// Model Comparison:
+    ///   1. Fetch the same stock-usage dataset from SQL Server.
+    ///   2. POST the dataset to the Inventory AI service.
+    ///   3. Compare Linear Regression and XGBoost.
+    ///   4. Return MAE, RMSE, R² and the best model.
     /// </summary>
     public class DemandForecastUsecase
     {
@@ -26,27 +31,48 @@ namespace trinova_erp_backend.Usecase.Persediaan
             ForecastExcelExporter excelExporter
         )
         {
-            _forecastDatasetRepository = forecastDatasetRepository;
-            _forecastHistoryRepository = forecastHistoryRepository;
-            _forecastClient = forecastClient;
-            _excelExporter = excelExporter;
+            _forecastDatasetRepository =
+                forecastDatasetRepository;
+
+            _forecastHistoryRepository =
+                forecastHistoryRepository;
+
+            _forecastClient =
+                forecastClient;
+
+            _excelExporter =
+                excelExporter;
         }
+
+
+        // =====================================================================
+        // REALTIME FORECAST
+        // =====================================================================
 
         public async Task<List<ForecastResult>> GetRealtimeForecast()
         {
-            var dataset = await _forecastDatasetRepository.GetForecastDataset();
+            var dataset =
+                await _forecastDatasetRepository.GetForecastDataset();
 
             var request = new ForecastRequest
             {
                 Items = dataset
             };
 
-            return await _forecastClient.GetRealtimeForecast(request);
+            return await _forecastClient.GetRealtimeForecast(
+                request
+            );
         }
+
+
+        // =====================================================================
+        // MONTHLY FORECAST
+        // =====================================================================
 
         public async Task<List<ForecastResult>> GenerateMonthlyForecast()
         {
-            var dataset = await _forecastDatasetRepository.GetForecastDataset();
+            var dataset =
+                await _forecastDatasetRepository.GetForecastDataset();
 
             var request = new ForecastRequest
             {
@@ -54,25 +80,63 @@ namespace trinova_erp_backend.Usecase.Persediaan
             };
 
             var forecasts =
-                await _forecastClient.GenerateMonthlyForecast(request);
+                await _forecastClient.GenerateMonthlyForecast(
+                    request
+                );
 
-            await _forecastHistoryRepository.ReplaceForecast(forecasts);
+            await _forecastHistoryRepository.ReplaceForecast(
+                forecasts
+            );
 
             return forecasts;
         }
 
+
+        // =====================================================================
+        // LATEST MONTHLY FORECAST
+        // =====================================================================
+
         public async Task<List<ForecastResult>> GetLatestMonthlyForecast()
         {
-            return await _forecastHistoryRepository.GetLatestForecast();
+            return await _forecastHistoryRepository
+                .GetLatestForecast();
         }
+
+
+        // =====================================================================
+        // DOWNLOAD FORECAST
+        // =====================================================================
 
         public async Task<byte[]> DownloadForecast()
         {
             var forecasts =
-                await _forecastHistoryRepository.GetLatestForecast();
+                await _forecastHistoryRepository
+                    .GetLatestForecast();
 
-            return _excelExporter.Export(forecasts);
+            return _excelExporter.Export(
+                forecasts
+            );
         }
 
+
+        // =====================================================================
+        // MODEL COMPARISON
+        // =====================================================================
+
+        public async Task<trinova_erp_backend.Models.AI.ModelComparisonResponse> GetModelComparison()
+        {
+            var dataset =
+                await _forecastDatasetRepository
+                    .GetForecastDataset();
+
+            var request = new ForecastRequest
+            {
+                Items = dataset
+            };
+
+            return await _forecastClient.CompareModels(
+                request
+            );
+        }
     }
 }

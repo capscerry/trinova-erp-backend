@@ -198,6 +198,31 @@ builder.Services.AddRequestTimeouts(options =>
         Timeout = TimeSpan.FromSeconds(30)
     };
 
+    // Model comparison can take longer because it trains
+    // Linear Regression and XGBoost across many products.
+    options.AddPolicy(
+        "model-comparison",
+        new Microsoft.AspNetCore.Http.Timeouts.RequestTimeoutPolicy
+        {
+            Timeout = TimeSpan.FromSeconds(120),
+
+            WriteTimeoutResponse = async ctx =>
+            {
+                ctx.Response.StatusCode =
+                    StatusCodes.Status504GatewayTimeout;
+
+                ctx.Response.ContentType =
+                    "application/json";
+
+                await ctx.Response.WriteAsync(
+                    "{\"status\":false,\"message\":" +
+                    "\"AI model comparison timed out. " +
+                    "Please try again later.\"}"
+                );
+            }
+        }
+    );
+
     options.AddPolicy("send-email", new Microsoft.AspNetCore.Http.Timeouts.RequestTimeoutPolicy
     {
         Timeout = TimeSpan.FromSeconds(55),
@@ -265,8 +290,14 @@ builder.Services.AddHttpClient("XGBoost", (serviceProvider, client) =>
 builder.Services.AddHttpClient<ForecastClient>(client =>
 {
     client.BaseAddress = new Uri(inventoryAIBaseUrl);
-    client.Timeout     = TimeSpan.FromSeconds(30);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+    // Model comparison can take longer than normal forecast requests.
+    client.Timeout = TimeSpan.FromSeconds(120);
+
+    client.DefaultRequestHeaders.Add(
+        "Accept",
+        "application/json"
+    );
 });
 
 // ── IInventoryAIService — typed HttpClient for /api/inventory-ai/* endpoints ──
